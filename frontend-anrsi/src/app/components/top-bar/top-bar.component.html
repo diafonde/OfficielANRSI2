@@ -1,0 +1,151 @@
+<div class="top-bar" [class.scrolled]="scrolled">
+  <div class="top-bar-container">
+    <!-- Desktop Layout -->
+    <div class="desktop-layout">
+      <!-- Contact info -->
+      <div class="contact-info">
+        <div class="contact-item">
+          <i class="fas fa-phone"></i>
+          <span>{{ 'Tél' | translate }}: +222 45 25 44 21</span>
+        </div>
+        <div class="contact-item">
+          <i class="fas fa-envelope"></i>
+          <span>info@anrsi.mr</span>
+        </div>
+      </div>
+
+      <!-- Quick links -->
+      <div class="quick-links">
+        <a routerLink="/ai4agri" class="quick-link">{{ 'AI 4 AGRI' | translate }}</a>
+        <a routerLink="/expert-anrsi" class="quick-link">{{ 'Expert à l\'ANRSI' | translate }}</a>
+        <a routerLink="/appels-candidatures" class="quick-link">{{ 'Appels à Candidatures' | translate }}</a>
+        <a routerLink="/plateformes" class="quick-link">{{ 'Plateformes' | translate }}</a>
+        <a routerLink="/zone-humide" class="quick-link">{{ 'Zone Humide' | translate }}</a>
+        <a routerLink="/agence-medias" class="quick-link">{{ 'Agence dans Médias' | translate }}</a>
+      </div>
+
+      <!-- Language switcher -->
+      <div class="top-actions">
+        <div class="language-dropdown">
+          <button 
+            class="lang-dropdown-btn" 
+            (click)="toggleLangDropdown()"
+            [class.active]="isLangDropdownOpen">
+            <span class="lang-flag">{{ getLanguageFlag(currentLang) }}</span>
+            <span class="lang-text">{{ getLanguageName(currentLang) }}</span>
+            <i class="fas fa-chevron-down" [class.rotated]="isLangDropdownOpen"></i>
+          </button>
+          <div class="lang-dropdown-menu" [class.show]="isLangDropdownOpen">
+            <button 
+              class="lang-option"
+              [class.active]="currentLang === 'fr'"
+              (click)="switchLanguage('fr')">
+              <span class="lang-flag">🇫🇷</span>
+              <span class="lang-code">FR</span>
+              <span class="lang-name">Français</span>
+            </button>
+            <button 
+              class="lang-option"
+              [class.active]="currentLang === 'ar'"
+              (click)="switchLanguage('ar')">
+              <span class="lang-flag">🇲🇷</span>
+              <span class="lang-code">AR</span>
+              <span class="lang-name">العربية</span>
+            </button>
+            <button 
+              class="lang-option"
+              [class.active]="currentLang === 'en'"
+              (click)="switchLanguage('en')">
+              <span class="lang-flag">🇺🇸</span>
+              <span class="lang-code">EN</span>
+              <span class="lang-name">English</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Layout -->
+    <div class="mobile-layout">
+      <div class="mobile-header">
+        <!-- Contact info (mobile) -->
+        <div class="mobile-contact">
+          <div class="contact-item">
+            <i class="fas fa-phone"></i>
+            <span>+222 45 25 44 21</span>
+          </div>
+          <div class="contact-item">
+            <i class="fas fa-envelope"></i>
+            <span>info@anrsi.mr</span>
+          </div>
+        </div>
+
+        <!-- Language switcher and Menu toggle (mobile) -->
+        <div class="mobile-actions">
+          <div class="language-dropdown">
+            <button 
+              class="lang-dropdown-btn mobile" 
+              (click)="toggleLangDropdown()"
+              [class.active]="isLangDropdownOpen"
+              id="mobile-lang-dropdown-btn">
+              <span class="lang-flag">{{ getLanguageFlag(currentLang) }}</span>
+              <span class="lang-text">{{ getLanguageName(currentLang) }}</span>
+              <i class="fas fa-chevron-down" [class.rotated]="isLangDropdownOpen"></i>
+            </button>
+            <div class="lang-dropdown-menu mobile" [class.show]="isLangDropdownOpen">
+              <button 
+                class="lang-option"
+                [class.active]="currentLang === 'fr'"
+                (click)="switchLanguage('fr')"
+                id="lang-option-fr">
+                <span class="lang-flag">🇫🇷</span>
+                <span class="lang-code">FR</span>
+                
+              </button>
+              <button 
+                class="lang-option"
+                [class.active]="currentLang === 'ar'"
+                (click)="switchLanguage('ar')"
+                id="lang-option-ar">
+                <span class="lang-flag">🇲🇷</span>
+                <span class="lang-code">AR</span>
+                
+              </button>
+              <button 
+                class="lang-option"
+                [class.active]="currentLang === 'en'"
+                (click)="switchLanguage('en')"
+                id="lang-option-en">
+                <span class="lang-flag">🇺🇸</span>
+                <span class="lang-code">EN</span>
+                
+              </button>
+            </div>
+          </div>
+
+          <!-- Mobile Menu Toggle -->
+          <button class="mobile-menu-toggle" 
+                  (click)="toggleMobileMenu($event)" 
+                  [class.active]="isMobileMenuOpen" 
+                  type="button"
+                  id="mobile-menu-toggle-btn"
+                  aria-label="Toggle menu">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Quick Links -->
+      <div class="mobile-quick-links" [class.expanded]="isMobileMenuOpen">
+        <a routerLink="/ai4agri" class="mobile-quick-link" (click)="closeMobileMenu($event)">{{ 'AI 4 AGRI' | translate }}</a>
+        <a routerLink="/expert-anrsi" class="mobile-quick-link" (click)="closeMobileMenu($event)">{{ 'Expert à l\'ANRSI' | translate }}</a>
+        <a routerLink="/appels-candidatures" class="mobile-quick-link" (click)="closeMobileMenu($event)">{{ 'Appels à Candidatures' | translate }}</a>
+        <a routerLink="/plateformes" class="mobile-quick-link" (click)="closeMobileMenu($event)">{{ 'Plateformes' | translate }}</a>
+        <a routerLink="/zone-humide" class="mobile-quick-link" (click)="closeMobileMenu($event)">{{ 'Zone Humide' | translate }}</a>
+        <a routerLink="/agence-medias" class="mobile-quick-link" (click)="closeMobileMenu($event)">{{ 'Agence dans Médias' | translate }}</a>
+      </div>
+    </div>
+  </div>
+</div>

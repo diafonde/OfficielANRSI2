@@ -1,0 +1,94 @@
+<div class="financement-page">
+  <div class="hero-section">
+    <div class="container">
+      <div class="hero-content" data-aos="fade-up">
+        <h1>{{ fundingInfo.title }}</h1>
+        <p class="hero-subtitle">{{ fundingInfo.description }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="financement-content">
+    <div class="container">
+      
+      <!-- Process Section -->
+      <div class="process-section">
+        <h2 data-aos="fade-up">{{ 'Processus de candidature' | translate }}</h2>
+        <div class="process-steps">
+          <div 
+            *ngFor="let step of fundingInfo.process; let i = index" 
+            class="process-step"
+            data-aos="fade-up"
+            [attr.data-aos-delay]="i * 100">
+            
+            <div class="step-number">{{ step.step }}</div>
+            <div class="step-icon">
+              <i [class]="step.icon"></i>
+            </div>
+            <div class="step-content">
+              <h3>{{ step.title }}</h3>
+              <p>{{ step.description }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Requirements Section -->
+      <div class="requirements-section">
+        <div class="section-content">
+          <div class="requirements-info" data-aos="fade-right">
+            <h2>{{ 'Conditions requises' | translate }}</h2>
+            <p>{{ 'Pour bénéficier du financement de l\'ANRSI, les candidats doivent remplir les conditions suivantes' | translate }}:</p>
+            
+            <ul class="requirements-list">
+              <li *ngFor="let requirement of fundingInfo.requirements">
+                <i class="fas fa-check-circle"></i>
+                {{ requirement }}
+              </li>
+            </ul>
+          </div>
+          
+          <div class="requirements-visual" data-aos="fade-left">
+            <div class="visual-card">
+              <i class="fas fa-handshake"></i>
+              <h3>{{ 'Partenariat' | translate }}</h3>
+              <p>{{ 'Collaboration avec l\'ANRSI pour le développement de la recherche' | translate }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Benefits Section -->
+      <div class="benefits-section">
+        <h2 data-aos="fade-up">{{ 'Avantages du financement' | translate }}</h2>
+        <div class="benefits-grid">
+          <div 
+            *ngFor="let benefit of fundingInfo.benefits; let i = index" 
+            class="benefit-card"
+            data-aos="fade-up"
+            [attr.data-aos-delay]="i * 100">
+            
+            <div class="benefit-icon">
+              <i class="fas fa-star"></i>
+            </div>
+            <h3>{{ benefit }}</h3>
+          </div>
+        </div>
+      </div>
+
+      <!-- Call to Action -->
+      <div class="cta-section">
+        <div class="cta-content" data-aos="fade-up">
+          <h2>{{ 'Prêt à candidater ?' | translate }}</h2>
+          <p>{{ 'Consultez nos appels à candidatures et soumettez votre projet' | translate }}</p>
+          <div class="cta-buttons">
+            <button class="btn btn-primary">{{ 'Appels à candidatures' | translate }}</button>
+            <button class="btn btn-secondary">{{ 'Guide du candidat' | translate }}</button>
+            <button class="btn btn-accent">{{ 'Nous contacter' | translate }}</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

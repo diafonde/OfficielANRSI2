@@ -1,0 +1,199 @@
+<div class="contact-page">
+  <div class="contact-hero">
+    <div class="container">
+      <div class="hero-content" data-aos="fade-up">
+        <h1>{{ 'Contactez-nous' | translate }}</h1>
+        <p>{{ 'Entrez en contact avec nos équipes de recherche et notre personnel de soutien' | translate }}</p>
+      </div>
+    </div>
+    <div class="hero-overlay"></div>
+  </div>
+  
+  <div class="container">
+    <section class="section contact-section">
+      <div class="grid grid-2">
+        <div class="contact-form-container">
+          <h2>{{ 'Envoyez-nous un message' | translate }}</h2>
+          <form class="contact-form" (ngSubmit)="onSubmit()">
+            <div class="form-group">
+              <label for="name">{{ 'Votre nom' | translate }}</label>
+              <input type="text" id="name" name="name" [(ngModel)]="contactForm.name" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="email">{{ 'Adresse e-mail' | translate }}</label>
+              <input type="email" id="email" name="email" [(ngModel)]="contactForm.email" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="subject">{{ 'Sujet' | translate }}</label>
+              <select id="subject" name="subject" [(ngModel)]="contactForm.subject" required>
+                <option value="">{{ 'Sélectionnez un sujet' | translate }}</option>
+                <option value="Demande de recherche">{{ 'Demande de recherche' | translate }}</option>
+                <option value="Proposition de collaboration">{{ 'Proposition de collaboration' | translate }}</option>
+                <option value="Demande médiatique">{{ 'Demande médiatique' | translate }}</option>
+                <option value="Emploi/Stage">{{ 'Emploi ou Stage' | translate }}</option>
+                <option value="Financement">{{ 'Financement' | translate }}</option>
+                <option value="Question générale">{{ 'Question générale' | translate }}</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="message">{{ 'Votre message' | translate }}</label>
+              <textarea id="message" name="message" rows="6" [(ngModel)]="contactForm.message" required></textarea>
+            </div>
+            
+            <div class="form-check">
+              <input type="checkbox" id="consent" name="consent" [(ngModel)]="contactForm.consent" required>
+              <label for="consent">{{ 'J\'accepte que l\'ANRSI stocke et traite mes données personnelles pour répondre à ma demande.' | translate }}</label>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">{{ 'Envoyer le message' | translate }}</button>
+          </form>
+          
+          <div class="success-message" *ngIf="submitted">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            <p>{{ 'Merci pour votre message ! Nous vous répondrons dans les plus brefs délais.' | translate }}</p>
+          </div>
+        </div>
+        
+        <div class="contact-info">
+          <h2>{{ 'Informations de contact' | translate }}</h2>
+          
+          <div class="info-card">
+            <div class="info-icon">
+              <i class="fas fa-phone"></i>
+            </div>
+            <div class="info-content">
+              <h3>{{ 'Téléphone' | translate }}</h3>
+              <p>{{ 'Bureau principal' | translate }}: +222 45 25 44 21</p>
+              <p>{{ 'Demandes de recherche' | translate }}: +222 45 25 44 22</p>
+            </div>
+          </div>
+          
+          <div class="info-card">
+            <div class="info-icon">
+              <i class="fas fa-envelope"></i>
+            </div>
+            <div class="info-content">
+              <h3>{{ 'E-mail' | translate }}</h3>
+              <p>{{ 'Demandes générales' | translate }}: <a href="mailto:info@anrsi.mr">info@anrsi.mr</a></p>
+              <p>{{ 'Relations médias' | translate }}: <a href="mailto:media@anrsi.mr">media@anrsi.mr</a></p>
+              <p>{{ 'Carrières' | translate }}: <a href="mailto:careers@anrsi.mr">careers@anrsi.mr</a></p>
+            </div>
+          </div>
+          
+          <div class="info-card">
+            <div class="info-icon">
+              <i class="fas fa-map-marker-alt"></i>
+            </div>
+            <div class="info-content">
+              <h3>{{ 'Adresse' | translate }}</h3>
+              <p>{{ 'Siège de l\'ANRSI' | translate }}</p>
+              <p>{{ 'Avenue du Palais Présidentiel' | translate }}</p>
+              <p>{{ 'Nouakchott, Mauritanie' | translate }}</p>
+              <p>{{ 'BP 5000' | translate }}</p>
+            </div>
+          </div>
+          
+          <div class="info-card">
+            <div class="info-icon">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="info-content">
+              <h3>{{ 'Heures d\'ouverture' | translate }}</h3>
+              <p>{{ 'Lundi - Vendredi' | translate }}: 8:00 - 16:00 GMT</p>
+              <p>{{ 'Installations de recherche' | translate }}: 24h/24 ({{ 'Accès sur rendez-vous' | translate }})</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <section class="section departments-section">
+      <h2 class="section-title" data-aos="fade-up">{{ 'Départements' | translate }}</h2>
+      <div class="grid grid-3">
+        <div class="department-card" data-aos="fade-up" data-aos-delay="100">
+          <div class="department-icon">
+            <i class="fas fa-microscope"></i>
+          </div>
+          <h3>{{ 'Recherche & Développement' | translate }}</h3>
+          <p>{{ 'Contactez notre département R&D pour des questions sur les projets de recherche en cours, les méthodologies et les résultats.' | translate }}</p>
+          <p><strong>{{ 'E-mail' | translate }}:</strong> <a href="mailto:research@anrsi.mr">research@anrsi.mr</a></p>
+          <p><strong>{{ 'Téléphone' | translate }}:</strong> +222 45 25 44 23</p>
+        </div>
+        
+        <div class="department-card" data-aos="fade-up" data-aos-delay="200">
+          <div class="department-icon">
+            <i class="fas fa-handshake"></i>
+          </div>
+          <h3>{{ 'Partenariats & Collaborations' | translate }}</h3>
+          <p>{{ 'Pour les partenariats institutionnels, les collaborations de recherche et les opportunités de coentreprise.' | translate }}</p>
+          <p><strong>{{ 'E-mail' | translate }}:</strong> <a href="mailto:partnerships@anrsi.mr">partnerships@anrsi.mr</a></p>
+          <p><strong>{{ 'Téléphone' | translate }}:</strong> +222 45 25 44 24</p>
+        </div>
+        
+        <div class="department-card" data-aos="fade-up" data-aos-delay="300">
+          <div class="department-icon">
+            <i class="fas fa-bullhorn"></i>
+          </div>
+          <h3>{{ 'Médias & Relations Publiques' | translate }}</h3>
+          <p>{{ 'Pour les demandes de presse, les demandes d\'entretien et les ressources médiatiques.' | translate }}</p>
+          <p><strong>{{ 'E-mail' | translate }}:</strong> <a href="mailto:media@anrsi.mr">media@anrsi.mr</a></p>
+          <p><strong>{{ 'Téléphone' | translate }}:</strong> +222 45 25 44 25</p>
+        </div>
+        
+        <div class="department-card" data-aos="fade-up" data-aos-delay="400">
+          <div class="department-icon">
+            <i class="fas fa-coins"></i>
+          </div>
+          <h3>{{ 'Financement & Subventions' | translate }}</h3>
+          <p>{{ 'Informations sur les subventions de recherche, les opportunités de financement et les processus de candidature.' | translate }}</p>
+          <p><strong>{{ 'E-mail' | translate }}:</strong> <a href="mailto:funding@anrsi.mr">funding@anrsi.mr</a></p>
+          <p><strong>{{ 'Téléphone' | translate }}:</strong> +222 45 25 44 26</p>
+        </div>
+        
+        <div class="department-card" data-aos="fade-up" data-aos-delay="500">
+          <div class="department-icon">
+            <i class="fas fa-graduation-cap"></i>
+          </div>
+          <h3>{{ 'Éducation & Sensibilisation' | translate }}</h3>
+          <p>{{ 'Pour les programmes éducatifs, les ateliers et les initiatives d\'engagement public.' | translate }}</p>
+          <p><strong>{{ 'E-mail' | translate }}:</strong> <a href="mailto:education@anrsi.mr">education@anrsi.mr</a></p>
+          <p><strong>{{ 'Téléphone' | translate }}:</strong> +222 45 25 44 27</p>
+        </div>
+        
+        <div class="department-card" data-aos="fade-up" data-aos-delay="600">
+          <div class="department-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <h3>{{ 'Ressources Humaines' | translate }}</h3>
+          <p>{{ 'Pour les opportunités d\'emploi, les stages et les questions liées à la carrière.' | translate }}</p>
+          <p><strong>{{ 'E-mail' | translate }}:</strong> <a href="mailto:careers@anrsi.mr">careers@anrsi.mr</a></p>
+          <p><strong>{{ 'Téléphone' | translate }}:</strong> +222 45 25 44 28</p>
+        </div>
+      </div>
+    </section>
+    
+    <section class="section faq-section">
+      <h2 class="section-title" data-aos="fade-up">{{ 'Questions fréquemment posées' | translate }}</h2>
+      <div class="faq-container">
+        <div class="faq-item" *ngFor="let faq of faqs; let i = index" (click)="toggleFaq(i)" data-aos="fade-up" [attr.data-aos-delay]="i * 100">
+          <div class="faq-question" [class.active]="faq.open">
+            <h3>{{ faq.question }}</h3>
+            <span class="faq-icon">
+              <i class="fas fa-plus" *ngIf="!faq.open"></i>
+              <i class="fas fa-minus" *ngIf="faq.open"></i>
+            </span>
+          </div>
+          <div class="faq-answer" [class.open]="faq.open">
+            <p>{{ faq.answer }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>

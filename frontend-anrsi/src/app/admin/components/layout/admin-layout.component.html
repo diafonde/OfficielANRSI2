@@ -1,0 +1,71 @@
+<div class="admin-layout" [class.sidebar-collapsed]="!sidebarOpen">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <img src="assets/images/logos.png" alt="ANRSI Logo" class="logo">
+      <h3>ANRSI Admin</h3>
+    </div>
+
+    <nav class="sidebar-nav">
+      <ul>
+        <li>
+          <a routerLink="/admin/dashboard" routerLinkActive="active">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/admin/articles" routerLinkActive="active">
+            <i class="fas fa-newspaper"></i>
+            <span>Articles</span>
+          </a>
+        </li>
+        <li *ngIf="isAdmin()">
+          <a routerLink="/admin/users" routerLinkActive="active">
+            <i class="fas fa-users"></i>
+            <span>Users</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar">
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="user-details">
+          <div class="user-name">{{ getUserDisplayName() }}</div>
+          <div class="user-role">{{ getUserRole() }}</div>
+        </div>
+      </div>
+      <button class="logout-btn" (click)="logout()">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Top Bar -->
+    <header class="top-bar">
+      <div class="top-bar-left">
+        <button class="sidebar-toggle" (click)="toggleSidebar()">
+          <i class="fas fa-bars"></i>
+        </button>
+        <h1 class="page-title">Admin Panel</h1>
+      </div>
+      <div class="top-bar-right">
+        <div class="user-menu">
+          <span class="welcome-text">Welcome, {{ getUserDisplayName() }}</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content Area -->
+    <main class="content-area">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

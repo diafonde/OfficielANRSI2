@@ -1,0 +1,63 @@
+<div class="programmes-page">
+  <div class="hero-section">
+    <div class="container">
+      <div class="hero-content" data-aos="fade-up">
+        <h1>{{ 'Programmes' | translate }}</h1>
+        <p class="hero-subtitle">{{ 'Programmes de l\'Agence' | translate }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="programmes-content">
+    <div class="container">
+      <div class="programmes-grid">
+        <div 
+          *ngFor="let programme of programmes; let i = index" 
+          class="programme-card"
+          [style.--programme-color]="programme.color"
+          data-aos="fade-up"
+          [attr.data-aos-delay]="i * 100">
+          
+          <div class="programme-header">
+            <div class="programme-icon">
+              <i [class]="programme.icon"></i>
+            </div>
+            <h3>{{ programme.name }}</h3>
+            <p class="programme-description">{{ programme.description }}</p>
+          </div>
+
+          <div class="programme-objectives">
+            <h4>{{ 'Objectifs' | translate }}:</h4>
+            <ul>
+              <li *ngFor="let objective of programme.objectives">{{ objective }}</li>
+            </ul>
+          </div>
+
+          <div *ngIf="programme.details" class="programme-details">
+            <h4>{{ 'Détails' | translate }}:</h4>
+            <p>{{ programme.details }}</p>
+          </div>
+
+          <div class="programme-footer">
+            <button class="btn btn-primary programme-btn">
+              {{ 'En savoir plus' | translate }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta-section">
+    <div class="container">
+      <div class="cta-content" data-aos="fade-up">
+        <h2>{{ 'Intéressé par nos programmes ?' | translate }}</h2>
+        <p>{{ 'Découvrez comment participer à nos programmes de recherche et d\'innovation' | translate }}</p>
+        <div class="cta-buttons">
+          <button class="btn btn-primary">{{ 'Appels à candidatures' | translate }}</button>
+          <button class="btn btn-secondary">{{ 'Nous contacter' | translate }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

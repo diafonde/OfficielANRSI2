@@ -1,0 +1,215 @@
+<div class="users-page">
+  <div class="page-header">
+    <div class="header-content">
+      <h1>User Management</h1>
+      <p>Manage system users and their permissions</p>
+    </div>
+    <button (click)="showCreateForm()" class="btn btn-primary">
+      <i class="fas fa-plus"></i>
+      Add User
+    </button>
+  </div>
+
+  <!-- Users Table -->
+  <div class="users-table" *ngIf="users$ | async as users">
+    <div class="table-header">
+      <div class="table-row">
+        <div class="col-avatar">Avatar</div>
+        <div class="col-name">Name</div>
+        <div class="col-email">Email</div>
+        <div class="col-role">Role</div>
+        <div class="col-status">Status</div>
+        <div class="col-last-login">Last Login</div>
+        <div class="col-actions">Actions</div>
+      </div>
+    </div>
+
+    <div class="table-body">
+      <div class="table-row user-row" *ngFor="let user of users">
+        <div class="col-avatar">
+          <div class="user-avatar">
+            <i class="fas fa-user"></i>
+          </div>
+        </div>
+        <div class="col-name">
+          <div class="name-content">
+            <h3>{{ user.firstName }} {{ user.lastName }}</h3>
+            <p>@{{ user.username }}</p>
+          </div>
+        </div>
+        <div class="col-email">
+          <span class="email-text">{{ user.email }}</span>
+        </div>
+        <div class="col-role">
+          <span class="role-badge" [class]="'role-' + user.role">
+            {{ getRoleDisplayName(user.role) }}
+          </span>
+        </div>
+        <div class="col-status">
+          <span class="status-badge" [class]="user.isActive ? 'active' : 'inactive'">
+            {{ user.isActive ? 'Active' : 'Inactive' }}
+          </span>
+        </div>
+        <div class="col-last-login">
+          <span class="date-text" *ngIf="user.lastLogin">
+            {{ formatDate(user.lastLogin) }}
+          </span>
+          <span class="date-text" *ngIf="!user.lastLogin">Never</span>
+        </div>
+        <div class="col-actions">
+          <div class="action-buttons">
+            <button (click)="showEditForm(user)" class="btn btn-sm btn-outline">
+              <i class="fas fa-edit"></i>
+              Edit
+            </button>
+            <button (click)="toggleUserStatus(user)" class="btn btn-sm btn-warning">
+              <i class="fas fa-power-off"></i>
+              {{ user.isActive ? 'Deactivate' : 'Activate' }}
+            </button>
+            <button (click)="deleteUser(user.id)" class="btn btn-sm btn-danger">
+              <i class="fas fa-trash"></i>
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-footer" *ngIf="users.length === 0">
+      <div class="empty-state">
+        <i class="fas fa-users"></i>
+        <h3>No users found</h3>
+        <p>Start by adding your first user</p>
+        <button (click)="showCreateForm()" class="btn btn-primary">
+          <i class="fas fa-plus"></i>
+          Add User
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Form Modal -->
+  <div class="modal-overlay" *ngIf="showUserForm" (click)="cancelForm()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ isEditMode ? 'Edit User' : 'Add New User' }}</h2>
+        <button (click)="cancelForm()" class="close-btn">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="user-form">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="username">Username *</label>
+            <input
+              type="text"
+              id="username"
+              formControlName="username"
+              class="form-control"
+              [class.error]="getFieldError('username')"
+              placeholder="Enter username"
+            >
+            <div class="error-message" *ngIf="getFieldError('username')">
+              {{ getFieldError('username') }}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email *</label>
+            <input
+              type="email"
+              id="email"
+              formControlName="email"
+              class="form-control"
+              [class.error]="getFieldError('email')"
+              placeholder="Enter email address"
+            >
+            <div class="error-message" *ngIf="getFieldError('email')">
+              {{ getFieldError('email') }}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="firstName">First Name *</label>
+            <input
+              type="text"
+              id="firstName"
+              formControlName="firstName"
+              class="form-control"
+              [class.error]="getFieldError('firstName')"
+              placeholder="Enter first name"
+            >
+            <div class="error-message" *ngIf="getFieldError('firstName')">
+              {{ getFieldError('firstName') }}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="lastName">Last Name *</label>
+            <input
+              type="text"
+              id="lastName"
+              formControlName="lastName"
+              class="form-control"
+              [class.error]="getFieldError('lastName')"
+              placeholder="Enter last name"
+            >
+            <div class="error-message" *ngIf="getFieldError('lastName')">
+              {{ getFieldError('lastName') }}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="role">Role *</label>
+            <select
+              id="role"
+              formControlName="role"
+              class="form-control"
+              [class.error]="getFieldError('role')"
+            >
+              <option value="">Select a role</option>
+              <option *ngFor="let role of getRoles()" [value]="role">
+                {{ getRoleDisplayName(role) }}
+              </option>
+            </select>
+            <div class="error-message" *ngIf="getFieldError('role')">
+              {{ getFieldError('role') }}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                formControlName="isActive"
+                class="checkbox-input"
+              >
+              <span class="checkbox-text">Active User</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <div class="error-message general-error" *ngIf="errorMessage">
+            {{ errorMessage }}
+          </div>
+          
+          <div class="action-buttons">
+            <button type="button" (click)="cancelForm()" class="btn btn-outline">
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="isLoading"
+            >
+              <span *ngIf="isLoading" class="spinner"></span>
+              {{ isLoading ? 'Saving...' : (isEditMode ? 'Update User' : 'Create User') }}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

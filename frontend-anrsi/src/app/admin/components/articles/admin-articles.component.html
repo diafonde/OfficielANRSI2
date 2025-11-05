@@ -1,0 +1,94 @@
+<div class="articles-page">
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Articles Management</h1>
+      <p>Manage and organize your articles</p>
+    </div>
+    <a routerLink="/admin/articles/new" class="btn btn-primary">
+      <i class="fas fa-plus"></i>
+      New Article
+    </a>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input
+        type="text"
+        placeholder="Search articles..."
+        (input)="onSearchChange($event)"
+        class="search-input"
+      >
+    </div>
+    <div class="category-filter">
+      <select (change)="onCategoryChange($event)" class="filter-select">
+        <option value="">All Categories</option>
+        <option *ngFor="let category of getCategories()" [value]="category">
+          {{ category }}
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Articles Table -->
+  <div class="articles-table" *ngIf="getFilteredArticles() | async as articles">
+    <div class="table-header">
+      <div class="table-row">
+        <div class="col-image">Image</div>
+        <div class="col-title">Title</div>
+        <div class="col-author">Author</div>
+        <div class="col-category">Category</div>
+        <div class="col-date">Date</div>
+        <div class="col-actions">Actions</div>
+      </div>
+    </div>
+
+    <div class="table-body">
+      <div class="table-row article-row" *ngFor="let article of articles">
+        <div class="col-image">
+          <img [src]="article.imageUrl" [alt]="article.title" class="article-thumb">
+        </div>
+        <div class="col-title">
+          <div class="title-content">
+            <h3>{{ article.title }}</h3>
+            <p>{{ article.excerpt }}</p>
+          </div>
+        </div>
+        <div class="col-author">
+          <span class="author-name">{{ article.author }}</span>
+        </div>
+        <div class="col-category">
+          <span class="category-badge">{{ article.category }}</span>
+        </div>
+        <div class="col-date">
+          <span class="date-text">{{ formatDate(article.publishDate) }}</span>
+        </div>
+        <div class="col-actions">
+          <div class="action-buttons">
+            <a [routerLink]="['/admin/articles/edit', article.id]" class="btn btn-sm btn-outline">
+              <i class="fas fa-edit"></i>
+              Edit
+            </a>
+            <button (click)="deleteArticle(article.id)" class="btn btn-sm btn-danger">
+              <i class="fas fa-trash"></i>
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-footer" *ngIf="articles.length === 0">
+      <div class="empty-state">
+        <i class="fas fa-newspaper"></i>
+        <h3>No articles found</h3>
+        <p>Start by creating your first article</p>
+        <a routerLink="/admin/articles/new" class="btn btn-primary">
+          <i class="fas fa-plus"></i>
+          Create Article
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,415 @@
+header {
+  position: fixed;
+  top: 0; /* Header at the very top */
+  left: 0;
+  width: 100%;
+  background: linear-gradient(135deg, #dae4ee 0%, #2b9867 100%);
+  padding: var(--space-6) 0;
+  height: 140px;
+  z-index: 1007; /* Higher than top bar (1006) so dropdown appears on top */
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: visible; /* Allow dropdown to extend beyond header */
+}
+
+header.scrolled {
+  background: linear-gradient(135deg, #d2e0ef 0%, #2b9867 100%);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  padding: var(--space-5) 0;
+  height: 120px;
+}
+
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+  width: 100%;
+  height: 100%;
+  min-height: 100px;
+  overflow: visible !important; /* Allow dropdown to extend beyond container */
+  position: relative;
+}
+
+.logo a {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.logo-text {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: black;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 100%;
+  transform: translateY(8px);
+}
+
+.logo-image {
+  height: 120px;
+  width: auto;
+  margin-right: var(--space-2);
+  display: block;
+  object-fit: contain;
+}
+
+.main-nav ul {
+  display: flex;
+  list-style: none;
+  gap: var(--space-6);
+  position: relative;
+  align-items: center;
+  height: 100%;
+  overflow: visible !important; /* Allow dropdown to extend beyond nav */
+  z-index: 1010;
+}
+
+@media (min-width: 769px) {
+  .main-nav {
+    display: block;
+    overflow: visible !important; /* Allow dropdown to extend beyond nav */
+    z-index: 1010;
+    position: relative;
+    height: auto;
+    max-height: none;
+  }
+  
+  .main-nav li {
+    position: relative;
+  }
+  
+  .mobile-menu-btn {
+    display: none !important;
+  }
+}
+
+.main-nav a {
+  color: black;
+  font-weight: 500;
+  text-decoration: none;
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.main-nav a:hover, .main-nav a.active {
+  color: #051d0e;
+}
+
+.main-nav a::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -4px;
+  left: 0;
+  background-color: #03150a;
+  transition: width 0.3s ease;
+}
+
+.main-nav a:hover::after, .main-nav a.active::after {
+  width: 100%;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  height: 100%;
+}
+
+.ministre-logo {
+  height: 60px;
+  width: auto;
+  object-fit: contain;
+  margin-right: var(--space-2);
+}
+
+.search-btn, .language-btn {
+  background: transparent;
+  border: none;
+  color: black;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  transition: color 0.2s ease;
+}
+
+.search-btn:hover, .language-btn:hover {
+  color: #4ade80;
+}
+
+.language-btn {
+  font-weight: 500;
+}
+
+.mobile-menu-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 24px;
+  height: 18px;
+  padding: 0;
+  z-index: 1004;
+  position: relative;
+}
+
+.mobile-menu-btn span {
+  display: block;
+  height: 2px;
+  width: 100%;
+  background-color: black;
+  transition: all 0.3s ease;
+}
+
+.mobile-menu-btn span.open:nth-child(1) {
+  transform: translateY(8px) rotate(45deg);
+}
+
+.mobile-menu-btn span.open:nth-child(2) {
+  opacity: 0;
+}
+
+.mobile-menu-btn span.open:nth-child(3) {
+  transform: translateY(-8px) rotate(-45deg);
+}
+
+@media (max-width: 768px) {
+  header {
+    top: 0 !important; /* Header stays at top on mobile */
+    height: 100px;
+  }
+  
+  header.scrolled {
+    height: 90px;
+  }
+  
+  .header-container {
+    padding: 0 var(--space-3);
+    flex-wrap: nowrap;
+    justify-content: space-between;
+  }
+
+  .logo {
+    flex-shrink: 0;
+    transform: translateY(-8px); /* Move logos up on mobile */
+  }
+  
+  .logo-image {
+    height: 70px;
+  }
+  
+  .ministre-logo {
+    height: 45px;
+    transform: translateY(-8px); /* Move ministre logo up on mobile */
+  }
+  
+  .main-nav {
+    position: fixed;
+    top: 180px; /* Adjusted to account for top bar height on mobile */
+    left: 0;
+    width: 100%;
+    background-color: rgba(8, 53, 21, 0.98);
+    backdrop-filter: blur(10px);
+    padding: var(--space-4);
+    transform: translateY(-100%);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease-in-out;
+    z-index: 1002;
+    display: block;
+  }
+  
+  .main-nav.active {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  .main-nav ul {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+    margin: 0;
+    padding: 0;
+  }
+  
+  .main-nav li {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .main-nav a {
+    display: block;
+    padding: var(--space-2) var(--space-4);
+    color: white !important;
+    font-size: 1.1rem;
+  }
+  
+  .mobile-menu-btn {
+    display: flex;
+    z-index: 1004;
+    transform: translateY(-8px); /* Move button up on mobile */
+  }
+  
+  header.mobile-open {
+    background: linear-gradient(135deg, #dae4ee 0%, #2b9867 100%);
+  }
+  
+  .actions {
+    gap: var(--space-2);
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  header {
+    top: 0 !important; /* Header stays at top on small mobile */
+    height: 85px;
+  }
+  
+  header.scrolled {
+    height: 80px;
+  }
+  
+  .header-container {
+    padding: 0 var(--space-2);
+    flex-wrap: nowrap;
+    justify-content: space-between;
+  }
+  
+  .logo {
+    flex-shrink: 0;
+    transform: translateY(-8px); /* Move logos up on small mobile */
+  }
+  
+  .logo-image {
+    height: 60px;
+  }
+  
+  .ministre-logo {
+    height: 35px;
+    transform: translateY(-8px); /* Move ministre logo up on small mobile */
+  }
+  
+  .main-nav {
+    top: 160px; /* Adjusted to account for top bar height on small mobile */
+    padding: var(--space-3);
+  }
+  
+  .main-nav ul {
+    gap: var(--space-3);
+  }
+  
+  .main-nav a {
+    padding: var(--space-2) var(--space-3);
+    font-size: 1rem;
+  }
+  
+  .mobile-menu-btn {
+    transform: translateY(-8px); /* Move button up on small mobile */
+  }
+  
+  .actions {
+    gap: var(--space-1);
+    flex-shrink: 0;
+  }
+}
+
+.dropdown {
+  position: relative;
+  z-index: 1010;
+}
+
+.dropdown.open > a {
+  background: rgba(93, 193, 133, 0.1);
+  border-radius: 4px;
+}
+
+.dropdown .arrow {
+  transition: transform 0.2s ease;
+  margin-left: 4px;
+}
+
+.dropdown.open .arrow {
+  transform: rotate(180deg);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 5px); /* Minimal offset from the button */
+  left: 0;
+  background: #b9d0c1; /* Bright green background for maximum visibility */
+  min-width: 220px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 1010; /* Higher than top-bar (1006) to appear on top */
+  flex-direction: column;
+  padding: 12px 0;
+  border-radius: 12px;
+  border: 2px solid #083515; /* Dark green border for contrast */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: all 0.25s ease;
+  backdrop-filter: blur(10px);
+}
+
+.dropdown.open .dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+
+
+.dropdown-menu li {
+  width: 100%;
+}
+
+.dropdown-menu a {
+  color: #083515; /* Dark green text for contrast with bright background */
+  padding: 12px 20px;
+  display: block;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  font-size: 14px;
+  border-radius: 0;
+}
+
+.dropdown-menu a:hover {
+  background: rgba(8, 53, 21, 0.2);
+  color: #ffffff;
+  transform: translateX(4px);
+}
+
+.language-dropdown button {
+  padding: 0.5rem 1.2rem;
+  border: none;
+  background: #4ade80;
+  color: #083515;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: background 0.2s;
+}
+
+.language-dropdown button:hover {
+  background: rgba(74, 222, 128, 0.8);
+}

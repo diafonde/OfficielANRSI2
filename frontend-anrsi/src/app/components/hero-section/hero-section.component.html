@@ -1,0 +1,35 @@
+<div class="hero-section">
+  <div class="slideshow-container">
+    <div class="slide" 
+         *ngFor="let slide of slides; let i = index" 
+         [class.active]="currentSlide === i"
+         [style.background-image]="'url(' + slide.url + ')'"
+         (click)="onSlideClick(slide, i)">
+      <div class="hero-overlay"></div>
+      <div class="slide-content">
+        <h1 class="no-wrap">{{slide.title}}</h1>
+        <p>{{slide.description}}</p>
+        <div class="slide-action" *ngIf="slide.actionText">
+          <button class="action-btn" (click)="onSlideClick(slide, i); $event.stopPropagation()">{{slide.actionText}}</button>
+        </div>
+      </div>
+    </div>
+      
+      <div class="slide-controls">
+         <button class="prev-btn" (click)="prevSlide()">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="next-btn" (click)="nextSlide()">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+
+      <div class="slide-indicators">
+        <span *ngFor="let slide of slides; let i = index" 
+              class="indicator"
+              [class.active]="currentSlide === i"
+              (click)="goToSlide(i)">
+        </span>
+      </div>
+    </div>
+  </div>

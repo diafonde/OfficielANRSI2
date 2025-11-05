@@ -1,0 +1,22 @@
+<div class="app-container">
+  <app-header></app-header>
+  <app-top-bar></app-top-bar>
+  <app-breadcrumbs></app-breadcrumbs>
+  <main>
+    <router-outlet></router-outlet>
+  </main>
+  
+  <div class="hero-statistics" data-aos="fade-up" style="background: linear-gradient(135deg, #083515 0%, #0a3d62 100%); padding: 3rem 0;">
+    <div class="container">
+      <div class="statistics-grid">
+        <app-animated-counter [value]="500" suffix="+" label="Projets de recherche"></app-animated-counter>
+        <app-animated-counter [value]="50" suffix="+" label="Institutions partenaires"></app-animated-counter>
+        <app-animated-counter [value]="2000" suffix="+" label="Articles publiés"></app-animated-counter>
+        <app-animated-counter [value]="250" suffix="M MRU" label="Financement de la recherche"></app-animated-counter>
+      </div>
+    </div>
+  </div>
+  
+  <app-footer></app-footer>
+  <app-back-to-top></app-back-to-top>
+</div>

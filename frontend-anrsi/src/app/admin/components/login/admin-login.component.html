@@ -1,0 +1,60 @@
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <img src="assets/images/logos.png" alt="ANRSI Logo" class="logo">
+      <h2>Admin Login</h2>
+      <p>Sign in to access the admin panel</p>
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input
+          type="text"
+          id="username"
+          formControlName="username"
+          class="form-control"
+          [class.error]="getFieldError('username')"
+          placeholder="Enter your username"
+        >
+        <div class="error-message" *ngIf="getFieldError('username')">
+          {{ getFieldError('username') }}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          formControlName="password"
+          class="form-control"
+          [class.error]="getFieldError('password')"
+          placeholder="Enter your password"
+        >
+        <div class="error-message" *ngIf="getFieldError('password')">
+          {{ getFieldError('password') }}
+        </div>
+      </div>
+
+      <div class="error-message general-error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="isLoading"
+      >
+        <span *ngIf="isLoading" class="spinner"></span>
+        {{ isLoading ? 'Signing in...' : 'Sign In' }}
+      </button>
+    </form>
+
+    <div class="login-footer">
+      <p><strong>Demo Credentials:</strong></p>
+      <p>Username: <code>admin</code> | Password: <code>password</code></p>
+      <p>Username: <code>editor</code> | Password: <code>password</code></p>
+    </div>
+  </div>
+</div>

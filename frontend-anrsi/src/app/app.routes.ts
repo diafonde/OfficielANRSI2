@@ -1,0 +1,51 @@
+import { Routes } from '@angular/router';
+import { HomeComponent } from './pages/home/home.component';
+import { ArticleDetailComponent } from './pages/article-detail/article-detail.component';
+import { ResearchCategoriesComponent } from './pages/research-categories/research-categories.component';
+import { AboutComponent } from './pages/about/about.component';
+import { ContactComponent } from './pages/contact/contact.component';
+import { VideosComponent } from './pages/videos/videos.component';
+import { ProgrammesComponent } from './pages/programmes/programmes.component';
+import { FinancementComponent } from './pages/financement/financement.component';
+import { CooperationComponent } from './pages/cooperation/cooperation.component';
+import { MissionsComponent } from './pages/missions/missions.component';
+import { ObjectivesComponent } from './pages/objectives/objectives.component';
+import { StrategicVisionComponent } from './pages/strategic-vision/strategic-vision.component';
+import { OrganigrammeComponent } from './pages/organigramme/organigramme.component';
+import { ArticlesComponent } from './pages/articles/articles.component';
+import { Ai4agriComponent } from './pages/ai4agri/ai4agri.component';
+import { ExpertAnrsiComponent } from './pages/expert-anrsi/expert-anrsi.component';
+import { AppelsCandidaturesComponent } from './pages/appels-candidatures/appels-candidatures.component';
+import { PlateformesComponent } from './pages/plateformes/plateformes.component';
+import { ZoneHumideComponent } from './pages/zone-humide/zone-humide.component';
+import { AgenceMediasComponent } from './pages/agence-medias/agence-medias.component';
+import { ConseilAdministrationComponent } from './pages/conseil-administration/conseil-administration.component';
+import { PrioritesRecherche2026Component } from './pages/priorites-recherche-2026/priorites-recherche-2026.component';
+import { adminRoutes } from './admin/admin.routes';
+
+export const routes: Routes = [
+  { path: '', component: HomeComponent },
+  { path: 'article/:id', component: ArticleDetailComponent },
+  { path: 'categories', component: ResearchCategoriesComponent },
+  { path: 'about', component: AboutComponent },
+  { path: 'contact', component: ContactComponent },
+  { path: 'videos', component: VideosComponent },
+  { path: 'programs', component: ProgrammesComponent },
+  { path: 'funding', component: FinancementComponent },
+  { path: 'cooperation', component: CooperationComponent },
+  { path: 'missions', component: MissionsComponent },
+  { path: 'objectives', component: ObjectivesComponent },
+  { path: 'strategic-vision', component: StrategicVisionComponent },
+  { path: 'organigramme', component: OrganigrammeComponent },
+  { path: 'articles', component: ArticlesComponent },
+  { path: 'ai4agri', component: Ai4agriComponent },
+  { path: 'expert-anrsi', component: ExpertAnrsiComponent },
+  { path: 'appels-candidatures', component: AppelsCandidaturesComponent },
+  { path: 'plateformes', component: PlateformesComponent },
+  { path: 'zone-humide', component: ZoneHumideComponent },
+  { path: 'agence-medias', component: AgenceMediasComponent },
+  { path: 'conseil-administration', component: ConseilAdministrationComponent },
+  { path: 'priorites-recherche-2026', component: PrioritesRecherche2026Component },
+  ...adminRoutes,
+  { path: '**', redirectTo: '' }
+];

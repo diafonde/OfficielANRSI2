@@ -1,0 +1,181 @@
+<div class="article-form-page">
+  <div class="page-header">
+    <div class="header-content">
+      <h1>{{ isEditMode ? 'Edit Article' : 'Create New Article' }}</h1>
+      <p>{{ isEditMode ? 'Update article information' : 'Add a new article to your site' }}</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" (click)="onCancel()" class="btn btn-outline">
+        <i class="fas fa-times"></i>
+        Cancel
+      </button>
+    </div>
+  </div>
+
+  <form [formGroup]="articleForm" (ngSubmit)="onSubmit()" class="article-form">
+    <div class="form-grid">
+      <!-- Basic Information -->
+      <div class="form-section">
+        <h2>Basic Information</h2>
+        
+        <div class="form-group">
+          <label for="title">Title *</label>
+          <input
+            type="text"
+            id="title"
+            formControlName="title"
+            class="form-control"
+            [class.error]="getFieldError('title')"
+            placeholder="Enter article title"
+          >
+          <div class="error-message" *ngIf="getFieldError('title')">
+            {{ getFieldError('title') }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="excerpt">Excerpt *</label>
+          <textarea
+            id="excerpt"
+            formControlName="excerpt"
+            class="form-control"
+            [class.error]="getFieldError('excerpt')"
+            placeholder="Brief description of the article"
+            rows="3"
+          ></textarea>
+          <div class="error-message" *ngIf="getFieldError('excerpt')">
+            {{ getFieldError('excerpt') }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="author">Author *</label>
+          <input
+            type="text"
+            id="author"
+            formControlName="author"
+            class="form-control"
+            [class.error]="getFieldError('author')"
+            placeholder="Author name"
+          >
+          <div class="error-message" *ngIf="getFieldError('author')">
+            {{ getFieldError('author') }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="category">Category *</label>
+          <select
+            id="category"
+            formControlName="category"
+            class="form-control"
+            [class.error]="getFieldError('category')"
+          >
+            <option value="">Select a category</option>
+            <option *ngFor="let category of getCategories()" [value]="category">
+              {{ category }}
+            </option>
+          </select>
+          <div class="error-message" *ngIf="getFieldError('category')">
+            {{ getFieldError('category') }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="form-section">
+        <h2>Content</h2>
+        
+        <div class="form-group">
+          <label for="content">Content *</label>
+          <textarea
+            id="content"
+            formControlName="content"
+            class="form-control content-textarea"
+            [class.error]="getFieldError('content')"
+            placeholder="Write your article content here..."
+            rows="15"
+          ></textarea>
+          <div class="error-message" *ngIf="getFieldError('content')">
+            {{ getFieldError('content') }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Media & Settings -->
+      <div class="form-section">
+        <h2>Media & Settings</h2>
+        
+        <div class="form-group">
+          <label for="imageUrl">Featured Image URL *</label>
+          <input
+            type="url"
+            id="imageUrl"
+            formControlName="imageUrl"
+            class="form-control"
+            [class.error]="getFieldError('imageUrl')"
+            placeholder="https://example.com/image.jpg"
+          >
+          <div class="error-message" *ngIf="getFieldError('imageUrl')">
+            {{ getFieldError('imageUrl') }}
+          </div>
+          <div class="form-help">
+            Enter the URL of the featured image for this article
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="publishDate">Publish Date *</label>
+          <input
+            type="date"
+            id="publishDate"
+            formControlName="publishDate"
+            class="form-control"
+            [class.error]="getFieldError('publishDate')"
+          >
+          <div class="error-message" *ngIf="getFieldError('publishDate')">
+            {{ getFieldError('publishDate') }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="tags">Tags *</label>
+          <input
+            type="text"
+            id="tags"
+            formControlName="tags"
+            class="form-control"
+            [class.error]="getFieldError('tags')"
+            placeholder="tag1, tag2, tag3"
+          >
+          <div class="error-message" *ngIf="getFieldError('tags')">
+            {{ getFieldError('tags') }}
+          </div>
+          <div class="form-help">
+            Separate multiple tags with commas
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <div class="error-message general-error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+      
+      <div class="action-buttons">
+        <button type="button" (click)="onCancel()" class="btn btn-outline">
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="isLoading"
+        >
+          <span *ngIf="isLoading" class="spinner"></span>
+          {{ isLoading ? 'Saving...' : (isEditMode ? 'Update Article' : 'Create Article') }}
+        </button>
+      </div>
+    </div>
+  </form>
+</div>

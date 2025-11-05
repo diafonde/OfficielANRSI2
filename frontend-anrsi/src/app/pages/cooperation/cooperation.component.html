@@ -1,0 +1,116 @@
+<div class="cooperation-page">
+  <div class="hero-section">
+    <div class="container">
+      <div class="hero-content" data-aos="fade-up">
+        <h1>{{ cooperationInfo.title }}</h1>
+        <p class="hero-subtitle">{{ cooperationInfo.description }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="cooperation-content">
+    <div class="container">
+      
+      <!-- Partnerships Grid -->
+      <div class="partnerships-section">
+        <h2 data-aos="fade-up">{{ 'Nos Partenariats' | translate }}</h2>
+        <div class="partnerships-grid">
+          <div 
+            *ngFor="let partnership of partnerships; let i = index" 
+            class="partnership-card"
+            [style.--partnership-color]="partnership.color"
+            data-aos="fade-up"
+            [attr.data-aos-delay]="i * 100">
+            
+            <div class="partnership-header">
+              <div class="country-info">
+                <span class="country-flag">{{ partnership.flag }}</span>
+                <span class="country-name">{{ partnership.country }}</span>
+              </div>
+              <div class="partnership-type">{{ partnership.type }}</div>
+            </div>
+
+            <div class="partnership-icon">
+              <i [class]="partnership.icon"></i>
+            </div>
+
+            <div class="partnership-content">
+              <h3>{{ partnership.title }}</h3>
+              <p class="partnership-description">{{ partnership.description }}</p>
+              
+              <div class="partnership-objectives">
+                <h4>{{ 'Objectifs' | translate }}:</h4>
+                <ul>
+                  <li *ngFor="let objective of partnership.objectives">{{ objective }}</li>
+                </ul>
+              </div>
+
+              <div *ngIf="partnership.details" class="partnership-details">
+                <h4>{{ 'Détails' | translate }}:</h4>
+                <p>{{ partnership.details }}</p>
+              </div>
+
+              <div class="partnership-status">
+                <span class="status-badge" [class.active]="partnership.status === 'Actif'">
+                  {{ partnership.status }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Benefits Section -->
+      <div class="benefits-section">
+        <div class="benefits-content">
+          <div class="benefits-info" data-aos="fade-right">
+            <h2>{{ 'Avantages de la coopération' | translate }}</h2>
+            <p>{{ 'Nos partenariats internationaux et locaux apportent de nombreux avantages' | translate }}:</p>
+            
+            <ul class="benefits-list">
+              <li *ngFor="let benefit of cooperationInfo.benefits">
+                <i class="fas fa-check-circle"></i>
+                {{ benefit }}
+              </li>
+            </ul>
+          </div>
+          
+          <div class="benefits-visual" data-aos="fade-left">
+            <div class="world-map">
+              <div class="map-point" style="top: 20%; left: 15%;" data-country="Mauritanie">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>Mauritanie</span>
+              </div>
+              <div class="map-point" style="top: 25%; left: 10%;" data-country="Sénégal">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>Sénégal</span>
+              </div>
+              <div class="map-point" style="top: 15%; left: 25%;" data-country="Maroc">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>Maroc</span>
+              </div>
+              <div class="map-point" style="top: 10%; left: 30%;" data-country="Tunisie">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>Tunisie</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Call to Action -->
+      <div class="cta-section">
+        <div class="cta-content" data-aos="fade-up">
+          <h2>{{ 'Intéressé par un partenariat ?' | translate }}</h2>
+          <p>{{ 'Rejoignez notre réseau de partenaires et développez des projets innovants avec nous' | translate }}</p>
+          <div class="cta-buttons">
+            <button class="btn btn-primary">{{ 'Proposer un partenariat' | translate }}</button>
+            <button class="btn btn-secondary">{{ 'Nos programmes' | translate }}</button>
+            <button class="btn btn-accent">{{ 'Nous contacter' | translate }}</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

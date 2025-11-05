@@ -1,0 +1,126 @@
+<div class="dashboard">
+  <div class="dashboard-header">
+    <h1>Dashboard</h1>
+    <p>Welcome back, {{ currentUser?.firstName }}! Here's what's happening with your content.</p>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fas fa-newspaper"></i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ stats.totalArticles }}</h3>
+        <p>Total Articles</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ stats.publishedArticles }}</h3>
+        <p>Published</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fas fa-clock"></i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ stats.draftArticles }}</h3>
+        <p>Drafts</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fas fa-calendar-week"></i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ stats.recentArticles }}</h3>
+        <p>This Week</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="quick-actions">
+    <h2>Quick Actions</h2>
+    <div class="actions-grid">
+      <a routerLink="/admin/articles/new" class="action-card">
+        <div class="action-icon">
+          <i class="fas fa-plus"></i>
+        </div>
+        <div class="action-content">
+          <h3>New Article</h3>
+          <p>Create a new article</p>
+        </div>
+      </a>
+
+      <a routerLink="/admin/articles" class="action-card">
+        <div class="action-icon">
+          <i class="fas fa-edit"></i>
+        </div>
+        <div class="action-content">
+          <h3>Manage Articles</h3>
+          <p>Edit existing articles</p>
+        </div>
+      </a>
+
+      <a routerLink="/admin/users" class="action-card" *ngIf="currentUser?.role === 'admin'">
+        <div class="action-icon">
+          <i class="fas fa-users"></i>
+        </div>
+        <div class="action-content">
+          <h3>Manage Users</h3>
+          <p>User administration</p>
+        </div>
+      </a>
+
+      <a href="/" target="_blank" class="action-card">
+        <div class="action-icon">
+          <i class="fas fa-external-link-alt"></i>
+        </div>
+        <div class="action-content">
+          <h3>View Site</h3>
+          <p>Preview public website</p>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Recent Articles -->
+  <div class="recent-articles">
+    <div class="section-header">
+      <h2>Recent Articles</h2>
+      <a routerLink="/admin/articles" class="view-all-link">View All</a>
+    </div>
+
+    <div class="articles-list" *ngIf="getRecentArticles() | async as articles">
+      <div class="article-item" *ngFor="let article of articles.slice(0, 5)">
+        <div class="article-image">
+          <img [src]="article.imageUrl" [alt]="article.title">
+        </div>
+        <div class="article-content">
+          <h3>{{ article.title }}</h3>
+          <p>{{ article.excerpt }}</p>
+          <div class="article-meta">
+            <span class="author">{{ article.author }}</span>
+            <span class="date">{{ formatDate(article.publishDate) }}</span>
+            <span class="category">{{ article.category }}</span>
+          </div>
+        </div>
+        <div class="article-actions">
+          <a [routerLink]="['/admin/articles/edit', article.id]" class="btn btn-sm btn-outline">
+            <i class="fas fa-edit"></i>
+            Edit
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

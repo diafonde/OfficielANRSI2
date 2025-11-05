@@ -1,0 +1,759 @@
+.top-bar {
+  background: linear-gradient(135deg, #083515 0%, #0a3d62 100%);
+  color: white;
+  padding: 0.3rem 0;
+  font-size: 0.8rem;
+  position: fixed;
+  top: 140px; /* Position flush with header bottom */
+  left: 0;
+  width: 100%;
+  z-index: 1006; /* Lower than header (1007) so dropdown can appear on top */
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-height: 32px;
+  margin: 0;
+  pointer-events: auto; /* Ensure clickability */
+  transform: translateZ(0); /* Create new stacking context */
+}
+
+.top-bar.scrolled {
+  background: rgba(8, 53, 21, 0.95);
+  backdrop-filter: blur(10px);
+  padding: 0.2rem 0;
+  top: 120px; /* Adjust position when header is scrolled */
+}
+
+.top-bar-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  min-height: 32px;
+  flex-wrap: nowrap;
+}
+
+.contact-info {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: rgba(255, 255, 255, 0.9);
+  transition: color 0.2s ease;
+  white-space: nowrap;
+}
+
+.contact-item:hover {
+  color: #4ade80;
+}
+
+.contact-item i {
+  font-size: 0.75rem;
+  color: #4ade80;
+}
+
+.quick-links {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.quick-link {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  position: relative;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  pointer-events: auto; /* Ensure clickability */
+  cursor: pointer;
+}
+
+.quick-link:hover {
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+}
+
+.quick-link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -2px;
+  left: 50%;
+  background: #4ade80;
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.quick-link:hover::after {
+  width: 100%;
+}
+
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.social-links {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  font-size: 0.75rem;
+}
+
+.social-link:hover {
+  background: #4ade80;
+  color: #083515;
+  transform: translateY(-2px);
+}
+
+.language-switcher {
+  display: flex;
+  gap: 0.25rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 0.125rem;
+}
+
+/* New Dropdown Language Switcher */
+.language-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.lang-dropdown-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  min-width: 120px;
+  justify-content: space-between;
+}
+
+.lang-dropdown-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.lang-dropdown-btn.active {
+  background: rgba(74, 222, 128, 0.2);
+  border-color: #4ade80;
+}
+
+.lang-flag {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.lang-text {
+  flex: 1;
+  text-align: left;
+}
+
+.lang-dropdown-btn i {
+  font-size: 0.7rem;
+  transition: transform 0.2s ease;
+}
+
+.lang-dropdown-btn i.rotated {
+  transform: rotate(180deg);
+}
+
+.lang-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: rgba(8, 53, 21, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  min-width: 160px;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.2s ease;
+  margin-top: 0.25rem;
+}
+
+.lang-dropdown-menu.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.lang-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.lang-option:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.lang-option.active {
+  background: rgba(74, 222, 128, 0.2);
+  color: #4ade80;
+}
+
+.lang-option .lang-flag {
+  font-size: 1.1rem;
+  width: 20px;
+  text-align: center;
+}
+
+.lang-option .lang-code {
+  font-weight: 600;
+  color: #4ade80;
+  min-width: 25px;
+}
+
+.lang-option .lang-name {
+  flex: 1;
+  color: inherit;
+}
+
+.lang-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  min-width: 32px;
+  pointer-events: auto; /* Ensure clickability */
+}
+
+.lang-btn.active {
+  background: #4ade80;
+  color: #083515;
+}
+
+.lang-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+/* Hide scrollbar for quick-links */
+.quick-links::-webkit-scrollbar {
+  display: none;
+}
+
+/* Layout visibility controls */
+.desktop-layout {
+  display: flex;
+  width: 100%;
+}
+
+.mobile-layout {
+  display: none;
+  width: 100%;
+  flex-direction: column;
+  position: relative;
+}
+
+
+/* Mobile responsiveness */
+@media (max-width: 1024px) {
+  .quick-links {
+    gap: 0.3rem;
+  }
+  
+  .quick-link {
+    font-size: 0.75rem;
+    padding: 0.15rem 0.3rem;
+  }
+  
+  .contact-info {
+    gap: 0.5rem;
+  }
+  
+  .contact-item {
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .desktop-layout {
+    display: none !important;
+  }
+  
+  .mobile-layout {
+    display: flex !important;
+    flex-direction: column;
+    position: relative;
+    gap: 0;
+  }
+  
+  .top-bar {
+    padding: 0.5rem 0;
+    min-height: auto;
+    top: 100px !important; /* Mobile header height (100px) */
+  }
+  
+  .top-bar.scrolled {
+    padding: 0.3rem 0;
+    top: 90px !important; /* Scrolled mobile header height (90px) */
+  }
+  
+  .top-bar-container {
+    padding: 0 0.75rem;
+    flex-direction: column;
+    gap: 0.5rem;
+    position: relative;
+  }
+  
+  .mobile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    position: relative;
+    flex: 0 0 auto;
+    overflow: visible;
+    min-height: 0;
+  }
+  
+  .mobile-contact {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex: 1;
+    flex-shrink: 1;
+    min-width: 0; /* Allow flex item to shrink below its content size */
+    overflow: hidden;
+  }
+  
+  .mobile-contact .contact-item {
+    font-size: 0.7rem;
+    gap: 0.2rem;
+  }
+  
+  .mobile-contact .contact-item i {
+    font-size: 0.65rem;
+  }
+  
+  .mobile-actions {
+    display: flex;
+    align-items: center;
+    position: relative;
+    gap: 0.5rem;
+    z-index: 1011; /* Ensure clickability above everything */
+    pointer-events: auto;
+    flex-shrink: 0; /* Prevent shrinking */
+    min-width: fit-content;
+  }
+  
+  .mobile-actions .language-switcher {
+    padding: 0.1rem;
+  }
+  
+  .mobile-actions .lang-btn {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.7rem;
+    min-width: 28px;
+  }
+  
+  /* Mobile dropdown styles */
+  .lang-dropdown-btn.mobile {
+    min-width: 100px;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.75rem;
+    pointer-events: auto !important;
+    z-index: 1004;
+    position: relative;
+  }
+  
+  .lang-dropdown-btn.mobile .lang-text {
+    display: none; /* Hide full language name on mobile */
+  }
+  
+  .lang-dropdown-menu.mobile {
+    right: 0;
+    min-width: 140px;
+  }
+  
+  .lang-option {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.8rem;
+    pointer-events: auto !important;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+  }
+  
+  .lang-option:hover {
+    background: rgba(74, 222, 128, 0.1);
+    border-color: rgba(74, 222, 128, 0.3);
+  }
+  
+  .lang-option .lang-name {
+    display: none; /* Hide full language name on mobile */
+  }
+  
+  .mobile-quick-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.3s ease, visibility 0s linear 0.3s;
+    background: rgba(8, 53, 21, 0.95);
+    border-radius: 6px;
+    margin-top: 0.5rem;
+    width: 100%;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    flex: 0 1 auto;
+    z-index: 1006;
+    position: relative;
+  }
+  
+  .mobile-quick-links.expanded {
+    max-height: 400px;
+    padding: 0.5rem;
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    border: 1px solid rgba(74, 222, 128, 0.3);
+    transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.3s ease, visibility 0s;
+  }
+  
+  .mobile-quick-link {
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    padding: 0.4rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    pointer-events: auto; /* Ensure clickability */
+    cursor: pointer;
+    display: block;
+    width: 100%;
+    text-align: left;
+  }
+  
+  .mobile-quick-link:hover {
+    background: rgba(74, 222, 128, 0.1);
+    color: #4ade80;
+    border-color: rgba(74, 222, 128, 0.3);
+  }
+  
+  .mobile-menu-toggle {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    padding: 0.4rem;
+    cursor: pointer;
+    display: flex !important; /* Force display */
+    flex-direction: column;
+    gap: 0.2rem;
+    transition: all 0.3s ease;
+    pointer-events: auto !important; /* Ensure clickability */
+    z-index: 1010 !important; /* Higher z-index for mobile toggle */
+    flex-shrink: 0;
+    min-width: 40px;
+    min-height: 40px;
+    justify-content: center;
+    align-items: center;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    position: relative;
+    transform: translateZ(0); /* Force hardware acceleration */
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  .mobile-menu-toggle::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    right: -5px;
+    bottom: -5px;
+    background: transparent;
+    z-index: -1;
+  }
+  
+  .mobile-menu-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  
+  .mobile-menu-toggle.active {
+    background: #4ade80;
+  }
+  
+  .hamburger-line {
+    width: 18px;
+    height: 2px;
+    background: white;
+    transition: all 0.3s ease;
+    border-radius: 1px;
+    pointer-events: none; /* Let clicks pass through to button */
+    flex-shrink: 0;
+  }
+  
+  .mobile-menu-toggle.active .hamburger-line:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+  }
+  
+  .mobile-menu-toggle.active .hamburger-line:nth-child(2) {
+    opacity: 0;
+  }
+  
+  .mobile-menu-toggle.active .hamburger-line:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -6px);
+  }
+}
+
+@media (max-width: 500px) {
+  .mobile-menu-toggle {
+    z-index: 1010 !important;
+    pointer-events: auto !important;
+    position: relative;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  .mobile-actions {
+    z-index: 1011 !important;
+    pointer-events: auto !important;
+    display: flex !important;
+    align-items: center;
+  }
+  
+  .mobile-header {
+    overflow: visible !important;
+  }
+  
+  .mobile-contact {
+    overflow: hidden;
+    flex-shrink: 1;
+  }
+}
+
+@media (max-width: 420px) {
+  .mobile-menu-toggle {
+    z-index: 1010 !important;
+    pointer-events: auto !important;
+    position: relative;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+  }
+  
+  .mobile-actions {
+    z-index: 1011 !important;
+    pointer-events: auto !important;
+    flex-shrink: 0 !important;
+    min-width: fit-content !important;
+    display: flex !important;
+    align-items: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .top-bar {
+    top: 85px !important; /* Small mobile header height (85px) */
+  }
+  
+  .top-bar.scrolled {
+    top: 80px !important; /* Scrolled small mobile header height (80px) */
+  }
+  
+  .top-bar-container {
+    padding: 0 0.5rem;
+  }
+  
+  .mobile-contact {
+    gap: 0.5rem;
+  }
+  
+  .mobile-contact .contact-item {
+    font-size: 0.65rem;
+  }
+  
+  .mobile-contact .contact-item span {
+    display: none; /* Hide text on very small screens, keep icons */
+  }
+  
+  .mobile-actions {
+    gap: 0.3rem;
+    z-index: 1011 !important; /* Ensure clickability above everything */
+    pointer-events: auto !important;
+    display: flex !important;
+    align-items: center;
+  }
+  
+  .mobile-actions .lang-btn {
+    padding: 0.15rem 0.3rem;
+    font-size: 0.65rem;
+    min-width: 24px;
+  }
+  
+  /* Small mobile dropdown styles */
+  .lang-dropdown-btn.mobile {
+    min-width: 80px;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.7rem;
+  }
+  
+  .lang-dropdown-menu.mobile {
+    min-width: 120px;
+  }
+  
+  .lang-option {
+    padding: 0.5rem 0.6rem;
+    font-size: 0.75rem;
+  }
+  
+  .mobile-quick-link {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.6rem;
+  }
+  
+  .mobile-menu-toggle {
+    display: flex !important;
+    padding: 0.3rem;
+    min-width: 35px;
+    min-height: 35px;
+    z-index: 1010 !important; /* Ensure clickability */
+    pointer-events: auto !important;
+    position: relative;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  .hamburger-line {
+    width: 16px;
+    height: 2px;
+  }
+}
+
+@media (max-width: 360px) {
+  .top-bar-container {
+    padding: 0 0.25rem;
+  }
+  
+  .mobile-contact {
+    gap: 0.25rem;
+  }
+  
+  .mobile-contact .contact-item {
+    font-size: 0.6rem;
+  }
+  
+  .mobile-actions {
+    gap: 0.25rem;
+    z-index: 1011 !important; /* Ensure clickability above everything */
+    pointer-events: auto !important;
+    display: flex !important;
+    align-items: center;
+  }
+  
+  .lang-dropdown-btn.mobile {
+    min-width: 70px;
+    padding: 0.25rem 0.4rem;
+    font-size: 0.65rem;
+  }
+  
+  .mobile-menu-toggle {
+    display: flex !important;
+    padding: 0.25rem;
+    min-width: 32px;
+    min-height: 32px;
+    z-index: 1010 !important; /* Ensure clickability */
+    pointer-events: auto !important;
+    position: relative;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  .hamburger-line {
+    width: 14px;
+    height: 1.5px;
+  }
+  
+  .mobile-quick-link {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.5rem;
+  }
+}
+
+
+/* Animation for smooth transitions */
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.top-bar {
+  animation: slideDown 0.3s ease-out;
+}
