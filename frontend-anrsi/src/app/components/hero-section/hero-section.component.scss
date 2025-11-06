@@ -40,13 +40,13 @@
 }
 
 .slide-content {
-  
   position: relative;
   z-index: 2;
   text-align: center;
   color: rgb(22, 8, 8);
   max-width: 800px;
   padding: 0 var(--space-4);
+  margin-top: 60px;
 }
 
 .slide-content h1 {
@@ -335,4 +335,116 @@
 }
 .dot.active {
   background-color: #1976d2;
+}
+
+// Mobile Responsive Styles
+@media (max-width: 768px) {
+  .hero-section {
+    height: 50vh;
+    min-height: 400px;
+    margin-top: -120px;
+  }
+
+  .slide-content {
+    max-width: 95%;
+    padding: 0 var(--space-2);
+    margin-top: 40px;
+  }
+
+  .slide-content h1,
+  .no-wrap {
+    font-size: clamp(1.5rem, 5vw, 2rem);
+    line-height: 1.2;
+    margin-bottom: var(--space-2);
+  }
+
+  .slide-content p {
+    font-size: clamp(0.9rem, 3vw, 1rem);
+    margin-bottom: var(--space-3);
+    line-height: 1.4;
+  }
+
+  .slide-action {
+    margin-top: var(--space-2);
+  }
+
+  .action-btn {
+    padding: var(--space-2) var(--space-4);
+    font-size: 0.9rem;
+    border-radius: 20px;
+  }
+
+  .slide-controls {
+    padding: 0 var(--space-2);
+  }
+
+  .prev-btn, .next-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+
+  .slide-indicators {
+    bottom: var(--space-3);
+    gap: var(--space-1);
+  }
+
+  .indicator {
+    width: 10px;
+    height: 10px;
+  }
+
+  .hero-overlay {
+    background: linear-gradient(to right, rgba(159, 183, 174, 0.85), rgba(106, 108, 107, 0.75));
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    height: 45vh;
+    min-height: 350px;
+    margin-top: -100px;
+  }
+
+  .slide-content {
+    max-width: 98%;
+    padding: 0 var(--space-1);
+    margin-top: 30px;
+  }
+
+  .slide-content h1,
+  .no-wrap {
+    font-size: clamp(1.2rem, 6vw, 1.6rem);
+    margin-bottom: var(--space-1);
+  }
+
+  .slide-content p {
+    font-size: clamp(0.85rem, 3.5vw, 0.95rem);
+    margin-bottom: var(--space-2);
+  }
+
+  .action-btn {
+    padding: var(--space-1) var(--space-3);
+    font-size: 0.85rem;
+    border-radius: 18px;
+  }
+
+  .prev-btn, .next-btn {
+    width: 35px;
+    height: 35px;
+    font-size: 0.9rem;
+  }
+
+  .slide-indicators {
+    bottom: var(--space-2);
+  }
+
+  .indicator {
+    width: 8px;
+    height: 8px;
+  }
+
+  .slide {
+    background-size: cover;
+  }
 }
