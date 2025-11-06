@@ -3,7 +3,7 @@ cd "$(dirname "$0")"
 git add .
 git commit -m "anrsi last version  - fixed budget warnings"
 git push
-ng build --configuration production --base-href "/OfficielANRSI/" --output-path ../docs
+ng build --configuration production --base-href "/OfficielAnrsi2/" --output-path ../docs
 cp ../docs/index.html ../docs/404.html
 touch ../.nojekyll
 cd ..
