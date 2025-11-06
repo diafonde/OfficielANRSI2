@@ -16,7 +16,7 @@
 </div>
 
 <!-- Article Content -->
-<div class="article-detail-hero" *ngIf="article && !loading">
+<div class="article-detail-hero" *ngIf="article && !loading" [ngStyle]="{'background-image': 'url(' + article.imageUrl + ')'}">
   <div class="container">
     <div class="article-category">{{ article.category }}</div>
     <h1>{{ article.title }}</h1>

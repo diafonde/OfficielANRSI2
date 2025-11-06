@@ -53,7 +53,7 @@ Cette collaboration internationale renforce la position de la Mauritanie dans le
       author: 'ANRSI',
       publishDate: new Date('2025-02-20'),
       category: 'Workshop',
-      imageUrl: 'assets/images/article1.jpeg',
+      imageUrl: 'assets/images/316956521_193067849924825_3676114238059618347_n_0.jpg.jpeg',
       tags: ['énergie', 'renouvelable', 'innovation', 'collaboration']
     },
     {
@@ -73,7 +73,7 @@ Le symposium vise à renforcer la coopération internationale dans le domaine de
       author: 'ANRSI',
       publishDate: new Date('2025-01-25'),
       category: 'Symposium',
-      imageUrl: 'assets/images/article1.jpeg',
+      imageUrl: 'assets/images/277154633_374993344636114_8242637262867242236_n_0.jpg.jpeg',
       tags: ['agriculture', 'sécurité alimentaire', 'innovation', 'symposium']
     },
     {
@@ -93,7 +93,7 @@ Le workshop offre une plateforme d'échange entre chercheurs, agriculteurs et d�
       author: 'ANRSI',
       publishDate: new Date('2025-01-20'),
       category: 'Workshop',
-      imageUrl: 'assets/images/article1.jpeg',
+      imageUrl: 'assets/images/316106463_190420513522892_2157453747881448998_n_0.jpg.jpeg',
       tags: ['technologie', 'agriculture', 'durable', 'innovation']
     },
     {
@@ -113,7 +113,7 @@ La conférence vise à promouvoir l'adoption de pratiques d'économie circulaire
       author: 'ANRSI',
       publishDate: new Date('2025-01-15'),
       category: 'Conférence',
-      imageUrl: 'assets/images/article1.jpeg',
+      imageUrl: 'assets/images/317490772_193067789924831_7216683787711679640_n_0.jpg.jpeg',
       tags: ['économie circulaire', 'innovation verte', 'développement durable']
     },
     {
@@ -133,7 +133,7 @@ L'atelier vise à renforcer les capacités en TIC et à promouvoir l'innovation 
       author: 'ANRSI',
       publishDate: new Date('2025-01-10'),
       category: 'Atelier',
-      imageUrl: 'assets/images/article1.jpeg',
+      imageUrl: 'assets/images/345629408_538652838484184_3414476345157867834_n_1.jpg.jpeg',
       tags: ['TIC', 'innovation', 'technologie', 'transformation numérique']
     },
     {
@@ -153,7 +153,7 @@ La conférence vise à promouvoir l'innovation comme moteur du développement du
       author: 'ANRSI',
       publishDate: new Date('2025-01-05'),
       category: 'Conférence',
-      imageUrl: 'assets/images/article1.jpeg',
+      imageUrl: 'assets/images/IMG_1702AAA.jpg.jpeg',
       tags: ['développement durable', 'innovation', 'ODD', 'coopération']
     },
     {
@@ -173,7 +173,7 @@ Le workshop vise à promouvoir l'adoption d'énergies renouvelables et à améli
       author: 'ANRSI',
       publishDate: new Date('2024-12-28'),
       category: 'Workshop',
-      imageUrl: 'assets/images/article1.jpeg',
+      imageUrl: 'assets/images/IMG_1738DDDDDDDDD.jpg.jpeg',
       tags: ['énergie renouvelable', 'efficacité énergétique', 'innovation']
     },
     {
@@ -193,7 +193,7 @@ Le symposium vise à renforcer les capacités de transfert de technologie et à 
       author: 'ANRSI',
       publishDate: new Date('2024-12-20'),
       category: 'Symposium',
-      imageUrl: 'assets/images/article1.jpeg',
+      imageUrl: 'assets/images/WhatsApp Image 2025-08-09 at 15.03.01.jpeg',
       tags: ['innovation', 'transfert de technologie', 'propriété intellectuelle']
     },
     {
@@ -213,7 +213,7 @@ La conférence vise à renforcer le système national de recherche et d'innovati
       author: 'ANRSI',
       publishDate: new Date('2024-12-15'),
       category: 'Conférence',
-      imageUrl: 'assets/images/article1.jpeg',
+      imageUrl: 'assets/images/WhatsApp Image 2025-08-18 at 14.48.29.jpeg',
       tags: ['recherche scientifique', 'innovation', 'Mauritanie', 'excellence']
     }
   ];
