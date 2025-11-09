@@ -8,7 +8,7 @@
       <div class="hero-overlay"></div>
       <div class="slide-content">
         <h1 class="no-wrap">{{slide.title}}</h1>
-        <p>{{slide.description}}</p>
+        
         <div class="slide-action" *ngIf="slide.actionText">
           <button class="action-btn" (click)="onSlideClick(slide, i); $event.stopPropagation()">{{slide.actionText}}</button>
         </div>

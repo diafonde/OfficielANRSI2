@@ -26,11 +26,13 @@ export interface ANRSIEvent {
 export interface ANRSIVideo {
   id: number;
   title: string;
-  description: string;
-  thumbnailUrl: string;
-  videoUrl: string;
-  duration: string;
-  speaker: string;
+  url: string;
+  type?: 'youtube' | 'file';
+  description?: string;
+  thumbnailUrl?: string;
+  videoUrl?: string; // Deprecated: use 'url' instead
+  duration?: string;
+  speaker?: string;
 }
 
 @Injectable({
@@ -182,42 +184,32 @@ Cette collaboration renforce le rôle de l'ANRSI dans le développement de la re
 
   // Videos based on ANRSI website content
   videos: ANRSIVideo[] = [
-    {
-      id: 1,
-      title: 'Entretien Avec Isabelle Henry, représentante de l\'IRD à Dakar',
-      description: 'Entretien exclusif avec Isabelle Henry sur la coopération scientifique entre la Mauritanie et l\'IRD.',
-      thumbnailUrl: 'https://anrsi.mr/sites/default/files/styles/medium/public/field/image/isabelle_henry_thumbnail.jpg',
-      videoUrl: 'https://anrsi.mr/sites/default/files/videos/isabelle_henry_interview.mp4',
-      duration: '15:30',
-      speaker: 'Isabelle Henry'
-    },
-    {
-      id: 2,
-      title: 'Soutenabilité économique versus Soutenabilité écologique - Pr Saad Bouh Regad',
-      description: 'Conférence du Professeur Saad Bouh Regad sur les défis de la soutenabilité.',
-      thumbnailUrl: 'https://anrsi.mr/sites/default/files/styles/medium/public/field/image/saad_bouh_regad_thumbnail.jpg',
-      videoUrl: 'https://anrsi.mr/sites/default/files/videos/saad_bouh_regad_conference.mp4',
-      duration: '45:20',
-      speaker: 'Pr Saad Bouh Regad'
-    },
-    {
-      id: 3,
-      title: 'Entretien Avec Dr Rachid El Bouyahaoui',
-      description: 'Discussion avec Dr Rachid El Bouyahaoui sur les perspectives de la recherche en Mauritanie.',
-      thumbnailUrl: 'https://anrsi.mr/sites/default/files/styles/medium/public/field/image/rachid_el_bouyahaoui_thumbnail.jpg',
-      videoUrl: 'https://anrsi.mr/sites/default/files/videos/rachid_el_bouyahaoui_interview.mp4',
-      duration: '22:15',
-      speaker: 'Dr Rachid El Bouyahaoui'
-    },
-    {
-      id: 4,
-      title: 'Entretien Avec Pr Cheikh Mouhamadou Mbacké Lo',
-      description: 'Entretien avec le Professeur Cheikh Mouhamadou Mbacké Lo sur l\'innovation et le développement.',
-      thumbnailUrl: 'https://anrsi.mr/sites/default/files/styles/medium/public/field/image/cheikh_mbacke_lo_thumbnail.jpg',
-      videoUrl: 'https://anrsi.mr/sites/default/files/videos/cheikh_mbacke_lo_interview.mp4',
-      duration: '18:45',
-      speaker: 'Pr Cheikh Mouhamadou Mbacké Lo'
-    }
+  {
+    id: 1,
+    title: "Présentation de l'Agence",
+    url: "https://www.youtube.com/embed/EMgwHc1F5W8",
+    type: "youtube"
+  },
+  {
+    id: 2,
+    title: "Recherche Scientifique",
+    url: "https://youtube.com/embed/bC2FLWuHTbI",
+    type: "youtube"
+  },
+  {
+    id: 3,
+    title: "Nouvelles Technologies",
+    url: "https://youtube.com/embed/4PupAG-vJnk",
+    type: "youtube"
+  },
+  {
+    id: 4,
+    title: "Nouvelles Technologies",
+    url: "https://youtube.com/embed/0yeNSWbl5MY",
+    type: "youtube"
+  }
+
+  
   ];
 
   // Events based on ANRSI website content
@@ -248,7 +240,16 @@ Cette collaboration renforce le rôle de l'ANRSI dans le développement de la re
       location: 'Lahore, Pakistan',
       imageUrl: 'https://anrsi.mr/sites/default/files/styles/large/public/field/image/see_pakistan_2025.jpg',
       type: 'participation'
-    }
+    },
+    {
+      id: 4,
+      title: 'Conférence internationale sur l\'autonomisation des jeunes pour la réalisation des Objectifs de Développement Durable',
+      description: 'Conférence internationale sur l\'autonomisation des jeunes pour la réalisation des Objectifs de Développement Durable.',
+      date: new Date('2025-02-25'),
+      location: 'Nouakchott, Mauritanie',
+      imageUrl: 'https://anrsi.mr/sites/default/files/styles/large/public/field/image/autonomisation_jeunes.jpg',
+      type: 'conference'
+    },
   ];
 
   // ANRSI Organization Information

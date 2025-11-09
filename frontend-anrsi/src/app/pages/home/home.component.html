@@ -1,7 +1,7 @@
 <app-hero-section></app-hero-section>
 
 <section id="news" class="section featured-section" data-aos="flip-up">
-  <div class="container">
+  <div style="display: flex; justify-content: center; margin-top: 30px;">
     <h2 class="section-title">{{ 'Dernières actualités' | translate }}</h2>
   </div>
   
@@ -11,7 +11,7 @@
        (mouseleave)="onSlideshowMouseLeave()">
     
     <!-- Slideshow Controls -->
-    <div class="slideshow-controls" *ngIf="latestArticles.length > slidesPerView">
+    <div class="slideshow-controls" *ngIf="canScroll()">
       <button class="slideshow-btn prev-btn" (click)="prevSlide()" aria-label="Previous articles">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="15 18 9 12 15 6"></polyline>
@@ -34,7 +34,7 @@
     </div>
     
     <!-- Slideshow Indicators -->
-    <div class="slideshow-indicators" *ngIf="latestArticles.length > slidesPerView">
+    <div class="slideshow-indicators" *ngIf="canScroll()">
       <button 
         *ngFor="let slide of [].constructor(getTotalSlides()); let i = index"
         class="indicator" 
@@ -55,7 +55,8 @@
 
 </section>
 
-<section id="featured" class="section featured-section" data-aos="fade-up-right">
+
+<section id="featured" class="featured-sections" data-aos="fade-up-right">
   <div class="container">
     <h2 class="section-title">{{ 'Recherches mises en avant' | translate }}</h2>
     <div class="grid grid-4">
@@ -67,6 +68,95 @@
     </div>
   </div>
 </section>
+
+<section id="videotheque" class="section videotheque-section" data-aos="fade-up">
+  <div class="videotheque-container">
+    <h2 class="videotheque-title">{{ 'VIDÉOTHÈQUE' | translate }}</h2>
+    
+    <div class="videos-slideshow" 
+         (mouseenter)="onVideoSlideshowMouseEnter()" 
+         (mouseleave)="onVideoSlideshowMouseLeave()">
+      
+      <!-- Navigation Arrows -->
+      <div class="video-slideshow-controls" *ngIf="featuredVideos.length > 0">
+        <button class="video-slideshow-btn prev-video-btn" (click)="prevVideoSlide()" aria-label="Previous videos" *ngIf="canScrollVideos()">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        <button class="video-slideshow-btn next-video-btn" (click)="nextVideoSlide()" aria-label="Next videos" *ngIf="canScrollVideos()">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+      
+      <!-- Videos Container -->
+      <div class="videos-container">
+        <div class="videos-track" [style.transform]="'translateX(-' + (currentVideoSlide * getVideoTransformPercentage()) + '%)'">
+          <div class="video-slide" 
+               *ngFor="let video of featuredVideos; let i = index"
+               [class.middle]="i === getMiddleVideoIndex()"
+               [class.active]="i === currentVideoSlide">
+            <div class="video-thumbnail" (click)="playVideo(video)">
+              <img 
+                [src]="getVideoThumbnail(video)" 
+                [alt]="video.title" 
+                *ngIf="getVideoThumbnail(video)"
+                (error)="onThumbnailError($event, video)"
+                loading="lazy">
+              <div class="video-thumbnail-placeholder" *ngIf="!getVideoThumbnail(video)">
+                <div class="placeholder-icon">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                    <polygon points="10 8 16 12 10 16 10 8"></polygon>
+                  </svg>
+                </div>
+              </div>
+              <div class="play-button-overlay">
+                <div class="play-button">
+                  <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                    <circle cx="32" cy="32" r="30" fill="white" opacity="0.95"></circle>
+                    <polygon points="24 18 24 46 46 32 24 18" fill="#102A57"></polygon>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="videotheque-button-container">
+      <a routerLink="/videos" class="btn-videotheque">
+        {{ 'Toutes les vidéos' | translate }}
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Video Modal -->
+<div class="video-modal" *ngIf="showVideoModal && selectedVideo" (click)="closeVideoModal()">
+  <div class="video-modal-content" (click)="$event.stopPropagation()">
+    <button class="video-modal-close" (click)="closeVideoModal()" aria-label="Close video">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+    <div class="video-modal-header">
+      <h3>{{ selectedVideo.title }}</h3>
+    </div>
+    <div class="video-modal-player">
+      <iframe
+        [src]="getSelectedVideoUrl() | safe"
+        frameborder="0"
+        allowfullscreen
+        [title]="selectedVideo.title">
+      </iframe>
+    </div>
+  </div>
+</div>
 
 <section class="section research-areas-section" data-aos="fade-right" data-aos="zoom-up">
   <div class="container">

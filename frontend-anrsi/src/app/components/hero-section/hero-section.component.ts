@@ -13,27 +13,7 @@ import { Router } from '@angular/router';
 export class HeroSectionComponent implements OnInit, OnDestroy {
   imageUrl = 'assets/images/backgr.jpeg';
   slides = [
-    { 
-      url: 'assets/images/Food Systems Transformation for Climate Actions.jpg',
-      title: 'ANRSI - Agence Nationale de la Recherche Scientifique et de l\'Innovation',
-      description: 'Conférence internationale et atelier de formation sur « La transformation des systèmes alimentaires pour l\'action climatique » (ICTW-FSTCA 2025)',
-      actionText: 'Découvrir l\'actualité',
-      actionUrl: '/article/1'
-    },
-    { 
-      url: 'assets/images/WhatsApp Image 2025-08-09 at 15.03.01.jpeg',
-      title: 'COMSTECH-UTS International Workshop on Renewable Energy',
-      description: 'Affordable & Clean Energy for ALL (CURE-ALL) - Workshop international sur les énergies renouvelables',
-      actionText: 'Voir le programme',
-      actionUrl: '/article/2'
-    },
-    { 
-      url: 'assets/images/WhatsApp Image 2025-08-18 at 14.48.29.jpeg',
-      title: 'Participation Mauritanienne à SEE PAKISTAN',
-      description: 'Lancement de l\'édition 2025 de SEE PAKISTAN avec une participation mauritanienne à Lahore',
-      actionText: 'En savoir plus',
-      actionUrl: '/article/3'
-    },
+    
     { 
       url: 'assets/images/directeur.jpeg',
       title: 'Autonomisation des Jeunes pour les ODD',

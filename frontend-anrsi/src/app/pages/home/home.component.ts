@@ -7,11 +7,12 @@ import { ArticleCardComponent } from '../../components/article-card/article-card
 import { ArticleService } from '../../services/article.service';
 import { ANRSIDataService, ANRSIArticle, ANRSIEvent, ANRSIVideo } from '../../services/anrsi-data.service';
 import { Article } from '../../models/article.model';
+import { SafePipe } from '../videos/safe.pipe';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslateModule, HeroSectionComponent, ArticleCardComponent],
+  imports: [CommonModule, RouterLink, TranslateModule, HeroSectionComponent, ArticleCardComponent, SafePipe],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })
@@ -26,6 +27,15 @@ export class HomeComponent implements OnInit, OnDestroy {
   currentSlide = 0;
   slideshowInterval: any;
   slidesPerView = 5;
+  
+  // Video slideshow properties
+  currentVideoSlide = 0;
+  videoSlideshowInterval: any;
+  videosPerView = 3;
+  
+  // Video modal properties
+  selectedVideo: ANRSIVideo | null = null;
+  showVideoModal = false;
   
   researchAreas = [
     {
@@ -102,18 +112,23 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
     
     this.articleService.getRecentArticles().subscribe(articles => {
-      this.latestArticles = articles;
+      this.latestArticles = articles.slice(); // Limit to 4 articles
       
-      // Start slideshow if there are articles
-      if (this.latestArticles.length > this.slidesPerView) {
+      // Start slideshow if we can scroll
+      if (this.canScroll()) {
         this.startSlideshow();
       }
     });
     
     // Load ANRSI data
     this.anrsiArticles = this.anrsiDataService.getFeaturedArticles();
-    this.upcomingEvents = this.anrsiDataService.getUpcomingEvents();
-    this.featuredVideos = this.anrsiDataService.getVideos().slice(0, 3);
+    this.upcomingEvents = this.anrsiDataService.getEvents();
+    // Load videos for videotheque (show at least 4 videos to enable navigation)
+    const allVideos = this.anrsiDataService.getVideos();
+    this.featuredVideos = allVideos.length >= 4 ? allVideos.slice(0, allVideos.length) : allVideos.slice(0, 3);
+    
+    // Ensure no auto-slideshow is running - videos will only move when user clicks navigation buttons
+    this.stopVideoSlideshow();
   }
   
   @HostListener('window:resize', ['$event'])
@@ -125,9 +140,16 @@ export class HomeComponent implements OnInit, OnDestroy {
     if (oldSlidesPerView !== this.slidesPerView) {
       this.currentSlide = 0;
       this.stopSlideshow();
-      if (this.latestArticles.length > this.slidesPerView) {
+      if (this.canScroll()) {
         this.startSlideshow();
       }
+    }
+  }
+  
+  @HostListener('window:keydown.escape', ['$event'])
+  onEscapeKey(event: KeyboardEvent): void {
+    if (this.showVideoModal) {
+      this.closeVideoModal();
     }
   }
   
@@ -139,7 +161,8 @@ export class HomeComponent implements OnInit, OnDestroy {
     } else if (window.innerWidth <= 1200) {
       this.slidesPerView = 3;
     } else {
-      this.slidesPerView = 5;
+      // Limit to 3 on large screens to ensure scrolling with 4 articles
+      this.slidesPerView = 3;
     }
   }
   
@@ -149,6 +172,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.stopSlideshow();
+    this.stopVideoSlideshow(); // Ensure any running interval is cleared
   }
 
   startSlideshow(): void {
@@ -193,7 +217,13 @@ export class HomeComponent implements OnInit, OnDestroy {
     if (this.latestArticles.length <= this.slidesPerView) {
       return 1;
     }
-    return this.latestArticles.length - this.slidesPerView + 1;
+    // Ensure we can scroll through all articles
+    return Math.max(1, this.latestArticles.length - this.slidesPerView + 1);
+  }
+  
+  canScroll(): boolean {
+    // Allow scrolling if we have more articles than slides per view
+    return this.latestArticles.length > this.slidesPerView;
   }
 
   onSlideshowMouseEnter(): void {
@@ -201,8 +231,161 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   onSlideshowMouseLeave(): void {
-    if (this.latestArticles.length > this.slidesPerView) {
+    if (this.canScroll()) {
       this.startSlideshow();
     }
+  }
+  
+  // Video slideshow methods
+  startVideoSlideshow(): void {
+    this.videoSlideshowInterval = setInterval(() => {
+      this.nextVideoSlide();
+    }, 5000); // Change slide every 5 seconds
+  }
+
+  stopVideoSlideshow(): void {
+    if (this.videoSlideshowInterval) {
+      clearInterval(this.videoSlideshowInterval);
+      this.videoSlideshowInterval = null;
+    }
+  }
+
+  nextVideoSlide(): void {
+    const maxSlides = this.getTotalVideoSlides() - 1;
+    if (maxSlides > 0) {
+      this.currentVideoSlide = (this.currentVideoSlide + 1) % (maxSlides + 1);
+    }
+  }
+
+  prevVideoSlide(): void {
+    const maxSlides = this.getTotalVideoSlides() - 1;
+    if (maxSlides > 0) {
+      this.currentVideoSlide = this.currentVideoSlide === 0 ? maxSlides : this.currentVideoSlide - 1;
+    }
+  }
+
+  getVideoTransformPercentage(): number {
+    return 100 / this.videosPerView;
+  }
+
+  getTotalVideoSlides(): number {
+    if (this.featuredVideos.length <= this.videosPerView) {
+      return 1;
+    }
+    return Math.max(1, this.featuredVideos.length - this.videosPerView + 1);
+  }
+  
+  canScrollVideos(): boolean {
+    return this.featuredVideos.length > this.videosPerView;
+  }
+
+  onVideoSlideshowMouseEnter(): void {
+    // Don't auto-play, so no need to stop anything
+    // this.stopVideoSlideshow();
+  }
+
+  onVideoSlideshowMouseLeave(): void {
+    // Don't auto-play, so no need to start anything
+    // if (this.canScrollVideos()) {
+    //   this.startVideoSlideshow();
+    // }
+  }
+  
+  playVideo(video: ANRSIVideo): void {
+    // Show video in modal
+    this.selectedVideo = video;
+    this.showVideoModal = true;
+    // Stop slideshow when video is playing
+    this.stopVideoSlideshow();
+  }
+  
+  closeVideoModal(): void {
+    this.showVideoModal = false;
+    this.selectedVideo = null;
+    // Don't auto-resume slideshow - videos only move on manual navigation
+    // if (this.canScrollVideos()) {
+    //   this.startVideoSlideshow();
+    // }
+  }
+  
+  getSelectedVideoUrl(): string {
+    if (!this.selectedVideo) return '';
+    return this.selectedVideo.url || this.selectedVideo.videoUrl || '';
+  }
+  
+  getVideoThumbnail(video: ANRSIVideo): string {
+    // If thumbnailUrl is already provided, use it
+    if (video.thumbnailUrl) {
+      return video.thumbnailUrl;
+    }
+    
+    // For YouTube videos, generate thumbnail from video ID
+    const videoUrl = video.url || video.videoUrl || '';
+    if (video.type === 'youtube' || videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
+      const videoId = this.extractYouTubeVideoId(videoUrl);
+      if (videoId) {
+        // Use maxresdefault for best quality
+        return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+      }
+    }
+    
+    // Return empty string if no thumbnail can be generated
+    return '';
+  }
+  
+  getVideoThumbnailFallback(video: ANRSIVideo): string {
+    // Get fallback thumbnail (hqdefault) for YouTube videos
+    const videoUrl = video.url || video.videoUrl || '';
+    if (video.type === 'youtube' || videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
+      const videoId = this.extractYouTubeVideoId(videoUrl);
+      if (videoId) {
+        return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+      }
+    }
+    return '';
+  }
+  
+  onThumbnailError(event: Event, video: ANRSIVideo): void {
+    const img = event.target as HTMLImageElement;
+    const fallback = this.getVideoThumbnailFallback(video);
+    if (fallback && img.src !== fallback) {
+      img.src = fallback;
+    } else {
+      // If fallback also fails, hide the image to show placeholder
+      img.style.display = 'none';
+    }
+  }
+  
+  private extractYouTubeVideoId(url: string): string | null {
+    if (!url) return null;
+    
+    // Match patterns like:
+    // https://www.youtube.com/embed/VIDEO_ID
+    // https://youtube.com/embed/VIDEO_ID
+    // https://www.youtube.com/watch?v=VIDEO_ID
+    // https://youtu.be/VIDEO_ID
+    
+    const embedMatch = url.match(/(?:youtube\.com\/embed\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    if (embedMatch) {
+      return embedMatch[1];
+    }
+    
+    const watchMatch = url.match(/(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/);
+    if (watchMatch) {
+      return watchMatch[1];
+    }
+    
+    return null;
+  }
+  
+  getMiddleVideoIndex(): number {
+    // When showing 3 videos, the middle one is always at index 1
+    // This ensures the middle video stays bigger regardless of slideshow position
+    if (this.featuredVideos.length <= 3) {
+      return 1; // Always the second video (index 1) when showing 3 or fewer
+    }
+    // For slideshow with more videos: middle video is the one in the center of the visible set
+    const middleIndex = this.currentVideoSlide + Math.floor(this.videosPerView / 2);
+    return Math.min(middleIndex, this.featuredVideos.length - 1);
   }
 }
