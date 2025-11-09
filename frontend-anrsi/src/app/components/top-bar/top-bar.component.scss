@@ -4,23 +4,24 @@
   padding: 0.3rem 0;
   font-size: 0.8rem;
   position: fixed;
-  top: 140px; /* Position flush with header bottom */
+  top: 140px;
   left: 0;
   width: 100%;
-  z-index: 1006; /* Lower than header (1007) so dropdown can appear on top */
+  z-index: 1006;
   transition: all 0.3s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   min-height: 32px;
   margin: 0;
-  pointer-events: auto; /* Ensure clickability */
-  transform: translateZ(0); /* Create new stacking context */
+  pointer-events: auto;
+  transform: translateZ(0);
+  animation: slideDown 0.3s ease-out;
 }
 
 .top-bar.scrolled {
   background: rgba(8, 53, 21, 0.95);
   backdrop-filter: blur(10px);
   padding: 0.2rem 0;
-  top: 120px; /* Adjust position when header is scrolled */
+  top: 120px;
 }
 
 .top-bar-container {
@@ -80,7 +81,7 @@
   white-space: nowrap;
   flex-shrink: 0;
   font-size: 0.8rem;
-  pointer-events: auto; /* Ensure clickability */
+  pointer-events: auto;
   cursor: pointer;
 }
 
@@ -146,7 +147,6 @@
   padding: 0.125rem;
 }
 
-/* New Dropdown Language Switcher */
 .language-dropdown {
   position: relative;
   display: inline-block;
@@ -275,7 +275,7 @@
   font-weight: 600;
   transition: all 0.2s ease;
   min-width: 32px;
-  pointer-events: auto; /* Ensure clickability */
+  pointer-events: auto;
 }
 
 .lang-btn.active {
@@ -288,12 +288,10 @@
   color: white;
 }
 
-/* Hide scrollbar for quick-links */
 .quick-links::-webkit-scrollbar {
   display: none;
 }
 
-/* Layout visibility controls */
 .desktop-layout {
   display: flex;
   width: 100%;
@@ -306,8 +304,6 @@
   position: relative;
 }
 
-
-/* Mobile responsiveness */
 @media (max-width: 1024px) {
   .quick-links {
     gap: 0.3rem;
@@ -342,12 +338,12 @@
   .top-bar {
     padding: 0.5rem 0;
     min-height: auto;
-    top: 100px !important; /* Mobile header height (100px) */
+    top: 100px !important;
   }
   
   .top-bar.scrolled {
     padding: 0.3rem 0;
-    top: 90px !important; /* Scrolled mobile header height (90px) */
+    top: 90px !important;
   }
   
   .top-bar-container {
@@ -374,7 +370,7 @@
     align-items: center;
     flex: 1;
     flex-shrink: 1;
-    min-width: 0; /* Allow flex item to shrink below its content size */
+    min-width: 0;
     overflow: hidden;
   }
   
@@ -392,9 +388,9 @@
     align-items: center;
     position: relative;
     gap: 0.5rem;
-    z-index: 1011; /* Ensure clickability above everything */
+    z-index: 1011;
     pointer-events: auto;
-    flex-shrink: 0; /* Prevent shrinking */
+    flex-shrink: 0;
     min-width: fit-content;
   }
   
@@ -408,7 +404,6 @@
     min-width: 28px;
   }
   
-  /* Mobile dropdown styles */
   .lang-dropdown-btn.mobile {
     min-width: 100px;
     padding: 0.4rem 0.6rem;
@@ -419,7 +414,7 @@
   }
   
   .lang-dropdown-btn.mobile .lang-text {
-    display: none; /* Hide full language name on mobile */
+    display: none;
   }
   
   .lang-dropdown-menu.mobile {
@@ -442,7 +437,7 @@
   }
   
   .lang-option .lang-name {
-    display: none; /* Hide full language name on mobile */
+    display: none;
   }
   
   .mobile-quick-links {
@@ -484,7 +479,7 @@
     font-weight: 500;
     transition: all 0.2s ease;
     border: 1px solid transparent;
-    pointer-events: auto; /* Ensure clickability */
+    pointer-events: auto;
     cursor: pointer;
     display: block;
     width: 100%;
@@ -503,12 +498,12 @@
     border-radius: 4px;
     padding: 0.4rem;
     cursor: pointer;
-    display: flex !important; /* Force display */
+    display: flex !important;
     flex-direction: column;
     gap: 0.2rem;
     transition: all 0.3s ease;
-    pointer-events: auto !important; /* Ensure clickability */
-    z-index: 1010 !important; /* Higher z-index for mobile toggle */
+    pointer-events: auto !important;
+    z-index: 1010 !important;
     flex-shrink: 0;
     min-width: 40px;
     min-height: 40px;
@@ -517,7 +512,7 @@
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
     position: relative;
-    transform: translateZ(0); /* Force hardware acceleration */
+    transform: translateZ(0);
     visibility: visible !important;
     opacity: 1 !important;
   }
@@ -547,7 +542,7 @@
     background: white;
     transition: all 0.3s ease;
     border-radius: 1px;
-    pointer-events: none; /* Let clicks pass through to button */
+    pointer-events: none;
     flex-shrink: 0;
   }
   
@@ -615,11 +610,11 @@
 
 @media (max-width: 480px) {
   .top-bar {
-    top: 85px !important; /* Small mobile header height (85px) */
+    top: 85px !important;
   }
   
   .top-bar.scrolled {
-    top: 80px !important; /* Scrolled small mobile header height (80px) */
+    top: 80px !important;
   }
   
   .top-bar-container {
@@ -635,12 +630,12 @@
   }
   
   .mobile-contact .contact-item span {
-    display: none; /* Hide text on very small screens, keep icons */
+    display: none;
   }
   
   .mobile-actions {
     gap: 0.3rem;
-    z-index: 1011 !important; /* Ensure clickability above everything */
+    z-index: 1011 !important;
     pointer-events: auto !important;
     display: flex !important;
     align-items: center;
@@ -652,7 +647,6 @@
     min-width: 24px;
   }
   
-  /* Small mobile dropdown styles */
   .lang-dropdown-btn.mobile {
     min-width: 80px;
     padding: 0.3rem 0.5rem;
@@ -678,7 +672,7 @@
     padding: 0.3rem;
     min-width: 35px;
     min-height: 35px;
-    z-index: 1010 !important; /* Ensure clickability */
+    z-index: 1010 !important;
     pointer-events: auto !important;
     position: relative;
     visibility: visible !important;
@@ -706,7 +700,7 @@
   
   .mobile-actions {
     gap: 0.25rem;
-    z-index: 1011 !important; /* Ensure clickability above everything */
+    z-index: 1011 !important;
     pointer-events: auto !important;
     display: flex !important;
     align-items: center;
@@ -723,7 +717,7 @@
     padding: 0.25rem;
     min-width: 32px;
     min-height: 32px;
-    z-index: 1010 !important; /* Ensure clickability */
+    z-index: 1010 !important;
     pointer-events: auto !important;
     position: relative;
     visibility: visible !important;
@@ -741,8 +735,6 @@
   }
 }
 
-
-/* Animation for smooth transitions */
 @keyframes slideDown {
   from {
     transform: translateY(-100%);
@@ -752,8 +744,4 @@
     transform: translateY(0);
     opacity: 1;
   }
-}
-
-.top-bar {
-  animation: slideDown 0.3s ease-out;
 }

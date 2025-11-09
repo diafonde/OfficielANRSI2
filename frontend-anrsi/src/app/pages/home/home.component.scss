@@ -35,7 +35,6 @@
   margin: 0;
 }
 
-/* Override section padding for full-width slideshow */
 section#news {
   padding-left: 0;
   padding-right: 0;
@@ -43,7 +42,6 @@ section#news {
   padding-bottom: var(--space-8);
 }
 
-/* Make sure the "Voir toutes les actualités" link is properly styled */
 .container.text-center a.btn {
   text-decoration: none;
   display: inline-block;
@@ -56,7 +54,6 @@ section#news {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Articles Slideshow Styles */
 .articles-slideshow {
   position: relative;
   margin: var(--space-4) auto;
@@ -80,10 +77,10 @@ section#news {
 }
 
 .articles-slide {
-  flex: 0 0 30%; /* 3 articles per view on large screens */
+  flex: 0 0 30%;
   padding: var(--space-2) var(--space-3);
   box-sizing: border-box;
-  min-width: 0; /* Prevent flex overflow */
+  min-width: 0;
 }
 
 .slideshow-controls {
@@ -157,16 +154,15 @@ section#news {
   background: var(--primary-400);
 }
 
-/* Responsive Design */
 @media (max-width: 1200px) {
   .articles-slide {
-    flex: 0 0 33.333%; /* 3 articles per view */
+    flex: 0 0 33.333%;
   }
 }
 
 @media (max-width: 768px) {
   .articles-slide {
-    flex: 0 0 50%; /* 2 articles per view */
+    flex: 0 0 50%;
   }
   
   .slideshow-btn {
@@ -185,7 +181,7 @@ section#news {
 
 @media (max-width: 480px) {
   .articles-slide {
-    flex: 0 0 100%; /* 1 article per view */
+    flex: 0 0 100%;
   }
   
   .slideshow-btn {
@@ -346,19 +342,16 @@ section#news {
   .timeline::before {
     left: 30px;
   }
-  
   .timeline-item, .timeline-item.even {
     width: 100%;
     padding-left: var(--space-12);
     padding-right: 0;
     margin-left: 0;
   }
-  
   .timeline-item::after, .timeline-item.even::after {
     left: 22px;
     right: auto;
   }
-  
   .timeline-date, .timeline-item.even .timeline-date {
     left: 0;
     right: auto;
@@ -421,6 +414,7 @@ section#news {
   background: var(--neutral-100);
   padding: var(--space-8) 0;
 }
+
 .partners-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -429,6 +423,7 @@ section#news {
   justify-items: center;
   margin-top: var(--space-6);
 }
+
 .partner-card {
   background: white;
   border-radius: 8px;
@@ -439,15 +434,18 @@ section#news {
   align-items: center;
   transition: box-shadow 0.2s;
 }
+
 .partner-card:hover {
   box-shadow: 0 4px 16px rgba(0,0,0,0.10);
 }
+
 .partner-logo {
   width: 80px;
   height: 80px;
   object-fit: contain;
   margin-bottom: var(--space-2);
 }
+
 .partner-name {
   font-weight: 500;
   text-align: center;
@@ -512,25 +510,20 @@ section#news {
   .map-container {
     height: 350px;
   }
-
   .map-info {
     grid-template-columns: 1fr;
   }
-
   .info-item {
     padding: var(--space-3);
   }
-
   .info-item i {
     font-size: 1.2rem;
   }
-
   .info-item span {
     font-size: 1rem;
   }
 }
 
-/* Videotheque Section */
 .videotheque-section {
   background-color: #fbfcfb;
   padding: var(--space-12) 0;
@@ -696,7 +689,6 @@ section#news {
   display: flex;
   align-items: center;
   justify-content: center;
-  
   transition: background 0.3s ease;
 }
 
@@ -748,12 +740,10 @@ section#news {
   transform: translateY(0);
 }
 
-/* Responsive Design for Videotheque */
 @media (max-width: 1200px) {
   .video-slide {
     flex: 0 0 calc(33.333% - var(--space-3));
   }
-  
   .videos-container {
     padding: 0 var(--space-6);
   }
@@ -763,12 +753,10 @@ section#news {
   .video-slide {
     flex: 0 0 calc(50% - var(--space-2));
   }
-  
   .video-slide.active {
     flex: 0 0 calc(55% - var(--space-2));
     transform: scale(1.1);
   }
-  
   .video-slide:not(.active) {
     flex: 0 0 calc(45% - var(--space-2));
   }
@@ -776,19 +764,15 @@ section#news {
   .videos-container {
     padding: 0 var(--space-4);
   }
-  
   .video-slideshow-btn {
     padding: var(--space-1);
   }
-  
   .prev-video-btn {
     margin-left: 0;
   }
-  
   .next-video-btn {
     margin-right: 0;
   }
-  
   .btn-videotheque {
     padding: var(--space-3) var(--space-6);
     font-size: 1rem;
@@ -799,27 +783,22 @@ section#news {
   .video-slide {
     flex: 0 0 100%;
   }
-  
   .video-slide.active {
     transform: scale(1);
   }
-  
   .videos-track {
     gap: var(--space-2);
   }
-  
   .videotheque-title {
     font-size: 1.5rem;
     margin-bottom: var(--space-6);
   }
-  
   .btn-videotheque {
     padding: var(--space-2) var(--space-4);
     font-size: 0.9rem;
   }
 }
 
-// Video Modal Styles
 .video-modal {
   position: fixed;
   top: 0;
@@ -883,50 +862,50 @@ section#news {
   z-index: 10001;
   color: white;
   transition: all 0.3s ease;
-  
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-    transform: scale(1.1);
-  }
-  
-  &:active {
-    transform: scale(0.95);
-  }
-  
-  svg {
-    width: 20px;
-    height: 20px;
-  }
+}
+
+.video-modal-close:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.video-modal-close:active {
+  transform: scale(0.95);
+}
+
+.video-modal-close svg {
+  width: 20px;
+  height: 20px;
 }
 
 .video-modal-header {
   padding: 1.5rem;
   background-color: #1a1a1a;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  
-  h3 {
-    color: white;
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 600;
-    line-height: 1.4;
-  }
+}
+
+.video-modal-header h3 {
+  color: white;
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.4;
 }
 
 .video-modal-player {
   position: relative;
   width: 100%;
-  padding-top: 56.25%; /* 16:9 Aspect Ratio */
+  padding-top: 56.25%;
   background-color: #000;
-  
-  iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border: none;
-  }
+}
+
+.video-modal-player iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
 }
 
 @media (max-width: 768px) {
@@ -940,10 +919,10 @@ section#news {
   
   .video-modal-header {
     padding: 1rem;
-    
-    h3 {
-      font-size: 1rem;
-    }
+  }
+  
+  .video-modal-header h3 {
+    font-size: 1rem;
   }
   
   .video-modal-close {
@@ -951,10 +930,10 @@ section#news {
     right: 0.5rem;
     width: 36px;
     height: 36px;
-    
-    svg {
-      width: 18px;
-      height: 18px;
-    }
+  }
+  
+  .video-modal-close svg {
+    width: 18px;
+    height: 18px;
   }
 }
