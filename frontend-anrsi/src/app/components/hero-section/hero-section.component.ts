@@ -22,7 +22,7 @@ export class HeroSectionComponent implements OnInit, OnDestroy {
       actionUrl: '/article/4'
     },
     { 
-      url: 'assets/images/chef.jpeg',
+      url: 'assets/images/anrsssi.jpeg',
       title: 'Rencontre avec la Faculté de Médecine',
       description: 'Le Directeur Général de l\'ANRSI reçoit le Doyen de la Faculté de Médecine, de Pharmacie et d\'Odontostomatologie de Nouakchott',
       actionText: 'Voir les détails',
