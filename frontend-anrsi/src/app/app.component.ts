@@ -8,7 +8,6 @@ import { BackToTopComponent } from './components/back-to-top/back-to-top.compone
 import { AnimatedCounterComponent } from './components/animated-counter/animated-counter.component';
 import { BreadcrumbsComponent } from './components/breadcrumbs/breadcrumbs.component';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
-import { HeroSectionComponent } from './components/hero-section/hero-section.component';
 import { TranslateModule, TranslateService, TranslateLoader } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 export function HttpLoaderFactory(http: HttpClient) {
@@ -27,7 +26,6 @@ export function HttpLoaderFactory(http: HttpClient) {
     BackToTopComponent,
     AnimatedCounterComponent,
     BreadcrumbsComponent,
-    HeroSectionComponent,
     HttpClientModule,
     TranslateModule
   ],

@@ -545,7 +545,7 @@ section#news {
 
 .videotheque-title {
   text-align: center;
-  color: white;
+  color: rgb(24, 4, 4);
   font-size: clamp(1.8rem, 4vw, 2.5rem);
   font-weight: 700;
   text-transform: uppercase;
@@ -696,7 +696,7 @@ section#news {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(146, 227, 180, 0.2);
+  
   transition: background 0.3s ease;
 }
 
