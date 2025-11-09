@@ -113,7 +113,7 @@
                   </svg>
                 </div>
               </div>
-              <div class="play-button-overlay">
+              <div class="play-button-overlay" *ngIf="i === getMiddleVideoIndex()">
                 <div class="play-button">
                   <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
                     <circle cx="32" cy="32" r="30" fill="white" opacity="0.95"></circle>

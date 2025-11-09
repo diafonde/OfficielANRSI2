@@ -105,6 +105,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     
     // Set initial slides per view based on screen size
     this.updateSlidesPerView();
+    this.updateVideosPerView();
     
     // Load original articles
     this.articleService.getFeaturedArticles().subscribe(articles => {
@@ -134,7 +135,10 @@ export class HomeComponent implements OnInit, OnDestroy {
   @HostListener('window:resize', ['$event'])
   onResize(): void {
     const oldSlidesPerView = this.slidesPerView;
+    const oldVideosPerView = this.videosPerView;
+    
     this.updateSlidesPerView();
+    this.updateVideosPerView();
     
     // Restart slideshow if configuration changed
     if (oldSlidesPerView !== this.slidesPerView) {
@@ -143,6 +147,11 @@ export class HomeComponent implements OnInit, OnDestroy {
       if (this.canScroll()) {
         this.startSlideshow();
       }
+    }
+    
+    // Reset video slide if configuration changed
+    if (oldVideosPerView !== this.videosPerView) {
+      this.currentVideoSlide = 0;
     }
   }
   
@@ -163,6 +172,16 @@ export class HomeComponent implements OnInit, OnDestroy {
     } else {
       // Limit to 3 on large screens to ensure scrolling with 4 articles
       this.slidesPerView = 3;
+    }
+  }
+  
+  updateVideosPerView(): void {
+    if (window.innerWidth <= 480) {
+      this.videosPerView = 1;
+    } else if (window.innerWidth <= 768) {
+      this.videosPerView = 2;
+    } else {
+      this.videosPerView = 3;
     }
   }
   
@@ -379,6 +398,14 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
   
   getMiddleVideoIndex(): number {
+    // On mobile (1 video per view), show play button on the current video
+    if (this.videosPerView === 1) {
+      return this.currentVideoSlide;
+    }
+    // When showing 2 videos, the middle one is the first visible
+    if (this.videosPerView === 2) {
+      return this.currentVideoSlide;
+    }
     // When showing 3 videos, the middle one is always at index 1
     // This ensures the middle video stays bigger regardless of slideshow position
     if (this.featuredVideos.length <= 3) {
