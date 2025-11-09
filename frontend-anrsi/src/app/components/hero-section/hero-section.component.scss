@@ -372,26 +372,26 @@
   .hero-section {
     height: 50vh;
     min-height: 400px;
-    margin-top: -120px;
+    //margin-top: -120px;
   }
 
   .slide-content {
     max-width: 95%;
     padding: 0 var(--space-2);
-    margin-top: 40px;
+    //margin-top: 40px;
   }
 
-  .slide-content h1,
+  .slide-content h2,
   .no-wrap {
     font-size: clamp(1.5rem, 5vw, 2rem);
     line-height: 1.2;
     margin-top: 150px;
-    margin-bottom: var(--space-2);
+    //margin-bottom: var(--space-2);
   }
 
   .slide-content p {
     font-size: clamp(0.9rem, 3vw, 1rem);
-    margin-bottom: var(--space-3);
+    //margin-bottom: var(--space-3);
     line-height: 1.4;
   }
 
@@ -428,7 +428,7 @@
   }
 
   .hero-overlay {
-    background: linear-gradient(to right, rgba(159, 183, 174, 0.85), rgba(106, 108, 107, 0.75));
+    
   }
 }
 
@@ -436,25 +436,25 @@
   .hero-section {
     height: 45vh;
     min-height: 350px;
-    margin-top: -100px;
+    //margin-top: -100px;
   }
 
   .slide-content {
     max-width: 98%;
     padding: 0 var(--space-1);
-    margin-top: 30px;
+    //margin-top: 30px;
   }
 
   .slide-content h1,
   .no-wrap {
     font-size: clamp(1.2rem, 6vw, 1.6rem);
-    margin-top: 120px;
-    margin-bottom: var(--space-1);
+    //margin-top: 120px;
+    //margin-bottom: var(--space-1);
   }
 
   .slide-content p {
     font-size: clamp(0.85rem, 3.5vw, 0.95rem);
-    margin-bottom: var(--space-2);
+    //margin-bottom: var(--space-2);
   }
 
   .action-btn {
