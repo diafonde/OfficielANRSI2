@@ -84,7 +84,7 @@ import { CommonModule } from '@angular/common';
       display: flex;
       align-items: center;
       color: white;
-      margin-top: 60px;
+      margin-top: 0px;
     }
     
     .vision-hero .container {

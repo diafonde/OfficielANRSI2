@@ -74,7 +74,7 @@ import { Article } from '../../models/article.model';
       display: flex;
       align-items: center;
       color: white;
-      margin-top: 60px;
+      margin-top: 0px;
     }
     
     .articles-hero .container {

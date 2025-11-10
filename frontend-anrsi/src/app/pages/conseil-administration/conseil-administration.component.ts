@@ -52,7 +52,7 @@ interface BoardMember {
       display: flex;
       align-items: center;
       color: white;
-      margin-top: 60px;
+      margin-top: 0px;
     }
     
     .board-hero .container {

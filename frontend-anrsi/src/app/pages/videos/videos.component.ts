@@ -64,7 +64,7 @@ import { SafePipe } from '../../pages/videos/safe.pipe';
       display: flex;
       align-items: center;
       color: white;
-      margin-top: 60px;
+      margin-top: 0px;
     }
     
     .contact-hero .container {
@@ -87,6 +87,7 @@ import { SafePipe } from '../../pages/videos/safe.pipe';
     }
     
     .hero-overlay {
+      
       position: absolute;
       top: 0;
       left: 0;
@@ -397,6 +398,7 @@ import { SafePipe } from '../../pages/videos/safe.pipe';
     @media (max-width: 480px) {
       .contact-hero {
         height: 200px;
+        margin-top: 117px; /* Mobile: Header (85px) + Topbar (~32px) */
       }
 
       .media-sections {

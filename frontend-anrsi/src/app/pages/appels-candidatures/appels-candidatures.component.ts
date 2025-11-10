@@ -344,13 +344,13 @@ import { CommonModule } from '@angular/common';
     .appels-hero {
       position: relative;
       height: 300px;
-      background-image: url('../../../assets/images/anrsiback.png');
+      background-image: url('../../../assets/images/candidatures.jpg');
       background-size: cover;
       background-position: center;
       display: flex;
       align-items: center;
       color: white;
-      margin-top: 60px;
+      margin-top: 0px;
     }
     
     .appels-hero .container {
