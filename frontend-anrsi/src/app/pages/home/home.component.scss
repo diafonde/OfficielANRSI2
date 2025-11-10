@@ -164,19 +164,23 @@ section#news {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   padding: 0 var(--space-4);
   max-width: 100%;
+  width: 100%;
 }
 
 .articles-track {
   display: flex;
   transition: transform 0.5s ease-in-out;
-  width: 100%;
+  width: auto;  // Change back to auto so it expands to fit all articles
+  flex-wrap: nowrap;
+  min-width: 100%;  // Ensure it's at least container width
 }
 
 .articles-slide {
-  flex: 0 0 30%;
+  flex: 0 0 calc(100% / 3);  // Use calc to ensure exact 33.333% relative to container
   padding: var(--space-2) var(--space-3);
   box-sizing: border-box;
   min-width: 0;
+  flex-shrink: 0;
 }
 
 .slideshow-controls {
@@ -252,13 +256,13 @@ section#news {
 
 @media (max-width: 1200px) {
   .articles-slide {
-    flex: 0 0 33.333%;
+    flex: 0 0 calc(100% / 3);  // Still 3 per view
   }
 }
 
 @media (max-width: 768px) {
   .articles-slide {
-    flex: 0 0 50%;
+    flex: 0 0 calc(100% / 2);  // 2 per view = 50% each
   }
   
   .articles-slideshow {
@@ -310,7 +314,7 @@ section#news {
 
 @media (max-width: 480px) {
   .articles-slide {
-    flex: 0 0 100%;
+    flex: 0 0 100%;  // 1 per view = 100%
   }
   
   .articles-slideshow {
@@ -501,6 +505,158 @@ section#news {
   background-color: var(--primary-500);
   color: white;
   text-decoration: none;
+}
+
+.missions-section {
+  padding: var(--space-8) 0;
+  background-color: var(--neutral-50);
+}
+
+.missions-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-4);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.mission-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-3);
+  background: white;
+  padding: var(--space-4);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.mission-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.mission-number {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+  color: white;
+  border-radius: 50%;
+  font-size: 1.25rem;
+  font-weight: 700;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+}
+
+.mission-text {
+  flex: 1;
+}
+
+.mission-text h3 {
+  margin-bottom: var(--space-2);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--primary-900);
+  line-height: 1.3;
+}
+
+.mission-text p {
+  margin: 0;
+  color: var(--neutral-700);
+  line-height: 1.5;
+  font-size: 0.875rem;
+}
+
+@media (max-width: 1024px) {
+  .missions-list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3);
+  }
+}
+
+@media (max-width: 768px) {
+  .missions-section {
+    padding: var(--space-6) 0;
+  }
+  
+  .missions-section .container {
+    padding: 0 var(--space-4);
+  }
+  
+  .missions-list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3);
+  }
+  
+  .mission-item {
+    padding: var(--space-3);
+    gap: var(--space-2);
+  }
+  
+  .mission-number {
+    width: 40px;
+    height: 40px;
+    font-size: 1.125rem;
+  }
+  
+  .mission-text h3 {
+    font-size: 0.9375rem;
+    margin-bottom: var(--space-1);
+  }
+  
+  .mission-text p {
+    font-size: 0.8125rem;
+  }
+  
+  .section-title {
+    font-size: 1.5rem;
+    margin-bottom: var(--space-4);
+  }
+}
+
+@media (max-width: 480px) {
+  .missions-section {
+    padding: var(--space-4) 0;
+  }
+  
+  .missions-section .container {
+    padding: 0 var(--space-2);
+  }
+  
+  .missions-list {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+  }
+  
+  .mission-item {
+    padding: var(--space-3);
+    gap: var(--space-2);
+  }
+  
+  .mission-number {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+  
+  .mission-text h3 {
+    font-size: 0.875rem;
+    margin-bottom: var(--space-1);
+  }
+  
+  .mission-text p {
+    font-size: 0.75rem;
+  }
+  
+  .section-title {
+    font-size: 1.25rem;
+    margin-bottom: var(--space-3);
+  }
 }
 
 .timeline {

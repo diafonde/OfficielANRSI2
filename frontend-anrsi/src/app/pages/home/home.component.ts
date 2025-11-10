@@ -415,4 +415,10 @@ export class HomeComponent implements OnInit, OnDestroy {
     const middleIndex = this.currentVideoSlide + Math.floor(this.videosPerView / 2);
     return Math.min(middleIndex, this.featuredVideos.length - 1);
   }
+
+  getMaxTransform(): number {
+    const totalSlides = this.getTotalSlides();
+    if (totalSlides <= 1) return 0;
+    return (totalSlides - 1) * this.getTransformPercentage();
+  }
 }
