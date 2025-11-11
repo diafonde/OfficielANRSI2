@@ -18,27 +18,27 @@ export class HeroSectionComponent implements OnInit, OnDestroy, AfterViewInit {
     
     { 
       url: 'assets/images/directeur.jpeg',
-      title: 'Autonomisation des Jeunes pour les ODD',
+      title: 'Signature d’un mémorandum d\'entente entre l\’ANRSI et l\’Académie de l\’Équipement Agricole Intelligent du Delta du Fleuve Jaune (Chine)',
       description: 'L\'ANRSI participe à une conférence internationale sur « l\'autonomisation des jeunes pour la réalisation des Objectifs de Développement Durable »',
       actionText: 'Lire la suite',
       actionUrl: '/article/4'
     },
     { 
       url: 'assets/images/anrsssi.jpeg',
-      title: 'Rencontre avec la Faculté de Médecine',
+      title: 'Le Directeur Général reçoit le Directeur Régional',
       description: 'Le Directeur Général de l\'ANRSI reçoit le Doyen de la Faculté de Médecine, de Pharmacie et d\'Odontostomatologie de Nouakchott',
       actionText: 'Voir les détails',
       actionUrl: '/article/5'
     },
     { 
       url: 'assets/images/article1.jpeg',
-      title: 'Rencontre avec la Faculté de Médecine',
+      title: 'Le Directeur Général de l’ANRSI reçoit le Doyen de la Faculté de Médecine',
       description: 'Le Directeur Général de l\'ANRSI reçoit le Doyen de la Faculté de Médecine, de Pharmacie et d\'Odontostomatologie de Nouakchott',
       actionText: 'Voir les détails',
       actionUrl: '/article/5'
     },
     { 
-      url: 'assets/images/zonehumide.jpg',
+      url: 'assets/images/anrsi22.jpeg',
       title: 'Rencontre avec la Faculté de Médecine',
       description: 'Le Directeur Général de l\'ANRSI reçoit le Doyen de la Faculté de Médecine, de Pharmacie et d\'Odontostomatologie de Nouakchott',
       actionText: 'Voir les détails',
