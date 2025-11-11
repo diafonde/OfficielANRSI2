@@ -38,8 +38,8 @@ export class HeroSectionComponent implements OnInit, OnDestroy, AfterViewInit {
       actionUrl: '/article/5'
     },
     { 
-      url: 'assets/images/anrsiip.jpg',
-      title: 'Le Directeur Général de l\'Agence participe à un atelier sur l\'assurance qualité dans la recherche scientifique',
+      url: 'assets/images/directeurr.jpeg',
+      title: 'Le Directeur Général participe à l\'ouverture du 2ᵉ Congrès International sur l\'Intelligence Artificielle à Nouakchott',
       description: 'Le Directeur Général de l\'ANRSI reçoit le Doyen de la Faculté de Médecine, de Pharmacie et d\'Odontostomatologie de Nouakchott',
       actionText: 'Voir les détails',
       actionUrl: '/article/5'
