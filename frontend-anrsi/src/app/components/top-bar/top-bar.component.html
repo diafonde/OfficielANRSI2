@@ -19,7 +19,7 @@
       <div class="quick-links">
         <a routerLink="/ai4agri" class="quick-link">{{ 'AI 4 AGRI' | translate }}</a>
         <a routerLink="/expert-anrsi" class="quick-link">{{ 'Expert à l\'ANRSI' | translate }}</a>
-        <a routerLink="/appels-candidatures" class="quick-link">{{ 'Appels à Candidatures' | translate }}</a>
+        <a routerLink="/appels-candidatures" class="quick-linked">{{ 'Appels à Candidatures' | translate }}</a>
         <a routerLink="/plateformes" class="quick-link">{{ 'Plateformes' | translate }}</a>
         <a routerLink="/zone-humide" class="quick-link">{{ 'Zone Humide' | translate }}</a>
         <a routerLink="/agence-medias" class="quick-link">{{ 'Agence dans Médias' | translate }}</a>
@@ -42,24 +42,21 @@
               [class.active]="currentLang === 'fr'"
               (click)="switchLanguage('fr')">
               <span class="lang-flag">🇫🇷</span>
-              <span class="lang-code">FR</span>
-              <span class="lang-name">Français</span>
+              <span class="lang-code">FR</span>            
             </button>
             <button 
               class="lang-option"
               [class.active]="currentLang === 'ar'"
               (click)="switchLanguage('ar')">
               <span class="lang-flag">🇲🇷</span>
-              <span class="lang-code">AR</span>
-              <span class="lang-name">العربية</span>
+              <span class="lang-code">AR</span>              
             </button>
             <button 
               class="lang-option"
               [class.active]="currentLang === 'en'"
               (click)="switchLanguage('en')">
               <span class="lang-flag">🇺🇸</span>
-              <span class="lang-code">EN</span>
-              <span class="lang-name">English</span>
+              <span class="lang-code">EN</span>            
             </button>
           </div>
         </div>

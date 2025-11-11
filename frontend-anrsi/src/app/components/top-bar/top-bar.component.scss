@@ -4,10 +4,10 @@
   padding: 0.3rem 0;
   font-size: 0.8rem;
   position: fixed;
-  top: 140px;
+  top: 150px; /* Match header height (150px) */
   left: 0;
   width: 100%;
-  z-index: 1006;
+  z-index: 1006; /* Lower than header (1007) */
   transition: all 0.3s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   min-height: 32px;
@@ -21,7 +21,7 @@
   background: rgba(8, 53, 21, 0.95);
   backdrop-filter: blur(10px);
   padding: 0.2rem 0;
-  top: 120px;
+  top: 120px; /* Match header scrolled height (120px) */
 }
 
 .top-bar-container {
@@ -83,6 +83,10 @@
   font-size: 0.8rem;
   pointer-events: auto;
   cursor: pointer;
+}
+.quick-linked {
+  color: #d1e311;
+  background: rgba(74, 222, 128, 0.1);
 }
 
 .quick-link:hover {

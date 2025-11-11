@@ -84,7 +84,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   ];
 
   partners = [
-    { name: 'Mauritanie', logo: 'https://upload.wikimedia.org/wikipedia/commons/4/43/Flag_of_Mauritania.svg' },
+    { name: 'Saudi Arabia', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Flag_of_Saudi_Arabia.svg/250px-Flag_of_Saudi_Arabia.svg.png' },
     { name: 'Pakistan', logo: 'https://upload.wikimedia.org/wikipedia/commons/3/32/Flag_of_Pakistan.svg' },
     { name: 'Japon', logo: 'https://upload.wikimedia.org/wikipedia/commons/9/9e/Flag_of_Japan.svg' },
     { name: 'Sénégal', logo: 'https://upload.wikimedia.org/wikipedia/commons/f/fd/Flag_of_Senegal.svg' },
@@ -238,6 +238,27 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
     // Ensure we can scroll through all articles
     return Math.max(1, this.latestArticles.length - this.slidesPerView + 1);
+  }
+  
+  getIndicatorSlides(): number[] {
+    const totalSlides = this.getTotalSlides();
+    const maxIndicators = 5; // Maximum number of indicators to show
+    if (totalSlides <= maxIndicators) {
+      return Array.from({ length: totalSlides }, (_, i) => i);
+    }
+    // Show evenly distributed indicators
+    return Array.from({ length: maxIndicators }, (_, i) => i);
+  }
+
+  getIndicatorIndex(indicatorPosition: number): number {
+    const totalSlides = this.getTotalSlides();
+    const maxIndicators = 5;
+    if (totalSlides <= maxIndicators) {
+      return indicatorPosition;
+    }
+    // Map indicator position to actual slide index (evenly distributed)
+    const step = (totalSlides - 1) / (maxIndicators - 1);
+    return Math.round(indicatorPosition * step);
   }
   
   canScroll(): boolean {

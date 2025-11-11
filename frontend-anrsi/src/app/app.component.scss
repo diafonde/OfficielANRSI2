@@ -4,6 +4,44 @@
   min-height: 100vh;
 }
 
+.independent-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1008; /* Higher than header (1007) */
+  //background: linear-gradient(135deg, #083515 0%, #0a3d62 100%);
+  color: white;
+  padding: var(--space-2) 0;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  
+  p {
+    margin: 0;
+    padding: 0 var(--space-4);
+    line-height: 1.4;
+  }
+  
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+    padding: var(--space-1) 0;
+    
+    p {
+      padding: 0 var(--space-2);
+    }
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 0.75rem;
+    padding: var(--space-1) 0;
+    
+    p {
+      padding: 0 var(--space-1);
+    }
+  }
+}
 main {
   flex: 1;
   padding-top: 180px; /* Account for header (140px) + top bar (40px) */

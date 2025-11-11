@@ -36,11 +36,11 @@
     <!-- Slideshow Indicators -->
     <div class="slideshow-indicators" *ngIf="canScroll()">
       <button 
-        *ngFor="let slide of [].constructor(getTotalSlides()); let i = index"
+        *ngFor="let slide of getIndicatorSlides(); let i = index"
         class="indicator" 
-        [class.active]="i === currentSlide"
-        (click)="goToSlide(i)"
-        [attr.aria-label]="'Go to slide ' + (i + 1)">
+        [class.active]="getIndicatorIndex(i) === currentSlide"
+        (click)="goToSlide(getIndicatorIndex(i))"
+        [attr.aria-label]="'Go to slide ' + (getIndicatorIndex(i) + 1)">
       </button>
     </div>
   </div>

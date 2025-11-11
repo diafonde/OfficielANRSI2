@@ -5,7 +5,7 @@ header {
   width: 100%;
   background: linear-gradient(135deg, #dae4ee 0%, #2b9867 100%);
   padding: var(--space-6) 0;
-  height: 140px;
+  height: 150px;
   z-index: 1007; /* Higher than top bar (1006) so dropdown appears on top */
   transition: all 0.3s ease-in-out;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -18,6 +18,45 @@ header.scrolled {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   padding: var(--space-5) 0;
   height: 120px;
+}
+
+.agency-title {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--space-2) 0;
+  width: 100%;
+  
+  p {
+    color: rgb(197, 38, 57);
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin: 0;
+    text-align: center;
+    line-height: 1.4;
+  }
+}
+
+@media (max-width: 768px) {
+  .agency-title {
+    padding: var(--space-1) 0;
+    
+    p {
+      font-size: 1rem;
+      padding: 0 var(--space-2);
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .agency-title {
+    padding: var(--space-1) 0;
+    
+    p {
+      font-size: 0.85rem;
+      padding: 0 var(--space-1);
+    }
+  }
 }
 
 .header-container {
