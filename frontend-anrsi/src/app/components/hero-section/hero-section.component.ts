@@ -38,8 +38,8 @@ export class HeroSectionComponent implements OnInit, OnDestroy, AfterViewInit {
       actionUrl: '/article/5'
     },
     { 
-      url: 'assets/images/anrsi22.jpeg',
-      title: 'Rencontre avec la Faculté de Médecine',
+      url: 'assets/images/anrsiip.jpg',
+      title: 'Le Directeur Général de l\'Agence participe à un atelier sur l\'assurance qualité dans la recherche scientifique',
       description: 'Le Directeur Général de l\'ANRSI reçoit le Doyen de la Faculté de Médecine, de Pharmacie et d\'Odontostomatologie de Nouakchott',
       actionText: 'Voir les détails',
       actionUrl: '/article/5'
