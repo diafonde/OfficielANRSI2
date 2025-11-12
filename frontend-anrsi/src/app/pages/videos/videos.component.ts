@@ -434,9 +434,9 @@ export class VideosComponent {
   photos = [
     { title: "", url: "assets/images/277154633_374993344636114_8242637262867242236_n_0.jpg.jpeg", type: "photo" },
     { title: "", url: "assets/images/316106463_190420513522892_2157453747881448998_n_0.jpg.jpeg", type: "photo" },
-    { title: "", url: "assets/images/316956521_193067849924825_3676114238059618347_n_0.jpg.jpeg", type: "photo" },
-    { title: "", url: "assets/images/317490772_193067789924831_7216683787711679640_n_0.jpg.jpeg", type: "photo" },
-    { title: "", url: "assets/images/345629408_538652838484184_3414476345157867834_n_1.jpg.jpeg", type: "photo" },
+    { title: "", url: "assets/images/directeur.jpeg", type: "photo" },
+    { title: "", url: "assets/images/article1.jpeg", type: "photo" },
+    { title: "", url: "assets/images/directeurr.jpeg", type: "photo" },
     { title: "", url: "assets/images/IMG_1702AAA.jpg.jpeg", type: "photo" },
     { title: "", url: "assets/images/IMG_1738DDDDDDDDD.jpg.jpeg", type: "photo" },
     { title: "", url: "assets/images/chef.jpeg", type: "photo" }
