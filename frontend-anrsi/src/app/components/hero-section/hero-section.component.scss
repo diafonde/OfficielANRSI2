@@ -15,23 +15,26 @@
 
 
 .slide-title {
-  font-size: clamp(1rem, 1vw, 2.5rem);
-  font-weight: 500;
+  font-size: clamp(2rem, 3vw, 5rem);
+  font-weight: 700;
   color: white;
-  margin-top: 400px;
-  padding: var(--space-2) var(--space-4);
-  line-height: 1.2;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+  margin-top: 600px;
+  padding: 0;
+  line-height: 1.1;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
   text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  word-wrap: break-word;
   position: relative;
   z-index: 2;
-  background-color: rgba(0, 0, 0, 0.4);
-  border-radius: 8px;
-  backdrop-filter: blur(2px);
+  background-color: transparent;
+  border-radius: 0;
+  backdrop-filter: none;
   pointer-events: auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  letter-spacing: -0.02em;
+  max-width: 90%;
+  margin: 0 auto;
 }
 
 .slide-description {
@@ -100,20 +103,19 @@
 
 .slide-content {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   z-index: 2;
   text-align: center;
   color: white;
-  padding: var(--space-4);
+  padding: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: var(--space-4);
-  width: 100%;
-  max-width: 800px;
+  gap: 0;
   pointer-events: none;
 }
 
@@ -435,10 +437,10 @@
   }
 
   .slide-title {
-    font-size: clamp(1.3rem, 5vw, 1.8rem);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: clamp(1.8rem, 6vw, 3rem);
+    white-space: normal;
+    overflow: visible;
+    max-width: 95%;
   }
 
   .slide-description {
@@ -499,10 +501,10 @@
   }
 
   .slide-title {
-    font-size: clamp(1.2rem, 6vw, 1.5rem);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: clamp(1.5rem, 7vw, 2.5rem);
+    white-space: normal;
+    overflow: visible;
+    max-width: 95%;
   }
 
   .slide-description {
