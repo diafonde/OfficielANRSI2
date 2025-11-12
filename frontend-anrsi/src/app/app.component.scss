@@ -46,6 +46,10 @@ main {
   flex: 1;
   padding-top: 180px; /* Account for header (140px) + top bar (40px) */
   transition: padding-top 0.3s ease-in-out;
+  
+  &.admin-main {
+    padding-top: 0; /* No padding for admin routes */
+  }
 }
 
 /* Adjust padding when header is scrolled */

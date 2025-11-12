@@ -1,18 +1,18 @@
 <div class="app-container">
-    <div class="independent-banner">
+    <div class="independent-banner" *ngIf="!isAdminRoute">
     <marquee>AGENCE NATIONALE DE LA RECHERCHE SCIENTIFIQUE ET DE L'INNOVATION</marquee>
   </div>
-  <app-header></app-header>
-  <app-top-bar></app-top-bar>
-  <app-breadcrumbs></app-breadcrumbs>
+  <app-header *ngIf="!isAdminRoute"></app-header>
+  <app-top-bar *ngIf="!isAdminRoute"></app-top-bar>
+  <app-breadcrumbs *ngIf="!isAdminRoute"></app-breadcrumbs>
   
-  <main>
+  <main [class.admin-main]="isAdminRoute">
     
     <router-outlet></router-outlet>
 
   </main>
   
-  <div class="hero-statistics" data-aos="fade-up" style="background: linear-gradient(135deg, #083515 0%, #0a3d62 100%); padding: 3rem 0;">
+  <div class="hero-statistics" *ngIf="!isAdminRoute" data-aos="fade-up" style="background: linear-gradient(135deg, #083515 0%, #0a3d62 100%); padding: 3rem 0;">
     <div class="container">
       <div class="statistics-grid">
         <app-animated-counter [value]="500" suffix="+" label="Projets de recherche"></app-animated-counter>
@@ -23,7 +23,7 @@
     </div>
   </div>
   
-  <app-footer></app-footer>
+  <app-footer *ngIf="!isAdminRoute"></app-footer>
   
-  <app-back-to-top></app-back-to-top>
+  <app-back-to-top *ngIf="!isAdminRoute"></app-back-to-top>
 </div>

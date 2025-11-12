@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { HeaderComponent } from './components/header/header.component';
 import { FooterComponent } from './components/footer/footer.component';
@@ -10,6 +10,7 @@ import { BreadcrumbsComponent } from './components/breadcrumbs/breadcrumbs.compo
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { TranslateModule, TranslateService, TranslateLoader } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
+import { filter } from 'rxjs/operators';
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
 }
@@ -32,12 +33,32 @@ export function HttpLoaderFactory(http: HttpClient) {
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class App {
-  constructor(public translate: TranslateService) {
+export class App implements OnInit {
+  isAdminRoute: boolean = false;
+
+  constructor(
+    public translate: TranslateService,
+    private router: Router
+  ) {
     translate.addLangs(['fr', 'ar', 'en']);
     translate.setDefaultLang('fr');
     translate.use('fr');
+    
+    // Check initial route
+    this.checkIfAdminRoute();
+    
+    // Listen to route changes
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe(() => {
+        this.checkIfAdminRoute();
+      });
   }
+  
+  checkIfAdminRoute() {
+    this.isAdminRoute = this.router.url.startsWith('/admin');
+  }
+  
   switchLang(lang: string) {
     this.translate.use(lang);
     document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
