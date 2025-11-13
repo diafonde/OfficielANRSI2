@@ -1,167 +1,214 @@
 import { Injectable } from '@angular/core';
-import { Observable, of, BehaviorSubject } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, of, BehaviorSubject, map, catchError, throwError, switchMap } from 'rxjs';
 import { Article } from '../../models/article.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ArticleAdminService {
+  private readonly apiUrl = '/api/articles';
   private articlesSubject = new BehaviorSubject<Article[]>([]);
   public articles$ = this.articlesSubject.asObservable();
 
-  private nextId = 6; // Starting from 6 since we have 5 mock articles
+  constructor(private http: HttpClient) {
+    // Load articles from backend on initialization
+    this.loadArticlesFromBackend();
+  }
 
-  constructor() {
-    // Initialize with mock data
-    this.loadMockArticles();
+  private getAuthHeaders(): HttpHeaders {
+    const token = localStorage.getItem('admin_token');
+    let headers = new HttpHeaders().set('Content-Type', 'application/json');
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    return headers;
+  }
+
+  private loadArticlesFromBackend(): void {
+    this.getAllArticles().subscribe({
+      next: (articles) => {
+        this.articlesSubject.next(articles);
+      },
+      error: (error) => {
+        console.error('Error loading articles from backend:', error);
+        // Fallback to empty array on error
+        this.articlesSubject.next([]);
+      }
+    });
+  }
+
+  uploadImage(file: File): Observable<{ url: string; filename: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    // Get auth token if available
+    const token = localStorage.getItem('admin_token');
+    let headers = new HttpHeaders();
+    
+    // Don't set Content-Type header - let browser set it with boundary for multipart/form-data
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    
+    console.log('Uploading image to:', `/api/upload/image`);
+    console.log('Has token:', !!token);
+    
+    return this.http.post<{ url: string; filename: string }>(`/api/upload/image`, formData, { 
+      headers,
+      reportProgress: false
+    });
   }
 
   getAllArticles(): Observable<Article[]> {
-    return this.articles$;
+    return this.http.get<Article[]>(`${this.apiUrl}/admin/all`, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      map((articles) => {
+        // Update local cache
+        this.articlesSubject.next(articles);
+        return articles;
+      }),
+      catchError((error) => {
+        console.error('Error fetching articles:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   getArticleById(id: number): Observable<Article | undefined> {
-    const articles = this.articlesSubject.value;
-    const article = articles.find(a => a.id === id);
-    return of(article);
+    return this.http.get<Article>(`${this.apiUrl}/${id}`, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      map((article) => article),
+      catchError((error) => {
+        console.error('Error fetching article:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   createArticle(articleData: any): Observable<Article> {
-    // Handle translations structure
-    // The form sends: { author, category, translations: { fr: {...}, ar: {...}, en: {...} } }
-    // We need to create article with translations object
+    // Transform translations to backend format
+    // Backend expects: { title, content, excerpt, author, publishDate, imageUrl, category, tags, featured, published }
+    // Frontend sends: { author, category, translations: { fr: {...}, ar: {...}, en: {...} }, ... }
     
-    const newArticle: Article = {
-      id: this.nextId++,
-      // Use first available translation for main fields (for backward compatibility)
-      title: articleData.translations?.fr?.title || articleData.translations?.ar?.title || articleData.translations?.en?.title || '',
-      content: articleData.translations?.fr?.content || articleData.translations?.ar?.content || articleData.translations?.en?.content || '',
-      excerpt: articleData.translations?.fr?.excerpt || articleData.translations?.ar?.excerpt || articleData.translations?.en?.excerpt || '',
+    // Use first available translation for main fields (prefer fr, then ar, then en)
+    const translations = articleData.translations || {};
+    const firstTranslation = translations.fr || translations.ar || translations.en || {};
+    
+    // Prepare data for backend
+    const backendData = {
+      title: firstTranslation.title || '',
+      content: firstTranslation.content || '',
+      excerpt: firstTranslation.excerpt || '',
       author: articleData.author,
       publishDate: articleData.publishDate,
       imageUrl: articleData.imageUrl,
       category: articleData.category,
       tags: articleData.tags || [],
       featured: articleData.featured || false,
-      published: articleData.published !== false,
-      translations: articleData.translations || {}
+      published: articleData.published !== false
     };
     
-    const currentArticles = this.articlesSubject.value;
-    this.articlesSubject.next([...currentArticles, newArticle]);
+    console.log('Creating article with data:', backendData);
     
-    return of(newArticle);
+    return this.http.post<Article>(this.apiUrl, backendData, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      map((createdArticle) => {
+        // Update local cache
+        const currentArticles = this.articlesSubject.value;
+        this.articlesSubject.next([...currentArticles, createdArticle]);
+        return createdArticle;
+      }),
+      catchError((error) => {
+        console.error('Error creating article:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   updateArticle(id: number, articleData: any): Observable<Article> {
-    const currentArticles = this.articlesSubject.value;
-    const index = currentArticles.findIndex(a => a.id === id);
+    // Transform translations to backend format
+    const translations = articleData.translations || {};
+    const firstTranslation = translations.fr || translations.ar || translations.en || {};
     
-    if (index !== -1) {
-      const existingArticle = currentArticles[index];
-      
-      // Merge translations - keep existing translations and update with new ones
-      const existingTranslations = existingArticle.translations || {};
-      const newTranslations = articleData.translations || {};
-      const mergedTranslations = { ...existingTranslations, ...newTranslations };
-      
-      // Update main fields from first available translation (for backward compatibility)
-      const firstTranslation = mergedTranslations.fr || mergedTranslations.ar || mergedTranslations.en;
-      
-      const updatedArticle: Article = {
-        ...existingArticle,
-        title: firstTranslation?.title || existingArticle.title,
-        content: firstTranslation?.content || existingArticle.content,
-        excerpt: firstTranslation?.excerpt || existingArticle.excerpt,
-        author: articleData.author !== undefined ? articleData.author : existingArticle.author,
-        publishDate: articleData.publishDate !== undefined ? articleData.publishDate : existingArticle.publishDate,
-        imageUrl: articleData.imageUrl !== undefined ? articleData.imageUrl : existingArticle.imageUrl,
-        category: articleData.category !== undefined ? articleData.category : existingArticle.category,
-        tags: articleData.tags !== undefined ? articleData.tags : existingArticle.tags,
-        featured: articleData.featured !== undefined ? articleData.featured : existingArticle.featured,
-        published: articleData.published !== undefined ? articleData.published : existingArticle.published,
-        translations: mergedTranslations
-      };
-      
-      currentArticles[index] = updatedArticle;
-      this.articlesSubject.next([...currentArticles]);
-      return of(updatedArticle);
-    }
+    // Prepare data for backend
+    const backendData = {
+      title: firstTranslation.title || '',
+      content: firstTranslation.content || '',
+      excerpt: firstTranslation.excerpt || '',
+      author: articleData.author,
+      publishDate: articleData.publishDate,
+      imageUrl: articleData.imageUrl,
+      category: articleData.category,
+      tags: articleData.tags || [],
+      featured: articleData.featured || false,
+      published: articleData.published !== false
+    };
     
-    throw new Error('Article not found');
+    console.log('Updating article with data:', backendData);
+    
+    return this.http.put<Article>(`${this.apiUrl}/${id}`, backendData, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      map((updatedArticle) => {
+        // Update local cache
+        const currentArticles = this.articlesSubject.value;
+        const index = currentArticles.findIndex(a => a.id === updatedArticle.id);
+        if (index !== -1) {
+          currentArticles[index] = updatedArticle;
+        } else {
+          currentArticles.push(updatedArticle);
+        }
+        this.articlesSubject.next([...currentArticles]);
+        return updatedArticle;
+      }),
+      catchError((error) => {
+        console.error('Error updating article:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   deleteArticle(id: number): Observable<boolean> {
-    const currentArticles = this.articlesSubject.value;
-    const filteredArticles = currentArticles.filter(a => a.id !== id);
-    
-    if (filteredArticles.length < currentArticles.length) {
-      this.articlesSubject.next(filteredArticles);
-      return of(true);
-    }
-    
-    return of(false);
+    return this.http.delete<void>(`${this.apiUrl}/${id}`, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      map(() => {
+        // Update local cache
+        const currentArticles = this.articlesSubject.value;
+        const filteredArticles = currentArticles.filter(a => a.id !== id);
+        this.articlesSubject.next(filteredArticles);
+        return true;
+      }),
+      catchError((error) => {
+        console.error('Error deleting article:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
-  private loadMockArticles(): void {
-    const mockArticles: Article[] = [
-      {
-        id: 1,
-        title: 'Innovation in Agricultural Research',
-        content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit...',
-        excerpt: 'Latest developments in agricultural research and innovation.',
-        author: 'Dr. Ahmed Mohamed',
-        publishDate: new Date('2024-01-15'),
-        imageUrl: 'assets/images/article1.jpeg',
-        category: 'Research',
-        tags: ['agriculture', 'innovation', 'research']
-      },
-      {
-        id: 2,
-        title: 'Climate Change Adaptation Strategies',
-        content: 'Strategies for adapting to climate change in Mauritania...',
-        excerpt: 'Comprehensive guide to climate adaptation.',
-        author: 'Dr. Fatima Al-Hassan',
-        publishDate: new Date('2024-01-20'),
-        imageUrl: 'assets/images/article1.jpeg',
-        category: 'Environment',
-        tags: ['climate', 'adaptation', 'environment']
-      },
-      {
-        id: 3,
-        title: 'Sustainable Development Goals',
-        content: 'How Mauritania is working towards SDGs...',
-        excerpt: 'Progress report on sustainable development.',
-        author: 'Dr. Mohamed Salem',
-        publishDate: new Date('2024-02-01'),
-        imageUrl: 'assets/images/article1.jpeg',
-        category: 'Development',
-        tags: ['sustainability', 'development', 'goals']
-      },
-      {
-        id: 4,
-        title: 'Technology Transfer in Agriculture',
-        content: 'Modern technologies being transferred to local farmers...',
-        excerpt: 'Technology transfer initiatives and their impact.',
-        author: 'Dr. Aicha Mint Ahmed',
-        publishDate: new Date('2024-02-10'),
-        imageUrl: 'assets/images/article1.jpeg',
-        category: 'Technology',
-        tags: ['technology', 'transfer', 'agriculture']
-      },
-      {
-        id: 5,
-        title: 'Research Collaboration Networks',
-        content: 'Building networks for collaborative research...',
-        excerpt: 'Importance of research collaboration.',
-        author: 'Dr. Sidi Mohamed',
-        publishDate: new Date('2024-02-15'),
-        imageUrl: 'assets/images/article1.jpeg',
-        category: 'Collaboration',
-        tags: ['collaboration', 'networks', 'research']
-      }
-    ];
-
-    this.articlesSubject.next(mockArticles);
+  toggleFeatured(id: number, featured: boolean): Observable<Article> {
+    // Get the current article first, then update it
+    return this.getArticleById(id).pipe(
+      switchMap((article) => {
+        if (!article) {
+          throw new Error('Article not found');
+        }
+        // Update the article with new featured status
+        const updateData = {
+          ...article,
+          featured: featured
+        };
+        // Use updateArticle to persist the change
+        return this.updateArticle(id, updateData);
+      }),
+      catchError((error) => {
+        console.error('Error toggling featured status:', error);
+        return throwError(() => error);
+      })
+    );
   }
 }

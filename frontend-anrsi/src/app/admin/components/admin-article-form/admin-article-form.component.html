@@ -72,20 +72,60 @@
         </div>
 
         <div class="form-group">
-          <label for="imageUrl">Featured Image URL *</label>
-          <input
-            type="url"
-            id="imageUrl"
-            formControlName="imageUrl"
-            class="form-control"
-            [class.error]="getFieldError('imageUrl')"
-            placeholder="https://example.com/image.jpg"
-          >
-          <div class="error-message" *ngIf="getFieldError('imageUrl')">
-            {{ getFieldError('imageUrl') }}
+          <label for="imageFile">Featured Image *</label>
+          <div class="file-upload-container">
+            <input
+              type="file"
+              id="imageFile"
+              accept="image/*"
+              (change)="onImageSelected($event)"
+              class="file-input"
+              [class.error]="getFieldError('imageUrl')"
+            >
+            <div class="file-upload-preview" *ngIf="imagePreview">
+              <img [src]="imagePreview" alt="Preview" class="preview-image">
+              <button type="button" class="remove-image" (click)="removeImage()" title="Remove image">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <div class="file-upload-placeholder" *ngIf="!imagePreview && !imageFile">
+              <i class="fas fa-cloud-upload-alt"></i>
+              <span>Click to upload or drag and drop</span>
+              <small>PNG, JPG, GIF up to 10MB</small>
+            </div>
+            <div class="file-upload-info" *ngIf="imageFile && !imagePreview">
+              <i class="fas fa-file-image"></i>
+              <span>{{ imageFile.name }}</span>
+              <span class="file-size">({{ formatFileSize(imageFile.size) }})</span>
+            </div>
+            <div class="upload-progress" *ngIf="isUploading">
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="uploadProgress"></div>
+              </div>
+              <span>Uploading... {{ uploadProgress }}%</span>
+            </div>
           </div>
-          <div class="form-help">
-            Enter the URL of the featured image for this article
+          <input
+            type="hidden"
+            formControlName="imageUrl"
+          >
+          <div class="error-message" *ngIf="getFieldError('imageUrl') || errorMessage">
+            {{ getFieldError('imageUrl') || errorMessage }}
+          </div>
+          <div class="form-help" *ngIf="!getFieldError('imageUrl') && !errorMessage">
+            Upload an image file (PNG, JPG, GIF) or enter a URL below
+          </div>
+          <div class="url-fallback" *ngIf="!imageFile">
+            <label for="imageUrlInput">Or enter image URL:</label>
+            <input
+              type="url"
+              id="imageUrlInput"
+              [value]="imageUrlFallback"
+              (input)="onUrlInputChange($event)"
+              (blur)="onUrlInput()"
+              class="form-control url-input"
+              placeholder="https://example.com/image.jpg"
+            >
           </div>
         </div>
 

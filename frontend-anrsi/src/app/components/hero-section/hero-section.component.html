@@ -1,19 +1,22 @@
 <div class="hero-section">
-  <div class="slideshow-container" #slideshowContainer>
+  <div class="slideshow-container" #slideshowContainer *ngIf="!loading && slides.length > 0">
     <div class="slide" 
          *ngFor="let slide of slides; let i = index" 
          [class.active]="currentSlide === i"
-         [style.background-image]="'url(' + slide.url + ')'"
          (click)="onSlideClick(slide, i)">
-      <div class="hero-overlay">
-        
+      <div class="slide-image-container">
+        <img [src]="slide.url" [alt]="slide.title" class="slide-image" (error)="onImageError($event)">
       </div>
       <div class="slide-content">
         <h2 class="slide-title">{{ slide.title }}</h2>
+        <p class="slide-description" *ngIf="slide.description">{{ slide.description }}</p>
+        <a [routerLink]="slide.actionUrl" class="action-btn" *ngIf="slide.actionUrl" (click)="$event.stopPropagation()">
+          {{ slide.actionText || 'Lire la suite' }}
+        </a>
       </div>
     </div>
       
-    <div class="slide-controls">
+    <div class="slide-controls" *ngIf="slides.length > 1">
       <button class="prev-btn" (click)="prevSlide(); $event.stopPropagation()">
         <i class="fas fa-chevron-left"></i>
       </button>
@@ -22,12 +25,26 @@
       </button>
     </div>
 
-    <div class="slide-indicators">
+    <div class="slide-indicators" *ngIf="slides.length > 1">
       <span *ngFor="let slide of slides; let i = index" 
             class="indicator"
             [class.active]="currentSlide === i"
             (click)="goToSlide(i); $event.stopPropagation()">
       </span>
+    </div>
+  </div>
+  
+  <div class="loading-state" *ngIf="loading">
+    <div class="loading-spinner">
+      <i class="fas fa-spinner fa-spin"></i>
+      <p>Chargement des articles...</p>
+    </div>
+  </div>
+  
+  <div class="empty-state" *ngIf="!loading && slides.length === 0">
+    <div class="empty-content">
+      <i class="fas fa-newspaper"></i>
+      <p>Aucun article disponible</p>
     </div>
   </div>
 </div>

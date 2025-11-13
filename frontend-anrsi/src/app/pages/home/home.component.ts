@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { TranslateModule } from '@ngx-translate/core';
 import { HeroSectionComponent } from '../../components/hero-section/hero-section.component';
 import { ArticleCardComponent } from '../../components/article-card/article-card.component';
@@ -92,7 +93,8 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   constructor(
     private articleService: ArticleService,
-    private anrsiDataService: ANRSIDataService
+    private anrsiDataService: ANRSIDataService,
+    private http: HttpClient
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -112,12 +114,25 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.featuredArticles = articles;
     });
     
-    this.articleService.getRecentArticles().subscribe(articles => {
-      this.latestArticles = articles.slice(); // Limit to 4 articles
-      
-      // Start slideshow if we can scroll
-      if (this.canScroll()) {
-        this.startSlideshow();
+    // Load non-featured articles from backend
+    this.http.get<Article[]>('/api/articles/non-featured').subscribe({
+      next: (articles) => {
+        this.latestArticles = articles.slice(); // Use all non-featured articles
+        
+        // Start slideshow if we can scroll
+        if (this.canScroll()) {
+          this.startSlideshow();
+        }
+      },
+      error: (error) => {
+        console.error('Error loading non-featured articles:', error);
+        // Fallback to recent articles if non-featured endpoint fails
+        this.articleService.getRecentArticles().subscribe(articles => {
+          this.latestArticles = articles.slice();
+          if (this.canScroll()) {
+            this.startSlideshow();
+          }
+        });
       }
     });
     

@@ -1,0 +1,176 @@
+package mr.gov.anrsi.service;
+
+import mr.gov.anrsi.dto.PageCreateDTO;
+import mr.gov.anrsi.dto.PageDTO;
+import mr.gov.anrsi.dto.PageUpdateDTO;
+import mr.gov.anrsi.entity.Page;
+import mr.gov.anrsi.exception.PageNotFoundException;
+import mr.gov.anrsi.repository.PageRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@Transactional
+@ConditionalOnProperty(name = "spring.datasource.url")
+public class PageService {
+    
+    @Autowired
+    private PageRepository pageRepository;
+    
+    public PageDTO getPageBySlug(String slug) {
+        Page page = pageRepository.findBySlugAndIsPublishedTrue(slug)
+            .orElseThrow(() -> new PageNotFoundException("Page not found with slug: " + slug));
+        return PageDTO.fromEntity(page);
+    }
+    
+    public PageDTO getPageById(Long id) {
+        Page page = pageRepository.findById(id)
+            .orElseThrow(() -> new PageNotFoundException("Page not found with id: " + id));
+        return PageDTO.fromEntity(page);
+    }
+    
+    public PageDTO getPageBySlugForAdmin(String slug) {
+        Page page = pageRepository.findBySlug(slug)
+            .orElseThrow(() -> new PageNotFoundException("Page not found with slug: " + slug));
+        return PageDTO.fromEntity(page);
+    }
+    
+    public List<PageDTO> getAllPublishedPages() {
+        return pageRepository.findByIsPublishedTrueAndIsActiveTrue()
+            .stream()
+            .map(PageDTO::fromEntity)
+            .collect(Collectors.toList());
+    }
+    
+    public List<PageDTO> getAllPages() {
+        return pageRepository.findAll()
+            .stream()
+            .map(PageDTO::fromEntity)
+            .collect(Collectors.toList());
+    }
+    
+    public List<PageDTO> getAllPages(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("updatedAt").descending());
+        org.springframework.data.domain.Page<Page> pages = pageRepository.findAll(pageable);
+        return pages.getContent()
+            .stream()
+            .map(PageDTO::fromEntity)
+            .collect(Collectors.toList());
+    }
+    
+    public List<PageDTO> getPagesByType(Page.PageType pageType) {
+        return pageRepository.findByPageType(pageType)
+            .stream()
+            .map(PageDTO::fromEntity)
+            .collect(Collectors.toList());
+    }
+    
+    public PageDTO createPage(PageCreateDTO pageCreateDTO) {
+        // Check if slug already exists
+        if (pageRepository.existsBySlug(pageCreateDTO.getSlug())) {
+            throw new IllegalArgumentException("Page with slug '" + pageCreateDTO.getSlug() + "' already exists");
+        }
+        
+        Page page = new Page();
+        page.setSlug(pageCreateDTO.getSlug());
+        page.setTitle(pageCreateDTO.getTitle());
+        page.setHeroTitle(pageCreateDTO.getHeroTitle());
+        page.setHeroSubtitle(pageCreateDTO.getHeroSubtitle());
+        page.setHeroImageUrl(pageCreateDTO.getHeroImageUrl());
+        page.setContent(pageCreateDTO.getContent());
+        page.setPageType(pageCreateDTO.getPageType());
+        page.setMetadata(pageCreateDTO.getMetadata());
+        page.setIsPublished(pageCreateDTO.getIsPublished() != null ? pageCreateDTO.getIsPublished() : false);
+        page.setIsActive(pageCreateDTO.getIsActive() != null ? pageCreateDTO.getIsActive() : true);
+        
+        Page savedPage = pageRepository.save(page);
+        return PageDTO.fromEntity(savedPage);
+    }
+    
+    public PageDTO updatePage(Long id, PageUpdateDTO pageUpdateDTO) {
+        Page page = pageRepository.findById(id)
+            .orElseThrow(() -> new PageNotFoundException("Page not found with id: " + id));
+        
+        if (pageUpdateDTO.getTitle() != null) {
+            page.setTitle(pageUpdateDTO.getTitle());
+        }
+        if (pageUpdateDTO.getHeroTitle() != null) {
+            page.setHeroTitle(pageUpdateDTO.getHeroTitle());
+        }
+        if (pageUpdateDTO.getHeroSubtitle() != null) {
+            page.setHeroSubtitle(pageUpdateDTO.getHeroSubtitle());
+        }
+        if (pageUpdateDTO.getHeroImageUrl() != null) {
+            page.setHeroImageUrl(pageUpdateDTO.getHeroImageUrl());
+        }
+        if (pageUpdateDTO.getContent() != null) {
+            page.setContent(pageUpdateDTO.getContent());
+        }
+        if (pageUpdateDTO.getPageType() != null) {
+            page.setPageType(pageUpdateDTO.getPageType());
+        }
+        if (pageUpdateDTO.getMetadata() != null) {
+            page.setMetadata(pageUpdateDTO.getMetadata());
+        }
+        if (pageUpdateDTO.getIsPublished() != null) {
+            page.setIsPublished(pageUpdateDTO.getIsPublished());
+        }
+        if (pageUpdateDTO.getIsActive() != null) {
+            page.setIsActive(pageUpdateDTO.getIsActive());
+        }
+        
+        Page updatedPage = pageRepository.save(page);
+        return PageDTO.fromEntity(updatedPage);
+    }
+    
+    public void deletePage(Long id) {
+        if (!pageRepository.existsById(id)) {
+            throw new PageNotFoundException("Page not found with id: " + id);
+        }
+        pageRepository.deleteById(id);
+    }
+    
+    public PageDTO publishPage(Long id) {
+        Page page = pageRepository.findById(id)
+            .orElseThrow(() -> new PageNotFoundException("Page not found with id: " + id));
+        page.setIsPublished(true);
+        Page updatedPage = pageRepository.save(page);
+        return PageDTO.fromEntity(updatedPage);
+    }
+    
+    public PageDTO unpublishPage(Long id) {
+        Page page = pageRepository.findById(id)
+            .orElseThrow(() -> new PageNotFoundException("Page not found with id: " + id));
+        page.setIsPublished(false);
+        Page updatedPage = pageRepository.save(page);
+        return PageDTO.fromEntity(updatedPage);
+    }
+    
+    public PageDTO togglePageStatus(Long id) {
+        Page page = pageRepository.findById(id)
+            .orElseThrow(() -> new PageNotFoundException("Page not found with id: " + id));
+        page.setIsActive(!page.getIsActive());
+        Page updatedPage = pageRepository.save(page);
+        return PageDTO.fromEntity(updatedPage);
+    }
+    
+    public List<String> getAllSlugs() {
+        return pageRepository.findAll()
+            .stream()
+            .map(Page::getSlug)
+            .collect(Collectors.toList());
+    }
+    
+    public List<Page.PageType> getAvailablePageTypes() {
+        return List.of(Page.PageType.values());
+    }
+}
+
