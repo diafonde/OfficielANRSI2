@@ -1,0 +1,101 @@
+<div class="admin-priorites-recherche-2026-form">
+  <div class="form-header">
+    <h1>Edit Priorités de la Recherche 2026 Page</h1>
+    <button (click)="onCancel()" class="btn btn-secondary">
+      <i class="fas fa-times"></i> Cancel
+    </button>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <i class="fas fa-spinner fa-spin"></i> Loading...
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+    <!-- Hero Section -->
+    <div class="form-section">
+      <h2>Hero Section</h2>
+      <div class="form-group">
+        <label>Hero Title *</label>
+        <input type="text" formControlName="heroTitle" class="form-control" />
+      </div>
+      <div class="form-group">
+        <label>Hero Subtitle *</label>
+        <input type="text" formControlName="heroSubtitle" class="form-control" />
+      </div>
+    </div>
+
+    <!-- Intro Paragraphs Section -->
+    <div class="form-section">
+      <h2>Introduction Paragraphs</h2>
+      <div formArrayName="introParagraphs" *ngFor="let paragraph of introParagraphs.controls; let i = index">
+        <div [formGroupName]="i" class="nested-form-group">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Paragraph {{ i + 1 }} *</label>
+              <textarea formControlName="text" class="form-control" rows="3"></textarea>
+            </div>
+            <button type="button" (click)="removeIntroParagraph(i)" class="btn btn-danger btn-sm">Remove</button>
+          </div>
+        </div>
+      </div>
+      <button type="button" (click)="addIntroParagraph()" class="btn btn-primary">Add Paragraph</button>
+    </div>
+
+    <!-- Content Section -->
+    <div class="form-section">
+      <h2>Content Section</h2>
+      <div class="form-group">
+        <label>Section Title *</label>
+        <input type="text" formControlName="sectionTitle" class="form-control" />
+      </div>
+      <div class="form-group">
+        <label>Publication Date *</label>
+        <input type="text" formControlName="publicationDate" class="form-control" placeholder="18 Janvier 2023" />
+        <small class="form-help">Date format: e.g., "18 Janvier 2023"</small>
+      </div>
+    </div>
+
+    <!-- Research Priorities Section -->
+    <div class="form-section">
+      <h2>Research Priorities</h2>
+      <div formArrayName="researchPriorities" *ngFor="let priority of researchPriorities.controls; let i = index">
+        <div [formGroupName]="i" class="nested-form-group">
+          <div class="form-row">
+            <div class="form-group">
+              <label>ID *</label>
+              <input type="number" formControlName="id" class="form-control" min="1" readonly />
+              <small class="form-help">Auto-generated based on position</small>
+            </div>
+            <button type="button" (click)="removeResearchPriority(i)" class="btn btn-danger btn-sm">Remove</button>
+          </div>
+          <div class="form-group">
+            <label>Title *</label>
+            <input type="text" formControlName="title" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Description *</label>
+            <textarea formControlName="description" class="form-control" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Icon (Font Awesome class) *</label>
+            <input type="text" formControlName="icon" class="form-control" placeholder="fas fa-seedling" />
+            <small class="form-help">Font Awesome icon class (e.g., "fas fa-seedling", "fas fa-robot")</small>
+          </div>
+        </div>
+      </div>
+      <button type="button" (click)="addResearchPriority()" class="btn btn-primary">Add Research Priority</button>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" (click)="onCancel()" class="btn btn-secondary">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="form.invalid || isSaving">
+        <i class="fas fa-save"></i> {{ isSaving ? 'Saving...' : 'Save Changes' }}
+      </button>
+    </div>
+  </form>
+</div>
+

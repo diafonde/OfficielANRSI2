@@ -1,5 +1,49 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { PageService, PageDTO } from '../../services/page.service';
+
+interface RequirementItem {
+  icon: string;
+  title: string;
+  items: string[];
+}
+
+interface DomainItem {
+  icon: string;
+  title: string;
+  description: string;
+}
+
+interface ProcessStep {
+  number: number;
+  title: string;
+  description: string;
+}
+
+interface BenefitItem {
+  icon: string;
+  title: string;
+  description: string;
+}
+
+interface ContactItem {
+  icon: string;
+  label: string;
+  value: string;
+}
+
+interface ExpertAnrsiContent {
+  heroTitle: string;
+  heroSubtitle: string;
+  introText: string;
+  requirements: RequirementItem[];
+  domains: DomainItem[];
+  processSteps: ProcessStep[];
+  benefits: BenefitItem[];
+  applicationText: string;
+  contactInfo: ContactItem[];
+  requiredDocuments: string[];
+}
 
 @Component({
   selector: 'app-expert-anrsi',
@@ -8,198 +52,88 @@ import { CommonModule } from '@angular/common';
   template: `
     <div class="expert-hero">
       <div class="container">
-        <h1>Expert à l'ANRSI</h1>
-        <p>Rejoignez notre réseau d'experts scientifiques et technologiques</p>
+        <h1>{{ content?.heroTitle || 'Expert à l\'ANRSI' }}</h1>
+        <p>{{ content?.heroSubtitle || 'Rejoignez notre réseau d\'experts scientifiques et technologiques' }}</p>
       </div>
       <div class="hero-overlay"></div>
     </div>
     
-    <div class="container">
+    <div class="container" *ngIf="isLoading">
+      <div class="loading-container">
+        <div class="loading">Loading...</div>
+      </div>
+    </div>
+    
+    <div class="container" *ngIf="!isLoading && content">
       <section class="section expert-section">
         <div class="expert-content">
           <h2>Devenir Expert ANRSI</h2>
-          <p class="intro-text">
-            L'Agence Nationale de la Recherche Scientifique et de l'Innovation (ANRSI) recrute des experts qualifiés pour évaluer les projets de recherche et contribuer au développement scientifique de la Mauritanie.
-          </p>
+          <p class="intro-text">{{ content.introText }}</p>
           
-          <div class="expert-requirements">
+          <div class="expert-requirements" *ngIf="content.requirements && content.requirements.length > 0">
             <h3>Profil Requis</h3>
             <div class="requirements-grid">
-              <div class="requirement-item">
-                <div class="requirement-icon">🎓</div>
-                <h4>Formation Académique</h4>
+              <div class="requirement-item" *ngFor="let requirement of content.requirements">
+                <div class="requirement-icon">{{ requirement.icon }}</div>
+                <h4>{{ requirement.title }}</h4>
                 <ul>
-                  <li>Doctorat dans un domaine scientifique ou technologique</li>
-                  <li>Expérience significative en recherche</li>
-                  <li>Publications scientifiques reconnues</li>
-                  <li>Maîtrise du français et/ou de l'anglais</li>
-                </ul>
-              </div>
-              
-              <div class="requirement-item">
-                <div class="requirement-icon">🔬</div>
-                <h4>Expertise Technique</h4>
-                <ul>
-                  <li>Connaissance approfondie du domaine d'expertise</li>
-                  <li>Expérience en évaluation de projets</li>
-                  <li>Capacité d'analyse et de synthèse</li>
-                  <li>Rigueur scientifique et éthique</li>
-                </ul>
-              </div>
-              
-              <div class="requirement-item">
-                <div class="requirement-icon">🌍</div>
-                <h4>Engagement</h4>
-                <ul>
-                  <li>Disponibilité pour les évaluations</li>
-                  <li>Engagement envers le développement scientifique</li>
-                  <li>Respect des délais et procédures</li>
-                  <li>Confidentialité et impartialité</li>
+                  <li *ngFor="let item of requirement.items">{{ item }}</li>
                 </ul>
               </div>
             </div>
           </div>
           
-          <div class="expert-domains">
+          <div class="expert-domains" *ngIf="content.domains && content.domains.length > 0">
             <h3>Domaines d'Expertise Recherchés</h3>
             <div class="domains-grid">
-              <div class="domain-item">
-                <h4>🔬 Sciences Exactes</h4>
-                <p>Mathématiques, Physique, Chimie, Sciences de la Terre</p>
-              </div>
-              
-              <div class="domain-item">
-                <h4>🌱 Sciences de la Vie</h4>
-                <p>Biologie, Agriculture, Médecine, Sciences Vétérinaires</p>
-              </div>
-              
-              <div class="domain-item">
-                <h4>💻 Technologies de l'Information</h4>
-                <p>Informatique, Intelligence Artificielle, Télécommunications</p>
-              </div>
-              
-              <div class="domain-item">
-                <h4>⚡ Sciences de l'Ingénieur</h4>
-                <p>Génie Civil, Mécanique, Électrique, Énergies Renouvelables</p>
-              </div>
-              
-              <div class="domain-item">
-                <h4>🌍 Sciences Sociales</h4>
-                <p>Économie, Sociologie, Droit, Sciences Politiques</p>
-              </div>
-              
-              <div class="domain-item">
-                <h4>🌿 Sciences de l'Environnement</h4>
-                <p>Écologie, Climatologie, Gestion des Ressources Naturelles</p>
+              <div class="domain-item" *ngFor="let domain of content.domains">
+                <h4>{{ domain.icon }} {{ domain.title }}</h4>
+                <p>{{ domain.description }}</p>
               </div>
             </div>
           </div>
           
-          <div class="expert-process">
+          <div class="expert-process" *ngIf="content.processSteps && content.processSteps.length > 0">
             <h3>Processus de Recrutement</h3>
             <div class="process-steps">
-              <div class="step-item">
-                <div class="step-number">1</div>
+              <div class="step-item" *ngFor="let step of content.processSteps">
+                <div class="step-number">{{ step.number }}</div>
                 <div class="step-content">
-                  <h4>Candidature</h4>
-                  <p>Soumission du dossier de candidature avec CV détaillé, liste des publications et lettre de motivation.</p>
-                </div>
-              </div>
-              
-              <div class="step-item">
-                <div class="step-number">2</div>
-                <div class="step-content">
-                  <h4>Évaluation</h4>
-                  <p>Examen du dossier par un comité d'experts de l'ANRSI selon des critères objectifs.</p>
-                </div>
-              </div>
-              
-              <div class="step-item">
-                <div class="step-number">3</div>
-                <div class="step-content">
-                  <h4>Entretien</h4>
-                  <p>Entretien avec les candidats retenus pour évaluer leurs compétences et leur motivation.</p>
-                </div>
-              </div>
-              
-              <div class="step-item">
-                <div class="step-number">4</div>
-                <div class="step-content">
-                  <h4>Formation</h4>
-                  <p>Formation aux procédures d'évaluation de l'ANRSI et aux outils utilisés.</p>
-                </div>
-              </div>
-              
-              <div class="step-item">
-                <div class="step-number">5</div>
-                <div class="step-content">
-                  <h4>Intégration</h4>
-                  <p>Intégration dans le réseau d'experts et attribution des premières missions d'évaluation.</p>
+                  <h4>{{ step.title }}</h4>
+                  <p>{{ step.description }}</p>
                 </div>
               </div>
             </div>
           </div>
           
-          <div class="expert-benefits">
+          <div class="expert-benefits" *ngIf="content.benefits && content.benefits.length > 0">
             <h3>Avantages d'être Expert ANRSI</h3>
             <div class="benefits-list">
-              <div class="benefit-item">
-                <div class="benefit-icon">💼</div>
+              <div class="benefit-item" *ngFor="let benefit of content.benefits">
+                <div class="benefit-icon">{{ benefit.icon }}</div>
                 <div class="benefit-content">
-                  <h4>Rémunération</h4>
-                  <p>Rémunération attractive pour chaque mission d'évaluation selon l'expertise et la complexité.</p>
-                </div>
-              </div>
-              
-              <div class="benefit-item">
-                <div class="benefit-icon">🌐</div>
-                <div class="benefit-content">
-                  <h4>Réseau International</h4>
-                  <p>Intégration dans un réseau d'experts internationaux et opportunités de collaboration.</p>
-                </div>
-              </div>
-              
-              <div class="benefit-item">
-                <div class="benefit-icon">📚</div>
-                <div class="benefit-content">
-                  <h4>Formation Continue</h4>
-                  <p>Accès à des formations et séminaires pour maintenir et développer ses compétences.</p>
-                </div>
-              </div>
-              
-              <div class="benefit-item">
-                <div class="benefit-icon">🏆</div>
-                <div class="benefit-content">
-                  <h4>Reconnaissance</h4>
-                  <p>Reconnaissance officielle en tant qu'expert scientifique et contribution au développement national.</p>
+                  <h4>{{ benefit.title }}</h4>
+                  <p>{{ benefit.description }}</p>
                 </div>
               </div>
             </div>
           </div>
           
-          <div class="application-section">
+          <div class="application-section" *ngIf="content.applicationText">
             <h3>Comment Postuler</h3>
             <div class="application-info">
-              <p>Pour postuler en tant qu'expert ANRSI, veuillez envoyer votre dossier de candidature à :</p>
-              <div class="contact-info">
-                <div class="contact-item">
-                  <i class="fas fa-envelope"></i>
-                  <span>expert@anrsi.mr</span>
-                </div>
-                <div class="contact-item">
-                  <i class="fas fa-phone"></i>
-                  <span>+222 45 25 44 21</span>
+              <p>{{ content.applicationText }}</p>
+              <div class="contact-info" *ngIf="content.contactInfo && content.contactInfo.length > 0">
+                <div class="contact-item" *ngFor="let contact of content.contactInfo">
+                  <i [class]="contact.icon"></i>
+                  <span>{{ contact.value }}</span>
                 </div>
               </div>
               
-              <div class="required-documents">
+              <div class="required-documents" *ngIf="content.requiredDocuments && content.requiredDocuments.length > 0">
                 <h4>Documents Requis :</h4>
                 <ul>
-                  <li>CV détaillé avec liste des publications</li>
-                  <li>Lettre de motivation</li>
-                  <li>Copies des diplômes et certifications</li>
-                  <li>Lettres de recommandation (optionnel)</li>
-                  <li>Liste des projets de recherche dirigés</li>
+                  <li *ngFor="let doc of content.requiredDocuments">{{ doc }}</li>
                 </ul>
               </div>
             </div>
@@ -561,6 +495,123 @@ import { CommonModule } from '@angular/common';
         gap: var(--space-4);
       }
     }
+    
+    .loading-container {
+      padding: var(--space-12);
+      text-align: center;
+    }
+    
+    .loading {
+      color: var(--neutral-600);
+      font-size: var(--text-lg);
+    }
   `]
 })
-export class ExpertAnrsiComponent {}
+export class ExpertAnrsiComponent implements OnInit {
+  page: PageDTO | null = null;
+  content: ExpertAnrsiContent | null = null;
+  isLoading = true;
+
+  constructor(private pageService: PageService) {}
+
+  ngOnInit(): void {
+    this.loadPage();
+  }
+
+  loadPage(): void {
+    this.pageService.getPageBySlug('expert-anrsi').subscribe({
+      next: (page) => {
+        this.page = page;
+        if (page.content) {
+          try {
+            this.content = JSON.parse(page.content);
+          } catch (e) {
+            console.error('Error parsing content:', e);
+            this.loadDefaultContent();
+          }
+        } else {
+          this.loadDefaultContent();
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading page:', error);
+        this.loadDefaultContent();
+        this.isLoading = false;
+      }
+    });
+  }
+
+  loadDefaultContent(): void {
+    this.content = {
+      heroTitle: 'Expert à l\'ANRSI',
+      heroSubtitle: 'Rejoignez notre réseau d\'experts scientifiques et technologiques',
+      introText: 'L\'Agence Nationale de la Recherche Scientifique et de l\'Innovation (ANRSI) recrute des experts qualifiés pour évaluer les projets de recherche et contribuer au développement scientifique de la Mauritanie.',
+      requirements: [
+        {
+          icon: '🎓',
+          title: 'Formation Académique',
+          items: [
+            'Doctorat dans un domaine scientifique ou technologique',
+            'Expérience significative en recherche',
+            'Publications scientifiques reconnues',
+            'Maîtrise du français et/ou de l\'anglais'
+          ]
+        },
+        {
+          icon: '🔬',
+          title: 'Expertise Technique',
+          items: [
+            'Connaissance approfondie du domaine d\'expertise',
+            'Expérience en évaluation de projets',
+            'Capacité d\'analyse et de synthèse',
+            'Rigueur scientifique et éthique'
+          ]
+        },
+        {
+          icon: '🌍',
+          title: 'Engagement',
+          items: [
+            'Disponibilité pour les évaluations',
+            'Engagement envers le développement scientifique',
+            'Respect des délais et procédures',
+            'Confidentialité et impartialité'
+          ]
+        }
+      ],
+      domains: [
+        { icon: '🔬', title: 'Sciences Exactes', description: 'Mathématiques, Physique, Chimie, Sciences de la Terre' },
+        { icon: '🌱', title: 'Sciences de la Vie', description: 'Biologie, Agriculture, Médecine, Sciences Vétérinaires' },
+        { icon: '💻', title: 'Technologies de l\'Information', description: 'Informatique, Intelligence Artificielle, Télécommunications' },
+        { icon: '⚡', title: 'Sciences de l\'Ingénieur', description: 'Génie Civil, Mécanique, Électrique, Énergies Renouvelables' },
+        { icon: '🌍', title: 'Sciences Sociales', description: 'Économie, Sociologie, Droit, Sciences Politiques' },
+        { icon: '🌿', title: 'Sciences de l\'Environnement', description: 'Écologie, Climatologie, Gestion des Ressources Naturelles' }
+      ],
+      processSteps: [
+        { number: 1, title: 'Candidature', description: 'Soumission du dossier de candidature avec CV détaillé, liste des publications et lettre de motivation.' },
+        { number: 2, title: 'Évaluation', description: 'Examen du dossier par un comité d\'experts de l\'ANRSI selon des critères objectifs.' },
+        { number: 3, title: 'Entretien', description: 'Entretien avec les candidats retenus pour évaluer leurs compétences et leur motivation.' },
+        { number: 4, title: 'Formation', description: 'Formation aux procédures d\'évaluation de l\'ANRSI et aux outils utilisés.' },
+        { number: 5, title: 'Intégration', description: 'Intégration dans le réseau d\'experts et attribution des premières missions d\'évaluation.' }
+      ],
+      benefits: [
+        { icon: '💼', title: 'Rémunération', description: 'Rémunération attractive pour chaque mission d\'évaluation selon l\'expertise et la complexité.' },
+        { icon: '🌐', title: 'Réseau International', description: 'Intégration dans un réseau d\'experts internationaux et opportunités de collaboration.' },
+        { icon: '📚', title: 'Formation Continue', description: 'Accès à des formations et séminaires pour maintenir et développer ses compétences.' },
+        { icon: '🏆', title: 'Reconnaissance', description: 'Reconnaissance officielle en tant qu\'expert scientifique et contribution au développement national.' }
+      ],
+      applicationText: 'Pour postuler en tant qu\'expert ANRSI, veuillez envoyer votre dossier de candidature à :',
+      contactInfo: [
+        { icon: 'fas fa-envelope', label: 'Email', value: 'expert@anrsi.mr' },
+        { icon: 'fas fa-phone', label: 'Téléphone', value: '+222 45 25 44 21' }
+      ],
+      requiredDocuments: [
+        'CV détaillé avec liste des publications',
+        'Lettre de motivation',
+        'Copies des diplômes et certifications',
+        'Lettres de recommandation (optionnel)',
+        'Liste des projets de recherche dirigés'
+      ]
+    };
+  }
+}

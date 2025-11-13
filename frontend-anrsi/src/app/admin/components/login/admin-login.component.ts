@@ -55,8 +55,20 @@ export class AdminLoginComponent implements OnInit {
         },
         error: (error) => {
           this.isLoading = false;
-          this.errorMessage = 'Invalid username or password';
-          console.error('Login error:', error);
+          console.error('Login error in component:', error);
+          
+          if (error.status === 401 || error.status === 403) {
+            this.errorMessage = 'Invalid username or password';
+          } else if (error.status === 0) {
+            this.errorMessage = 'Cannot connect to server. Please check if the backend is running on http://localhost:8080';
+          } else if (error.status === 404) {
+            this.errorMessage = 'Login endpoint not found. Please check if the backend is properly configured.';
+          } else if (error.status >= 500) {
+            this.errorMessage = 'Server error. Please try again later.';
+          } else {
+            const errorMsg = error.error?.message || error.error?.error || error.message || 'An error occurred during login';
+            this.errorMessage = errorMsg;
+          }
         }
       });
     } else {

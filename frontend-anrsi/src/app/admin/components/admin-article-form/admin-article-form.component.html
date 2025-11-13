@@ -1,0 +1,222 @@
+<div class="article-form-page">
+  <div class="page-header">
+    <div class="header-content">
+      <h1>{{ isEditMode ? 'Edit Article' : 'Create New Article' }}</h1>
+      <p>{{ isEditMode ? 'Update article information' : 'Add a new article with translations' }}</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" (click)="onCancel()" class="btn btn-outline">
+        <i class="fas fa-times"></i>
+        Cancel
+      </button>
+    </div>
+  </div>
+
+  <form [formGroup]="articleForm" (ngSubmit)="onSubmit()" class="article-form">
+    
+    <!-- Language Tabs -->
+    <div class="language-tabs">
+      <button
+        *ngFor="let lang of languages"
+        type="button"
+        class="lang-tab"
+        [class.active]="activeLanguage === lang.code"
+        [class.has-content]="hasTranslation(lang.code)"
+        [class.valid]="isLanguageFormValid(lang.code)"
+        (click)="switchLanguage(lang.code)">
+        <span class="lang-flag">{{ lang.flag }}</span>
+        <span class="lang-name">{{ lang.name }}</span>
+        <span class="lang-status">
+          <i *ngIf="isLanguageFormValid(lang.code)" class="fas fa-check-circle"></i>
+          <i *ngIf="!isLanguageFormValid(lang.code) && hasTranslation(lang.code)" class="fas fa-exclamation-circle"></i>
+        </span>
+      </button>
+    </div>
+
+    <div class="form-grid">
+      <!-- Shared Fields Section -->
+      <div class="form-section shared-fields">
+        <h2>Shared Information</h2>
+        
+        <div class="form-group">
+          <label for="author">Author *</label>
+          <input
+            type="text"
+            id="author"
+            formControlName="author"
+            class="form-control"
+            [class.error]="getFieldError('author')"
+            placeholder="Author name"
+          >
+          <div class="error-message" *ngIf="getFieldError('author')">
+            {{ getFieldError('author') }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="category">Category *</label>
+          <select
+            id="category"
+            formControlName="category"
+            class="form-control"
+            [class.error]="getFieldError('category')"
+          >
+            <option value="">Select a category</option>
+            <option *ngFor="let category of getCategories()" [value]="category">
+              {{ category }}
+            </option>
+          </select>
+          <div class="error-message" *ngIf="getFieldError('category')">
+            {{ getFieldError('category') }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="imageUrl">Featured Image URL *</label>
+          <input
+            type="url"
+            id="imageUrl"
+            formControlName="imageUrl"
+            class="form-control"
+            [class.error]="getFieldError('imageUrl')"
+            placeholder="https://example.com/image.jpg"
+          >
+          <div class="error-message" *ngIf="getFieldError('imageUrl')">
+            {{ getFieldError('imageUrl') }}
+          </div>
+          <div class="form-help">
+            Enter the URL of the featured image for this article
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="publishDate">Publish Date *</label>
+          <input
+            type="date"
+            id="publishDate"
+            formControlName="publishDate"
+            class="form-control"
+            [class.error]="getFieldError('publishDate')"
+          >
+          <div class="error-message" *ngIf="getFieldError('publishDate')">
+            {{ getFieldError('publishDate') }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="tags">Tags *</label>
+          <input
+            type="text"
+            id="tags"
+            formControlName="tags"
+            class="form-control"
+            [class.error]="getFieldError('tags')"
+            placeholder="tag1, tag2, tag3"
+          >
+          <div class="error-message" *ngIf="getFieldError('tags')">
+            {{ getFieldError('tags') }}
+          </div>
+          <div class="form-help">
+            Separate multiple tags with commas
+          </div>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label>
+            <input type="checkbox" formControlName="featured">
+            Featured Article
+          </label>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label>
+            <input type="checkbox" formControlName="published" [checked]="true">
+            Published
+          </label>
+        </div>
+      </div>
+
+      <!-- Language-Specific Content (Tabbed) -->
+      <div class="form-section translation-content">
+        <h2>Content - {{ getActiveLanguageName() }}</h2>
+        
+        <div [formGroup]="getActiveTranslationFormGroup()">
+          <div class="form-group">
+            <label [attr.for]="'title-' + activeLanguage">Title *</label>
+            <input
+              [attr.id]="'title-' + activeLanguage"
+              type="text"
+              formControlName="title"
+              class="form-control"
+              [class.error]="getFieldError('title', activeLanguage)"
+              [attr.placeholder]="'Enter article title in ' + getActiveLanguageName()"
+            >
+            <div class="error-message" *ngIf="getFieldError('title', activeLanguage)">
+              {{ getFieldError('title', activeLanguage) }}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label [attr.for]="'excerpt-' + activeLanguage">Excerpt *</label>
+            <textarea
+              [attr.id]="'excerpt-' + activeLanguage"
+              formControlName="excerpt"
+              class="form-control"
+              [class.error]="getFieldError('excerpt', activeLanguage)"
+              [attr.placeholder]="'Brief description in ' + getActiveLanguageName()"
+              rows="3"
+            ></textarea>
+            <div class="error-message" *ngIf="getFieldError('excerpt', activeLanguage)">
+              {{ getFieldError('excerpt', activeLanguage) }}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label [attr.for]="'content-' + activeLanguage">Content *</label>
+            <textarea
+              [attr.id]="'content-' + activeLanguage"
+              formControlName="content"
+              class="form-control content-textarea"
+              [class.error]="getFieldError('content', activeLanguage)"
+              [attr.placeholder]="'Write your article content in ' + getActiveLanguageName()"
+              rows="15"
+            ></textarea>
+            <div class="error-message" *ngIf="getFieldError('content', activeLanguage)">
+              {{ getFieldError('content', activeLanguage) }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <div class="error-message general-error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+      
+      <div class="translation-summary">
+        <div class="summary-item" *ngFor="let lang of languages">
+          <span class="lang-flag">{{ lang.flag }}</span>
+          <span class="lang-name">{{ lang.name }}:</span>
+          <span [class]="'status ' + (isLanguageFormValid(lang.code) ? 'complete' : 'incomplete')">
+            {{ isLanguageFormValid(lang.code) ? 'Complete' : 'Incomplete' }}
+          </span>
+        </div>
+      </div>
+      
+      <div class="action-buttons">
+        <button type="button" (click)="onCancel()" class="btn btn-outline">
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="isLoading"
+        >
+          <span *ngIf="isLoading" class="spinner"></span>
+          {{ isLoading ? 'Saving...' : (isEditMode ? 'Update Article' : 'Create Article') }}
+        </button>
+      </div>
+    </div>
+  </form>
+</div>

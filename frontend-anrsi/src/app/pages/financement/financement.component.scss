@@ -330,6 +330,16 @@
       max-width: 300px;
     }
   }
+  
+  .loading-container {
+    padding: var(--space-12);
+    text-align: center;
+  }
+  
+  .loading {
+    color: var(--neutral-600);
+    font-size: var(--text-lg);
+  }
 }
 
 @media (max-width: 480px) {

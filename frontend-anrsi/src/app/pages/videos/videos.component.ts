@@ -1,6 +1,26 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SafePipe } from '../../pages/videos/safe.pipe';
+import { PageService, PageDTO } from '../../services/page.service';
+
+interface VideoItem {
+  title: string;
+  url: string;
+  type: string;
+}
+
+interface PhotoItem {
+  title: string;
+  url: string;
+  type: string;
+}
+
+interface VideosContent {
+  heroTitle: string;
+  heroSubtitle: string;
+  videos: VideoItem[];
+  photos: PhotoItem[];
+}
 
 @Component({
   selector: 'app-videos',
@@ -10,17 +30,23 @@ import { SafePipe } from '../../pages/videos/safe.pipe';
   
     <div class="contact-hero">
       <div class="container">
-        <h1>Mediatique</h1>
-        <p>Get in touch with our research teams and support staff</p>
+        <h1>{{ heroTitle || 'Mediatique' }}</h1>
+        <p>{{ heroSubtitle || 'Get in touch with our research teams and support staff' }}</p>
       </div>
       <div class="hero-overlay"></div>
     </div>
     
-    <div class="container">
+    <div class="container" *ngIf="isLoading">
+      <div class="loading-container">
+        <div class="loading">Loading...</div>
+      </div>
+    </div>
+    
+    <div class="container" *ngIf="!isLoading">
       
 <!-- Container for the image gallery -->
     <div class="media-sections">
-      <section class="media-block">
+      <section class="media-block" *ngIf="videos && videos.length > 0">
         <h2 class="media-title">Vidéos</h2>
         <div class="media-grid">
           <div class="media-card" *ngFor="let video of videos">
@@ -29,7 +55,7 @@ import { SafePipe } from '../../pages/videos/safe.pipe';
                 [src]="video.url | safe"
                 frameborder="0"
                 allowfullscreen
-                title="{{ video.title }}">
+                [title]="video.title">
               </iframe>
             </div>
             <div class="media-caption">{{ video.title }}</div>
@@ -37,14 +63,14 @@ import { SafePipe } from '../../pages/videos/safe.pipe';
         </div>
       </section>
 
-      <section class="media-block">
+      <section class="media-block" *ngIf="photos && photos.length > 0">
         <h2 class="media-title">Photos</h2>
         <div class="media-grid">
           <div class="media-card" *ngFor="let photo of photos">
             <div class="media-thumb">
-              <img [src]="photo.url" [alt]="photo.title" loading="lazy" />
+              <img [src]="photo.url" [alt]="photo.title || 'Photo'" loading="lazy" />
             </div>
-            <div class="media-caption">{{ photo.title }}</div>
+            <div class="media-caption">{{ photo.title || 'Photo' }}</div>
           </div>
         </div>
       </section>
@@ -418,20 +444,36 @@ import { SafePipe } from '../../pages/videos/safe.pipe';
         font-size: 0.9rem;
       }
     }
- 
+    
+    .loading-container {
+      padding: var(--space-12);
+      text-align: center;
+    }
+    
+    .loading {
+      color: var(--neutral-600);
+      font-size: var(--text-lg);
+    }
   `]
 })
-export class VideosComponent {
-  selectedIndex = 0;
-  videos = [
+export class VideosComponent implements OnInit {
+  page: PageDTO | null = null;
+  heroTitle: string = '';
+  heroSubtitle: string = '';
+  videos: VideoItem[] = [];
+  photos: PhotoItem[] = [];
+  isLoading = true;
+
+  constructor(private pageService: PageService) {}
+  
+  defaultVideos: VideoItem[] = [
     { title: "Présentation de l'Agence", url: "https://www.youtube.com/embed/EMgwHc1F5W8", type: "youtube" },
     { title: "Recherche Scientifique", url: "https://youtube.com/embed/bC2FLWuHTbI", type: "youtube" },
     { title: "Nouvelles Technologies", url: "https://youtube.com/embed/4PupAG-vJnk", type: "youtube" },
     { title: "Nouvelles Technologies", url: "https://youtube.com/embed/0yeNSWbl5MY", type: "youtube" }
-
-    // Add more videos as needed
   ];
-  photos = [
+  
+  defaultPhotos: PhotoItem[] = [
     { title: "", url: "assets/images/277154633_374993344636114_8242637262867242236_n_0.jpg.jpeg", type: "photo" },
     { title: "", url: "assets/images/316106463_190420513522892_2157453747881448998_n_0.jpg.jpeg", type: "photo" },
     { title: "", url: "assets/images/directeur.jpeg", type: "photo" },
@@ -441,4 +483,49 @@ export class VideosComponent {
     { title: "", url: "assets/images/IMG_1738DDDDDDDDD.jpg.jpeg", type: "photo" },
     { title: "", url: "assets/images/chef.jpeg", type: "photo" }
   ];
+
+  ngOnInit(): void {
+    this.loadPage();
+  }
+
+  loadPage(): void {
+    this.pageService.getPageBySlug('videos').subscribe({
+      next: (page) => {
+        this.page = page;
+        this.parseContent();
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading page:', error);
+        this.loadDefaultContent();
+        this.isLoading = false;
+      }
+    });
+  }
+
+  parseContent(): void {
+    if (!this.page?.content) {
+      this.loadDefaultContent();
+      return;
+    }
+
+    try {
+      const content: VideosContent = JSON.parse(this.page.content);
+      
+      this.heroTitle = content.heroTitle || 'Mediatique';
+      this.heroSubtitle = content.heroSubtitle || 'Get in touch with our research teams and support staff';
+      this.videos = content.videos || this.defaultVideos;
+      this.photos = content.photos || this.defaultPhotos;
+    } catch (e) {
+      console.error('Error parsing content:', e);
+      this.loadDefaultContent();
+    }
+  }
+
+  loadDefaultContent(): void {
+    this.heroTitle = 'Mediatique';
+    this.heroSubtitle = 'Get in touch with our research teams and support staff';
+    this.videos = this.defaultVideos;
+    this.photos = this.defaultPhotos;
+  }
 }

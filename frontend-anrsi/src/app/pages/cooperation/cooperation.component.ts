@@ -1,6 +1,27 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { PageService, PageDTO } from '../../services/page.service';
+
+interface Partnership {
+  id: string;
+  title: string;
+  description: string;
+  type: string;
+  country: string;
+  flag: string;
+  objectives: string[];
+  status: string;
+  icon: string;
+  color: string;
+  details?: string;
+}
+
+interface CooperationInfo {
+  title: string;
+  description: string;
+  benefits: string[];
+}
 
 @Component({
   selector: 'app-cooperation',
@@ -10,8 +31,18 @@ import { TranslateModule } from '@ngx-translate/core';
   styleUrls: ['./cooperation.component.scss']
 })
 export class CooperationComponent implements OnInit {
+  page: PageDTO | null = null;
+  partnerships: Partnership[] = [];
+  cooperationInfo: CooperationInfo = {
+    title: 'Coopération & Partenariats',
+    description: 'L\'Agence est liée à des institutions d\'intérêt commun par le biais d\'accords de coopération et de partenariat pour atteindre des objectifs communs.',
+    benefits: []
+  };
+  isLoading = true;
+
+  constructor(private pageService: PageService) {}
   
-  partnerships = [
+  defaultPartnerships = [
     {
       id: 'anrsa-senegal',
       title: 'Convention de partenariat avec l\'ANRSA Sénégal',
@@ -83,7 +114,7 @@ export class CooperationComponent implements OnInit {
     }
   ];
 
-  cooperationInfo = {
+  defaultCooperationInfo: CooperationInfo = {
     title: 'Coopération & Partenariats',
     description: 'L\'Agence est liée à des institutions d\'intérêt commun par le biais d\'accords de coopération et de partenariat pour atteindre des objectifs communs.',
     benefits: [
@@ -102,6 +133,60 @@ export class CooperationComponent implements OnInit {
       AOS.init();
     } catch (error) {
       console.warn('AOS library could not be loaded:', error);
+    }
+    
+    this.loadPage();
+  }
+
+  loadPage(): void {
+    this.pageService.getPageBySlug('cooperation').subscribe({
+      next: (page) => {
+        this.page = page;
+        this.parseContent();
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading page:', error);
+        this.partnerships = this.defaultPartnerships;
+        this.cooperationInfo = this.defaultCooperationInfo;
+        this.isLoading = false;
+      }
+    });
+  }
+
+  parseContent(): void {
+    if (!this.page?.content) {
+      this.partnerships = this.defaultPartnerships;
+      this.cooperationInfo = this.defaultCooperationInfo;
+      return;
+    }
+
+    try {
+      const content = JSON.parse(this.page.content);
+      
+      // Handle new structured format
+      if (content.cooperationInfo) {
+        this.cooperationInfo = {
+          title: content.cooperationInfo.title || this.defaultCooperationInfo.title,
+          description: content.cooperationInfo.description || this.defaultCooperationInfo.description,
+          benefits: content.cooperationInfo.benefits || this.defaultCooperationInfo.benefits
+        };
+      } else {
+        this.cooperationInfo = this.defaultCooperationInfo;
+      }
+      
+      if (content.partnerships && Array.isArray(content.partnerships)) {
+        this.partnerships = content.partnerships;
+      } else if (Array.isArray(content)) {
+        // Legacy format - content is directly an array of partnerships
+        this.partnerships = content;
+      } else {
+        this.partnerships = this.defaultPartnerships;
+      }
+    } catch (e) {
+      console.error('Error parsing content:', e);
+      this.partnerships = this.defaultPartnerships;
+      this.cooperationInfo = this.defaultCooperationInfo;
     }
   }
 }

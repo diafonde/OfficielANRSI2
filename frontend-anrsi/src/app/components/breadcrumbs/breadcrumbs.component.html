@@ -3,7 +3,7 @@
     <li class="breadcrumb-item">
       <a routerLink="/" class="breadcrumb-link">
         <i class="fas fa-home"></i>
-        <span>Accueil</span>
+        <span>{{ 'Accueil' | translate }}</span>
       </a>
     </li>
     <li class="breadcrumb-item" *ngFor="let breadcrumb of breadcrumbs.slice(1); let last = last">

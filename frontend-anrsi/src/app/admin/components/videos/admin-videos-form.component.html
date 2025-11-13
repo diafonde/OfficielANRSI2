@@ -1,0 +1,98 @@
+<div class="admin-videos-form">
+  <div class="form-header">
+    <h1>Edit Mediatique (Videos) Page</h1>
+    <button (click)="onCancel()" class="btn btn-secondary">
+      <i class="fas fa-times"></i> Cancel
+    </button>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <i class="fas fa-spinner fa-spin"></i> Loading...
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+    <!-- Hero Section -->
+    <div class="form-section">
+      <h2>Hero Section</h2>
+      <div class="form-group">
+        <label>Hero Title *</label>
+        <input type="text" formControlName="heroTitle" class="form-control" />
+      </div>
+      <div class="form-group">
+        <label>Hero Subtitle *</label>
+        <input type="text" formControlName="heroSubtitle" class="form-control" />
+      </div>
+    </div>
+
+    <!-- Videos Section -->
+    <div class="form-section">
+      <h2>Videos</h2>
+      <div formArrayName="videos" *ngFor="let video of videos.controls; let i = index">
+        <div [formGroupName]="i" class="nested-form-group">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Title *</label>
+              <input type="text" formControlName="title" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label>Type *</label>
+              <select formControlName="type" class="form-control">
+                <option value="youtube">YouTube</option>
+                <option value="vimeo">Vimeo</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <button type="button" (click)="removeVideo(i)" class="btn btn-danger btn-sm">Remove</button>
+          </div>
+          <div class="form-group">
+            <label>URL (Embed URL) *</label>
+            <input type="text" formControlName="url" class="form-control" placeholder="https://www.youtube.com/embed/EMgwHc1F5W8" />
+            <small class="form-help">For YouTube: Use embed URL format (https://www.youtube.com/embed/VIDEO_ID)</small>
+          </div>
+        </div>
+      </div>
+      <button type="button" (click)="addVideo()" class="btn btn-primary">Add Video</button>
+    </div>
+
+    <!-- Photos Section -->
+    <div class="form-section">
+      <h2>Photos</h2>
+      <div formArrayName="photos" *ngFor="let photo of photos.controls; let i = index">
+        <div [formGroupName]="i" class="nested-form-group">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Title</label>
+              <input type="text" formControlName="title" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label>Type *</label>
+              <select formControlName="type" class="form-control">
+                <option value="photo">Photo</option>
+                <option value="image">Image</option>
+              </select>
+            </div>
+            <button type="button" (click)="removePhoto(i)" class="btn btn-danger btn-sm">Remove</button>
+          </div>
+          <div class="form-group">
+            <label>URL (Image Path) *</label>
+            <input type="text" formControlName="url" class="form-control" placeholder="assets/images/photo.jpg" />
+            <small class="form-help">Relative path from assets folder (e.g., assets/images/photo.jpg)</small>
+          </div>
+        </div>
+      </div>
+      <button type="button" (click)="addPhoto()" class="btn btn-primary">Add Photo</button>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" (click)="onCancel()" class="btn btn-secondary">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="form.invalid || isSaving">
+        <i class="fas fa-save"></i> {{ isSaving ? 'Saving...' : 'Save Changes' }}
+      </button>
+    </div>
+  </form>
+</div>
+

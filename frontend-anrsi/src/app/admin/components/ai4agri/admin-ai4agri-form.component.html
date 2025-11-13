@@ -1,0 +1,144 @@
+<div class="admin-ai4agri-form">
+  <div class="form-header">
+    <h1>Edit AI 4 AGRI Page</h1>
+    <button (click)="onCancel()" class="btn btn-secondary">
+      <i class="fas fa-times"></i> Cancel
+    </button>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <i class="fas fa-spinner fa-spin"></i> Loading...
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+    <!-- Hero Section -->
+    <div class="form-section">
+      <h2>Hero Section</h2>
+      <div class="form-group">
+        <label>Hero Title *</label>
+        <input type="text" formControlName="heroTitle" class="form-control" />
+      </div>
+      <div class="form-group">
+        <label>Hero Subtitle *</label>
+        <input type="text" formControlName="heroSubtitle" class="form-control" />
+      </div>
+    </div>
+
+    <!-- Intro Text -->
+    <div class="form-section">
+      <h2>Introduction</h2>
+      <div class="form-group">
+        <label>Intro Text *</label>
+        <textarea formControlName="introText" class="form-control" rows="4"></textarea>
+      </div>
+    </div>
+
+    <!-- Workshops -->
+    <div class="form-section">
+      <h2>Workshops</h2>
+      <div formArrayName="workshops" *ngFor="let workshop of workshops.controls; let i = index">
+        <div [formGroupName]="i" class="nested-form-group">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Date *</label>
+              <input type="text" formControlName="date" class="form-control" placeholder="13-15 Février 2024" />
+            </div>
+            <div class="form-group">
+              <label>Title *</label>
+              <input type="text" formControlName="title" class="form-control" />
+            </div>
+            <button type="button" (click)="removeWorkshop(i)" class="btn btn-danger btn-sm">Remove</button>
+          </div>
+          <div class="form-group">
+            <label>Description *</label>
+            <textarea formControlName="description" class="form-control" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Details Title</label>
+            <input type="text" formControlName="detailsTitle" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Details Items</label>
+            <div formArrayName="detailsItems" *ngFor="let itemCtrl of getWorkshopDetailsItems(i).controls; let j = index">
+              <div class="form-row">
+                <input type="text" [formControlName]="j" class="form-control" />
+                <button type="button" (click)="removeWorkshopDetailItem(i, j)" class="btn btn-danger btn-sm">Remove</button>
+              </div>
+            </div>
+            <button type="button" (click)="addWorkshopDetailItem(i)" class="btn btn-secondary btn-sm">Add Detail Item</button>
+          </div>
+        </div>
+      </div>
+      <button type="button" (click)="addWorkshop()" class="btn btn-primary">Add Workshop</button>
+    </div>
+
+    <!-- Benefits -->
+    <div class="form-section">
+      <h2>Benefits</h2>
+      <div formArrayName="benefits" *ngFor="let benefit of benefits.controls; let i = index">
+        <div [formGroupName]="i" class="nested-form-group">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Icon</label>
+              <input type="text" formControlName="icon" class="form-control" placeholder="🌱" />
+            </div>
+            <div class="form-group">
+              <label>Title *</label>
+              <input type="text" formControlName="title" class="form-control" />
+            </div>
+            <button type="button" (click)="removeBenefit(i)" class="btn btn-danger btn-sm">Remove</button>
+          </div>
+          <div class="form-group">
+            <label>Description *</label>
+            <textarea formControlName="description" class="form-control" rows="2"></textarea>
+          </div>
+        </div>
+      </div>
+      <button type="button" (click)="addBenefit()" class="btn btn-primary">Add Benefit</button>
+    </div>
+
+    <!-- Partnership Section -->
+    <div class="form-section">
+      <h2>Partnership Section</h2>
+      <div class="form-group">
+        <label>Partnership Text *</label>
+        <textarea formControlName="partnershipText" class="form-control" rows="3"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Partnership Highlights</label>
+        <div formArrayName="partnershipHighlights" *ngFor="let highlight of partnershipHighlights.controls; let i = index">
+          <div [formGroupName]="i" class="nested-form-group">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Icon</label>
+                <input type="text" formControlName="icon" class="form-control" placeholder="🔬" />
+              </div>
+              <div class="form-group">
+                <label>Title *</label>
+                <input type="text" formControlName="title" class="form-control" />
+              </div>
+              <button type="button" (click)="removePartnershipHighlight(i)" class="btn btn-danger btn-sm">Remove</button>
+            </div>
+            <div class="form-group">
+              <label>Description *</label>
+              <textarea formControlName="description" class="form-control" rows="2"></textarea>
+            </div>
+          </div>
+        </div>
+        <button type="button" (click)="addPartnershipHighlight()" class="btn btn-primary">Add Partnership Highlight</button>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" (click)="onCancel()" class="btn btn-secondary">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="form.invalid || isSaving">
+        <i class="fas fa-save"></i> {{ isSaving ? 'Saving...' : 'Save Changes' }}
+      </button>
+    </div>
+  </form>
+</div>
+

@@ -1,5 +1,34 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { PageService, PageDTO } from '../../services/page.service';
+
+interface Position {
+  icon: string;
+  title: string;
+  description: string;
+  isDirector?: boolean;
+}
+
+interface Level {
+  levelNumber: number;
+  positions: Position[];
+}
+
+interface Responsibility {
+  icon: string;
+  title: string;
+  description: string;
+}
+
+interface OrganigrammeContent {
+  heroTitle: string;
+  heroSubtitle: string;
+  sectionTitle: string;
+  introText: string;
+  levels: Level[];
+  responsibilitiesTitle: string;
+  responsibilities: Responsibility[];
+}
 
 @Component({
   selector: 'app-organigramme',
@@ -8,109 +37,42 @@ import { CommonModule } from '@angular/common';
   template: `
     <div class="organigramme-hero">
       <div class="container">
-        <h1>Organigramme</h1>
-        <p>Structure organisationnelle de l'Agence Nationale de la Recherche Scientifique et de l'Innovation</p>
+        <h1>{{ heroTitle || 'Organigramme' }}</h1>
+        <p>{{ heroSubtitle || "Structure organisationnelle de l'Agence Nationale de la Recherche Scientifique et de l'Innovation" }}</p>
       </div>
       <div class="hero-overlay"></div>
     </div>
     
-    <div class="container">
+    <div class="container" *ngIf="isLoading">
+      <div class="loading-container">
+        <div class="loading">Loading...</div>
+      </div>
+    </div>
+    
+    <div class="container" *ngIf="!isLoading">
       <section class="section organigramme-section">
         <div class="organigramme-content">
-          <h2>Structure Organisationnelle</h2>
-          <p class="intro-text">
-            L'ANRSI est structurée de manière hiérarchique pour assurer une gestion efficace de la recherche scientifique et de l'innovation en Mauritanie.
+          <h2>{{ sectionTitle || 'Structure Organisationnelle' }}</h2>
+          <p class="intro-text" *ngIf="introText">
+            {{ introText }}
           </p>
           
-          <div class="organigramme-chart">
-            <!-- Haut Conseil -->
-            <div class="level level-1">
-              <div class="position-card director">
-                <div class="position-icon">👑</div>
-                <h3>Haut Conseil de la Recherche Scientifique et de l'Innovation</h3>
-                <p>Présidé par Son Excellence le Premier Ministre</p>
-              </div>
-            </div>
-            
-            <!-- Direction Générale -->
-            <div class="level level-2">
-              <div class="position-card director">
-                <div class="position-icon">👔</div>
-                <h3>Direction Générale</h3>
-                <p>Directeur Général de l'ANRSI</p>
-              </div>
-            </div>
-            
-            <!-- Directions Techniques -->
-            <div class="level level-3">
-              <div class="position-card">
-                <div class="position-icon">🔬</div>
-                <h3>Direction de la Recherche</h3>
-                <p>Gestion des programmes de recherche</p>
-              </div>
-              
-              <div class="position-card">
-                <div class="position-icon">💡</div>
-                <h3>Direction de l'Innovation</h3>
-                <p>Promotion de l'innovation technologique</p>
-              </div>
-              
-              <div class="position-card">
-                <div class="position-icon">💰</div>
-                <h3>Direction Financière</h3>
-                <p>Gestion des fonds et budgets</p>
-              </div>
-            </div>
-            
-            <!-- Services Support -->
-            <div class="level level-4">
-              <div class="position-card">
-                <div class="position-icon">📊</div>
-                <h3>Service d'Évaluation</h3>
-                <p>Suivi et évaluation des projets</p>
-              </div>
-              
-              <div class="position-card">
-                <div class="position-icon">🤝</div>
-                <h3>Service de Coopération</h3>
-                <p>Partenariats internationaux</p>
-              </div>
-              
-              <div class="position-card">
-                <div class="position-icon">📋</div>
-                <h3>Service Administratif</h3>
-                <p>Gestion administrative</p>
-              </div>
-              
-              <div class="position-card">
-                <div class="position-icon">💻</div>
-                <h3>Service Informatique</h3>
-                <p>Support technique et numérique</p>
+          <div class="organigramme-chart" *ngIf="levels && levels.length > 0">
+            <div class="level" [class]="'level-' + level.levelNumber" *ngFor="let level of levels">
+              <div class="position-card" [class.director]="position.isDirector" *ngFor="let position of level.positions">
+                <div class="position-icon">{{ position.icon }}</div>
+                <h3>{{ position.title }}</h3>
+                <p>{{ position.description }}</p>
               </div>
             </div>
           </div>
           
-          <div class="organigramme-info">
-            <h3>Responsabilités Clés</h3>
+          <div class="organigramme-info" *ngIf="responsibilities && responsibilities.length > 0">
+            <h3>{{ responsibilitiesTitle || 'Responsabilités Clés' }}</h3>
             <div class="responsibilities-grid">
-              <div class="responsibility-item">
-                <h4>🎯 Définition des Priorités</h4>
-                <p>Le Haut Conseil définit les priorités nationales de recherche et d'innovation</p>
-              </div>
-              
-              <div class="responsibility-item">
-                <h4>📝 Appels à Projets</h4>
-                <p>L'ANRSI lance des appels à projets selon les priorités définies</p>
-              </div>
-              
-              <div class="responsibility-item">
-                <h4>💼 Gestion des Fonds</h4>
-                <p>Allocation transparente et efficace des fonds de recherche</p>
-              </div>
-              
-              <div class="responsibility-item">
-                <h4>📈 Suivi et Évaluation</h4>
-                <p>Monitoring continu des projets financés et évaluation de leur impact</p>
+              <div class="responsibility-item" *ngFor="let responsibility of responsibilities">
+                <h4>{{ responsibility.icon }} {{ responsibility.title }}</h4>
+                <p>{{ responsibility.description }}</p>
               </div>
             </div>
           </div>
@@ -300,6 +262,175 @@ import { CommonModule } from '@angular/common';
         grid-template-columns: 1fr;
       }
     }
+    
+    .loading-container {
+      padding: var(--space-12);
+      text-align: center;
+    }
+    
+    .loading {
+      color: var(--neutral-600);
+      font-size: var(--text-lg);
+    }
   `]
 })
-export class OrganigrammeComponent {}
+export class OrganigrammeComponent implements OnInit {
+  page: PageDTO | null = null;
+  heroTitle: string = '';
+  heroSubtitle: string = '';
+  sectionTitle: string = '';
+  introText: string = '';
+  levels: Level[] = [];
+  responsibilitiesTitle: string = '';
+  responsibilities: Responsibility[] = [];
+  isLoading = true;
+
+  constructor(private pageService: PageService) {}
+  
+  defaultLevels: Level[] = [
+    {
+      levelNumber: 1,
+      positions: [{
+        icon: '👑',
+        title: 'Haut Conseil de la Recherche Scientifique et de l\'Innovation',
+        description: 'Présidé par Son Excellence le Premier Ministre',
+        isDirector: true
+      }]
+    },
+    {
+      levelNumber: 2,
+      positions: [{
+        icon: '👔',
+        title: 'Direction Générale',
+        description: 'Directeur Général de l\'ANRSI',
+        isDirector: true
+      }]
+    },
+    {
+      levelNumber: 3,
+      positions: [
+        {
+          icon: '🔬',
+          title: 'Direction de la Recherche',
+          description: 'Gestion des programmes de recherche',
+          isDirector: false
+        },
+        {
+          icon: '💡',
+          title: 'Direction de l\'Innovation',
+          description: 'Promotion de l\'innovation technologique',
+          isDirector: false
+        },
+        {
+          icon: '💰',
+          title: 'Direction Financière',
+          description: 'Gestion des fonds et budgets',
+          isDirector: false
+        }
+      ]
+    },
+    {
+      levelNumber: 4,
+      positions: [
+        {
+          icon: '📊',
+          title: 'Service d\'Évaluation',
+          description: 'Suivi et évaluation des projets',
+          isDirector: false
+        },
+        {
+          icon: '🤝',
+          title: 'Service de Coopération',
+          description: 'Partenariats internationaux',
+          isDirector: false
+        },
+        {
+          icon: '📋',
+          title: 'Service Administratif',
+          description: 'Gestion administrative',
+          isDirector: false
+        },
+        {
+          icon: '💻',
+          title: 'Service Informatique',
+          description: 'Support technique et numérique',
+          isDirector: false
+        }
+      ]
+    }
+  ];
+  
+  defaultResponsibilities: Responsibility[] = [
+    {
+      icon: '🎯',
+      title: 'Définition des Priorités',
+      description: 'Le Haut Conseil définit les priorités nationales de recherche et d\'innovation'
+    },
+    {
+      icon: '📝',
+      title: 'Appels à Projets',
+      description: 'L\'ANRSI lance des appels à projets selon les priorités définies'
+    },
+    {
+      icon: '💼',
+      title: 'Gestion des Fonds',
+      description: 'Allocation transparente et efficace des fonds de recherche'
+    },
+    {
+      icon: '📈',
+      title: 'Suivi et Évaluation',
+      description: 'Monitoring continu des projets financés et évaluation de leur impact'
+    }
+  ];
+
+  ngOnInit(): void {
+    this.loadPage();
+  }
+
+  loadPage(): void {
+    this.pageService.getPageBySlug('organigramme').subscribe({
+      next: (page) => {
+        this.page = page;
+        this.parseContent();
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading page:', error);
+        this.loadDefaultContent();
+        this.isLoading = false;
+      }
+    });
+  }
+
+  parseContent(): void {
+    if (!this.page?.content) {
+      this.loadDefaultContent();
+      return;
+    }
+
+    try {
+      const content: OrganigrammeContent = JSON.parse(this.page.content);
+      
+      this.heroTitle = content.heroTitle || 'Organigramme';
+      this.heroSubtitle = content.heroSubtitle || 'Structure organisationnelle de l\'Agence Nationale de la Recherche Scientifique et de l\'Innovation';
+      this.sectionTitle = content.sectionTitle || 'Structure Organisationnelle';
+      this.introText = content.introText || '';
+      this.levels = content.levels || this.defaultLevels;
+      this.responsibilitiesTitle = content.responsibilitiesTitle || 'Responsabilités Clés';
+      this.responsibilities = content.responsibilities || this.defaultResponsibilities;
+    } catch (e) {
+      console.error('Error parsing content:', e);
+      this.loadDefaultContent();
+    }
+  }
+
+  loadDefaultContent(): void {
+    this.heroTitle = 'Organigramme';
+    this.heroSubtitle = 'Structure organisationnelle de l\'Agence Nationale de la Recherche Scientifique et de l\'Innovation';
+    this.sectionTitle = 'Structure Organisationnelle';
+    this.introText = 'L\'ANRSI est structurée de manière hiérarchique pour assurer une gestion efficace de la recherche scientifique et de l\'innovation en Mauritanie.';
+    this.levels = this.defaultLevels;
+    this.responsibilitiesTitle = 'Responsabilités Clés';
+    this.responsibilities = this.defaultResponsibilities;
+  }
+}

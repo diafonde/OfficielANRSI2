@@ -1,6 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { PageService, PageDTO } from '../../services/page.service';
+
+interface Programme {
+  id: string;
+  name: string;
+  description: string;
+  objectives: string[];
+  icon: string;
+  color: string;
+  details?: string;
+}
 
 @Component({
   selector: 'app-programmes',
@@ -10,8 +21,17 @@ import { TranslateModule } from '@ngx-translate/core';
   styleUrls: ['./programmes.component.scss']
 })
 export class ProgrammesComponent implements OnInit {
+  page: PageDTO | null = null;
+  programmes: Programme[] = [];
+  heroTitle: string = '';
+  heroSubtitle: string = '';
+  ctaTitle: string = '';
+  ctaDescription: string = '';
+  isLoading = true;
+
+  constructor(private pageService: PageService) {}
   
-  programmes = [
+  defaultProgrammes = [
     {
       id: 'temkin',
       name: 'Programme Temkin (Autonomisation)',
@@ -76,6 +96,67 @@ export class ProgrammesComponent implements OnInit {
       AOS.init();
     } catch (error) {
       console.warn('AOS library could not be loaded:', error);
+    }
+    
+    this.loadPage();
+  }
+
+  loadPage(): void {
+    this.pageService.getPageBySlug('programmes').subscribe({
+      next: (page) => {
+        this.page = page;
+        this.parseContent();
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading page:', error);
+        this.programmes = this.defaultProgrammes;
+        this.isLoading = false;
+      }
+    });
+  }
+
+  parseContent(): void {
+    if (!this.page?.content) {
+      this.programmes = this.defaultProgrammes;
+      this.heroTitle = 'Programmes';
+      this.heroSubtitle = 'Programmes de l\'Agence';
+      this.ctaTitle = 'Intéressé par nos programmes ?';
+      this.ctaDescription = 'Découvrez comment participer à nos programmes de recherche et d\'innovation';
+      return;
+    }
+
+    try {
+      const content = JSON.parse(this.page.content);
+      
+      // Handle new structured format
+      if (content.programmes && Array.isArray(content.programmes)) {
+        this.programmes = content.programmes;
+        this.heroTitle = content.heroTitle || 'Programmes';
+        this.heroSubtitle = content.heroSubtitle || 'Programmes de l\'Agence';
+        this.ctaTitle = content.ctaTitle || 'Intéressé par nos programmes ?';
+        this.ctaDescription = content.ctaDescription || 'Découvrez comment participer à nos programmes de recherche et d\'innovation';
+      } else if (Array.isArray(content)) {
+        // Legacy format - content is directly an array of programmes
+        this.programmes = content;
+        this.heroTitle = 'Programmes';
+        this.heroSubtitle = 'Programmes de l\'Agence';
+        this.ctaTitle = 'Intéressé par nos programmes ?';
+        this.ctaDescription = 'Découvrez comment participer à nos programmes de recherche et d\'innovation';
+      } else {
+        this.programmes = this.defaultProgrammes;
+        this.heroTitle = 'Programmes';
+        this.heroSubtitle = 'Programmes de l\'Agence';
+        this.ctaTitle = 'Intéressé par nos programmes ?';
+        this.ctaDescription = 'Découvrez comment participer à nos programmes de recherche et d\'innovation';
+      }
+    } catch (e) {
+      console.error('Error parsing content:', e);
+      this.programmes = this.defaultProgrammes;
+      this.heroTitle = 'Programmes';
+      this.heroSubtitle = 'Programmes de l\'Agence';
+      this.ctaTitle = 'Intéressé par nos programmes ?';
+      this.ctaDescription = 'Découvrez comment participer à nos programmes de recherche et d\'innovation';
     }
   }
 }

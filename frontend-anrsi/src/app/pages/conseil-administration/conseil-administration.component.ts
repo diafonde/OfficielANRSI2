@@ -15,7 +15,7 @@ interface BoardMember {
     <div class="board-hero">
       <div class="container">
         <h1>Conseil d'Administration</h1>
-        <p>{{ 'Composition du Conseil d\'Administration de l\'Agence Nationale de la Recherche Scientifique et de l\'Innovation' | translate }}</p>
+        <p>Composition du Conseil d\'Administration de l\'Agence Nationale de la Recherche Scientifique et de l\'Innovation' | translate</p>
       </div>
       <div class="hero-overlay"></div>
     </div>

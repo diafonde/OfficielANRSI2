@@ -1,0 +1,217 @@
+.admin-pages {
+  padding: var(--space-6);
+
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-6);
+
+    h1 {
+      margin: 0;
+      color: var(--primary-600);
+    }
+  }
+
+  .filters {
+    display: flex;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+
+    .search-box {
+      position: relative;
+      flex: 1;
+      max-width: 400px;
+
+      i {
+        position: absolute;
+        left: var(--space-3);
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--neutral-500);
+      }
+
+      .search-input {
+        width: 100%;
+        padding: var(--space-2) var(--space-2) var(--space-2) var(--space-10);
+        border: 1px solid var(--neutral-300);
+        border-radius: 6px;
+        font-size: var(--text-base);
+      }
+    }
+
+    .filter-select {
+      padding: var(--space-2) var(--space-4);
+      border: 1px solid var(--neutral-300);
+      border-radius: 6px;
+      font-size: var(--text-base);
+    }
+  }
+
+  .error-message {
+    background: #fee;
+    color: #c33;
+    padding: var(--space-4);
+    border-radius: 6px;
+    margin-bottom: var(--space-4);
+  }
+
+  .loading {
+    text-align: center;
+    padding: var(--space-8);
+    color: var(--neutral-600);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: var(--space-12);
+    color: var(--neutral-600);
+
+    i {
+      font-size: 3rem;
+      margin-bottom: var(--space-4);
+      opacity: 0.5;
+    }
+  }
+
+  .pages-table {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+
+      thead {
+        background: var(--neutral-100);
+
+        th {
+          padding: var(--space-4);
+          text-align: left;
+          font-weight: 600;
+          color: var(--neutral-700);
+          border-bottom: 2px solid var(--neutral-200);
+        }
+      }
+
+      tbody {
+        tr {
+          border-bottom: 1px solid var(--neutral-200);
+          transition: background 0.2s;
+
+          &:hover {
+            background: var(--neutral-50);
+          }
+
+          td {
+            padding: var(--space-4);
+            color: var(--neutral-700);
+
+            .subtitle {
+              font-size: var(--text-sm);
+              color: var(--neutral-500);
+              margin-top: var(--space-1);
+            }
+
+            code {
+              background: var(--neutral-100);
+              padding: var(--space-1) var(--space-2);
+              border-radius: 4px;
+              font-size: var(--text-sm);
+              font-family: monospace;
+            }
+          }
+        }
+      }
+    }
+
+    .badge {
+      display: inline-block;
+      padding: var(--space-1) var(--space-3);
+      border-radius: 12px;
+      font-size: var(--text-xs);
+      font-weight: 600;
+      margin-right: var(--space-2);
+
+      &.badge-published {
+        background: #d1fae5;
+        color: #065f46;
+      }
+
+      &.badge-draft {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      &.badge-inactive {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      &.badge-type {
+        background: var(--primary-100);
+        color: var(--primary-700);
+      }
+    }
+
+    .actions {
+      display: flex;
+      gap: var(--space-2);
+
+      .btn {
+        padding: var(--space-2);
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        &.btn-sm {
+          width: 32px;
+          height: 32px;
+        }
+
+        &.btn-edit {
+          background: var(--primary-100);
+          color: var(--primary-600);
+
+          &:hover {
+            background: var(--primary-200);
+          }
+        }
+
+        &.btn-publish {
+          background: #d1fae5;
+          color: #065f46;
+
+          &:hover {
+            background: #a7f3d0;
+          }
+        }
+
+        &.btn-unpublish {
+          background: #fef3c7;
+          color: #92400e;
+
+          &:hover {
+            background: #fde68a;
+          }
+        }
+
+        &.btn-delete {
+          background: #fee2e2;
+          color: #991b1b;
+
+          &:hover {
+            background: #fecaca;
+          }
+        }
+      }
+    }
+  }
+}
+

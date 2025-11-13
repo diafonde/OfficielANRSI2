@@ -1,5 +1,67 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { PageService, PageDTO } from '../../services/page.service';
+
+interface MediaOverview {
+  icon: string;
+  title: string;
+  description: string;
+  items: string[];
+}
+
+interface CoverageItem {
+  date: string;
+  title: string;
+  description: string;
+  mediaOutlets: { type: string; name: string }[];
+}
+
+interface MediaType {
+  icon: string;
+  title: string;
+  description: string;
+  items: string[];
+}
+
+interface PressRelease {
+  date: string;
+  title: string;
+  description: string;
+  link?: string;
+}
+
+interface MediaKitItem {
+  icon: string;
+  title: string;
+  description: string;
+  link?: string;
+}
+
+interface SocialPlatform {
+  icon: string;
+  name: string;
+  handle: string;
+  link?: string;
+}
+
+interface ContactItem {
+  icon: string;
+  label: string;
+  value: string;
+}
+
+interface AgenceMediasContent {
+  heroTitle: string;
+  heroSubtitle: string;
+  introText: string;
+  mediaOverview: MediaOverview[];
+  recentCoverage: CoverageItem[];
+  mediaTypes: MediaType[];
+  pressReleases: PressRelease[];
+  mediaKit: MediaKitItem[];
+  socialMedia: SocialPlatform[];
+  contactInfo: ContactItem[];
+}
 
 @Component({
   selector: 'app-agence-medias',
@@ -8,146 +70,49 @@ import { CommonModule } from '@angular/common';
   template: `
     <div class="medias-hero">
       <div class="container">
-        <h1>ANRSI dans les Médias</h1>
-        <p>Actualités, publications et visibilité médiatique</p>
+        <h1>{{ content?.heroTitle || 'ANRSI dans les Médias' }}</h1>
+        <p>{{ content?.heroSubtitle || 'Actualités, publications et visibilité médiatique' }}</p>
       </div>
       <div class="hero-overlay"></div>
     </div>
     
-    <div class="container">
+    <div class="container" *ngIf="isLoading">
+      <div class="loading-container">
+        <div class="loading">Loading...</div>
+      </div>
+    </div>
+    
+    <div class="container" *ngIf="!isLoading && content">
       <section class="section medias-section">
         <div class="medias-content">
           <h2>Présence Médias de l'ANRSI</h2>
-          <p class="intro-text">
-            L'Agence Nationale de la Recherche Scientifique et de l'Innovation (ANRSI) maintient une présence active dans les médias pour promouvoir la recherche scientifique, l'innovation technologique, et les initiatives de développement en Mauritanie.
-          </p>
+          <p class="intro-text">{{ content.introText }}</p>
           
-          <div class="medias-overview">
-            <div class="overview-item">
-              <div class="overview-icon">📺</div>
+          <div class="medias-overview" *ngIf="content.mediaOverview && content.mediaOverview.length > 0">
+            <div class="overview-item" *ngFor="let item of content.mediaOverview">
+              <div class="overview-icon">{{ item.icon }}</div>
               <div class="overview-content">
-                <h3>Médias Audiovisuels</h3>
-                <p>Interviews, reportages et émissions spéciales sur les chaînes de télévision et radios nationales et internationales.</p>
+                <h3>{{ item.title }}</h3>
+                <p>{{ item.description }}</p>
                 <ul>
-                  <li>TVM (Télévision de Mauritanie)</li>
-                  <li>Radio Mauritanie</li>
-                  <li>Chaînes internationales</li>
-                  <li>Podcasts scientifiques</li>
-                </ul>
-              </div>
-            </div>
-            
-            <div class="overview-item">
-              <div class="overview-icon">📰</div>
-              <div class="overview-content">
-                <h3>Presse Écrite</h3>
-                <p>Articles, tribunes et publications dans les journaux nationaux et internationaux.</p>
-                <ul>
-                  <li>Le Calame</li>
-                  <li>Horizons</li>
-                  <li>Mauritanie News</li>
-                  <li>Revues scientifiques</li>
-                </ul>
-              </div>
-            </div>
-            
-            <div class="overview-item">
-              <div class="overview-icon">🌐</div>
-              <div class="overview-content">
-                <h3>Médias Numériques</h3>
-                <p>Présence active sur les plateformes numériques et réseaux sociaux.</p>
-                <ul>
-                  <li>Site web officiel</li>
-                  <li>Réseaux sociaux</li>
-                  <li>Newsletters</li>
-                  <li>Webinaires</li>
+                  <li *ngFor="let listItem of item.items">{{ listItem }}</li>
                 </ul>
               </div>
             </div>
           </div>
           
-          <div class="recent-coverage">
+          <div class="recent-coverage" *ngIf="content.recentCoverage && content.recentCoverage.length > 0">
             <h3>Couverture Médias Récente</h3>
             <div class="coverage-timeline">
-              <div class="coverage-item">
-                <div class="coverage-date">15 Février 2024</div>
+              <div class="coverage-item" *ngFor="let item of content.recentCoverage">
+                <div class="coverage-date">{{ item.date }}</div>
                 <div class="coverage-content">
-                  <h4>Colloque International sur l'IA dans l'Agriculture</h4>
-                  <p class="coverage-description">
-                    L'ANRSI organise un colloque international sur l'application de l'intelligence artificielle dans l'agriculture de précision pour la sécurité alimentaire.
-                  </p>
-                  <div class="coverage-media">
-                    <div class="media-outlet">
-                      <span class="media-type">📺</span>
-                      <span class="media-name">TVM - Journal 20h</span>
-                    </div>
-                    <div class="media-outlet">
-                      <span class="media-type">📰</span>
-                      <span class="media-name">Le Calame</span>
-                    </div>
-                    <div class="media-outlet">
-                      <span class="media-type">🌐</span>
-                      <span class="media-name">ANRSI.mr</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="coverage-item">
-                <div class="coverage-date">10 Février 2024</div>
-                <div class="coverage-content">
-                  <h4>Lancement du Programme Innovation Technologique</h4>
-                  <p class="coverage-description">
-                    Nouveau programme de soutien aux projets d'innovation technologique et de transfert de technologie vers l'industrie mauritanienne.
-                  </p>
-                  <div class="coverage-media">
-                    <div class="media-outlet">
-                      <span class="media-type">📻</span>
-                      <span class="media-name">Radio Mauritanie</span>
-                    </div>
-                    <div class="media-outlet">
-                      <span class="media-type">📰</span>
-                      <span class="media-name">Horizons</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="coverage-item">
-                <div class="coverage-date">5 Février 2024</div>
-                <div class="coverage-content">
-                  <h4>Partenariat avec l'Université de Nouakchott</h4>
-                  <p class="coverage-description">
-                    Signature d'un accord de partenariat stratégique pour le développement de la recherche scientifique et l'innovation dans l'enseignement supérieur.
-                  </p>
-                  <div class="coverage-media">
-                    <div class="media-outlet">
-                      <span class="media-type">📺</span>
-                      <span class="media-name">TVM - Matinée</span>
-                    </div>
-                    <div class="media-outlet">
-                      <span class="media-type">📰</span>
-                      <span class="media-name">Mauritanie News</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="coverage-item">
-                <div class="coverage-date">1er Février 2024</div>
-                <div class="coverage-content">
-                  <h4>Résultats du Programme de Bourses Doctorales</h4>
-                  <p class="coverage-description">
-                    Annonce des lauréats du programme de bourses de doctorat 2024 pour soutenir les étudiants mauritaniens dans leurs études doctorales.
-                  </p>
-                  <div class="coverage-media">
-                    <div class="media-outlet">
-                      <span class="media-type">📻</span>
-                      <span class="media-name">Radio Mauritanie</span>
-                    </div>
-                    <div class="media-outlet">
-                      <span class="media-type">📰</span>
-                      <span class="media-name">Le Calame</span>
+                  <h4>{{ item.title }}</h4>
+                  <p class="coverage-description">{{ item.description }}</p>
+                  <div class="coverage-media" *ngIf="item.mediaOutlets && item.mediaOutlets.length > 0">
+                    <div class="media-outlet" *ngFor="let outlet of item.mediaOutlets">
+                      <span class="media-type">{{ outlet.type }}</span>
+                      <span class="media-name">{{ outlet.name }}</span>
                     </div>
                   </div>
                 </div>
@@ -155,230 +120,80 @@ import { CommonModule } from '@angular/common';
             </div>
           </div>
           
-          <div class="media-types">
+          <div class="media-types" *ngIf="content.mediaTypes && content.mediaTypes.length > 0">
             <h3>Types de Couverture Médias</h3>
             <div class="types-grid">
-              <div class="type-item">
-                <div class="type-icon">🎤</div>
+              <div class="type-item" *ngFor="let item of content.mediaTypes">
+                <div class="type-icon">{{ item.icon }}</div>
                 <div class="type-content">
-                  <h4>Interviews et Déclarations</h4>
-                  <p>Interviews exclusives avec le Directeur Général et les experts de l'ANRSI sur les enjeux scientifiques et technologiques.</p>
+                  <h4>{{ item.title }}</h4>
+                  <p>{{ item.description }}</p>
                   <ul>
-                    <li>Interviews télévisées</li>
-                    <li>Déclarations officielles</li>
-                    <li>Points de presse</li>
-                    <li>Conférences de presse</li>
-                  </ul>
-                </div>
-              </div>
-              
-              <div class="type-item">
-                <div class="type-icon">📊</div>
-                <div class="type-content">
-                  <h4>Reportages et Documentaires</h4>
-                  <p>Reportages approfondis sur les projets de recherche, les innovations technologiques et les initiatives de développement.</p>
-                  <ul>
-                    <li>Reportages terrain</li>
-                    <li>Documentaires scientifiques</li>
-                    <li>Émissions spéciales</li>
-                    <li>Portraits d'experts</li>
-                  </ul>
-                </div>
-              </div>
-              
-              <div class="type-item">
-                <div class="type-icon">📝</div>
-                <div class="type-content">
-                  <h4>Articles et Publications</h4>
-                  <p>Articles de fond, tribunes et publications dans les médias nationaux et internationaux.</p>
-                  <ul>
-                    <li>Articles d'opinion</li>
-                    <li>Tribunes libres</li>
-                    <li>Publications scientifiques</li>
-                    <li>Communiqués de presse</li>
-                  </ul>
-                </div>
-              </div>
-              
-              <div class="type-item">
-                <div class="type-icon">🎥</div>
-                <div class="type-content">
-                  <h4>Contenu Multimédia</h4>
-                  <p>Production de contenu vidéo, audio et interactif pour les plateformes numériques.</p>
-                  <ul>
-                    <li>Vidéos éducatives</li>
-                    <li>Podcasts scientifiques</li>
-                    <li>Webinaires</li>
-                    <li>Contenu interactif</li>
+                    <li *ngFor="let listItem of item.items">{{ listItem }}</li>
                   </ul>
                 </div>
               </div>
             </div>
           </div>
           
-          <div class="press-releases">
+          <div class="press-releases" *ngIf="content.pressReleases && content.pressReleases.length > 0">
             <h3>Communiqués de Presse</h3>
             <div class="releases-list">
-              <div class="release-item">
-                <div class="release-date">20 Février 2024</div>
+              <div class="release-item" *ngFor="let release of content.pressReleases">
+                <div class="release-date">{{ release.date }}</div>
                 <div class="release-content">
-                  <h4>Lancement du Programme "Innovation Verte"</h4>
-                  <p>L'ANRSI annonce le lancement d'un nouveau programme de financement pour les projets d'innovation verte et de technologies durables.</p>
-                  <a href="#" class="release-link">Lire le communiqué complet</a>
-                </div>
-              </div>
-              
-              <div class="release-item">
-                <div class="release-date">18 Février 2024</div>
-                <div class="release-content">
-                  <h4>Partenariat avec l'Institut Pasteur</h4>
-                  <p>Signature d'un accord de collaboration avec l'Institut Pasteur pour le développement de la recherche médicale en Mauritanie.</p>
-                  <a href="#" class="release-link">Lire le communiqué complet</a>
-                </div>
-              </div>
-              
-              <div class="release-item">
-                <div class="release-date">15 Février 2024</div>
-                <div class="release-content">
-                  <h4>Résultats de l'Appel à Projets 2024</h4>
-                  <p>Announcement des projets sélectionnés dans le cadre de l'appel à projets de recherche et d'innovation 2024.</p>
-                  <a href="#" class="release-link">Lire le communiqué complet</a>
-                </div>
-              </div>
-              
-              <div class="release-item">
-                <div class="release-date">12 Février 2024</div>
-                <div class="release-content">
-                  <h4>Inauguration du Laboratoire de Biotechnologie</h4>
-                  <p>Ouverture officielle du nouveau laboratoire de biotechnologie équipé des dernières technologies pour la recherche en biologie moléculaire.</p>
-                  <a href="#" class="release-link">Lire le communiqué complet</a>
+                  <h4>{{ release.title }}</h4>
+                  <p>{{ release.description }}</p>
+                  <a [href]="release.link || '#'" class="release-link" *ngIf="release.link">Lire le communiqué complet</a>
                 </div>
               </div>
             </div>
           </div>
           
-          <div class="media-kit">
+          <div class="media-kit" *ngIf="content.mediaKit && content.mediaKit.length > 0">
             <h3>Kit Médias</h3>
             <div class="kit-content">
               <p>L'ANRSI met à disposition des médias un kit complet pour faciliter la couverture de ses activités :</p>
               
               <div class="kit-items">
-                <div class="kit-item">
-                  <div class="kit-icon">📸</div>
+                <div class="kit-item" *ngFor="let item of content.mediaKit">
+                  <div class="kit-icon">{{ item.icon }}</div>
                   <div class="kit-details">
-                    <h4>Photos et Images</h4>
-                    <p>Banque d'images haute résolution des installations, équipements et événements de l'ANRSI.</p>
-                    <a href="#" class="kit-link">Télécharger les photos</a>
-                  </div>
-                </div>
-                
-                <div class="kit-item">
-                  <div class="kit-icon">🎥</div>
-                  <div class="kit-details">
-                    <h4>Vidéos et B-Roll</h4>
-                    <p>Vidéos de présentation, interviews et séquences B-Roll pour les reportages télévisés.</p>
-                    <a href="#" class="kit-link">Accéder aux vidéos</a>
-                  </div>
-                </div>
-                
-                <div class="kit-item">
-                  <div class="kit-icon">📄</div>
-                  <div class="kit-details">
-                    <h4>Documents et Fiches</h4>
-                    <p>Fiches techniques, présentations et documents d'information sur les programmes et projets.</p>
-                    <a href="#" class="kit-link">Télécharger les documents</a>
-                  </div>
-                </div>
-                
-                <div class="kit-item">
-                  <div class="kit-icon">👥</div>
-                  <div class="kit-details">
-                    <h4>Contacts Presse</h4>
-                    <p>Liste des contacts presse et experts disponibles pour interviews et commentaires.</p>
-                    <a href="#" class="kit-link">Voir les contacts</a>
+                    <h4>{{ item.title }}</h4>
+                    <p>{{ item.description }}</p>
+                    <a [href]="item.link || '#'" class="kit-link" *ngIf="item.link">Voir plus</a>
                   </div>
                 </div>
               </div>
             </div>
           </div>
           
-          <div class="social-media">
+          <div class="social-media" *ngIf="content.socialMedia && content.socialMedia.length > 0">
             <h3>Réseaux Sociaux</h3>
             <div class="social-content">
               <p>Suivez l'ANRSI sur les réseaux sociaux pour les dernières actualités et informations :</p>
               
               <div class="social-platforms">
-                <div class="platform-item">
-                  <div class="platform-icon">📘</div>
+                <div class="platform-item" *ngFor="let platform of content.socialMedia">
+                  <div class="platform-icon">{{ platform.icon }}</div>
                   <div class="platform-info">
-                    <h4>Facebook</h4>
-                    <p>@ANRSI.Mauritanie</p>
-                    <a href="#" class="platform-link">Suivre sur Facebook</a>
-                  </div>
-                </div>
-                
-                <div class="platform-item">
-                  <div class="platform-icon">🐦</div>
-                  <div class="platform-info">
-                    <h4>Twitter</h4>
-                    <p>@ANRSI_MR</p>
-                    <a href="#" class="platform-link">Suivre sur Twitter</a>
-                  </div>
-                </div>
-                
-                <div class="platform-item">
-                  <div class="platform-icon">💼</div>
-                  <div class="platform-info">
-                    <h4>LinkedIn</h4>
-                    <p>ANRSI Mauritanie</p>
-                    <a href="#" class="platform-link">Suivre sur LinkedIn</a>
-                  </div>
-                </div>
-                
-                <div class="platform-item">
-                  <div class="platform-icon">📺</div>
-                  <div class="platform-info">
-                    <h4>YouTube</h4>
-                    <p>ANRSI Mauritanie</p>
-                    <a href="#" class="platform-link">S'abonner à YouTube</a>
+                    <h4>{{ platform.name }}</h4>
+                    <p>{{ platform.handle }}</p>
+                    <a [href]="platform.link || '#'" class="platform-link" *ngIf="platform.link">Suivre</a>
                   </div>
                 </div>
               </div>
             </div>
           </div>
           
-          <div class="contact-section">
+          <div class="contact-section" *ngIf="content.contactInfo && content.contactInfo.length > 0">
             <h3>Contact Presse</h3>
             <div class="contact-info">
-              <div class="contact-item">
-                <i class="fas fa-envelope"></i>
+              <div class="contact-item" *ngFor="let contact of content.contactInfo">
+                <i [class]="contact.icon"></i>
                 <div class="contact-details">
-                  <h4>Email Presse</h4>
-                  <p>presse@anrsi.mr</p>
-                </div>
-              </div>
-              
-              <div class="contact-item">
-                <i class="fas fa-phone"></i>
-                <div class="contact-details">
-                  <h4>Téléphone</h4>
-                  <p>+222 45 25 44 21</p>
-                </div>
-              </div>
-              
-              <div class="contact-item">
-                <i class="fas fa-user"></i>
-                <div class="contact-details">
-                  <h4>Responsable Presse</h4>
-                  <p>Mme Fatima Mint Ahmed</p>
-                </div>
-              </div>
-              
-              <div class="contact-item">
-                <i class="fas fa-clock"></i>
-                <div class="contact-details">
-                  <h4>Horaires</h4>
-                  <p>Lundi - Vendredi : 8h00 - 16h00</p>
+                  <h4>{{ contact.label }}</h4>
+                  <p>{{ contact.value }}</p>
                 </div>
               </div>
             </div>
@@ -932,6 +747,156 @@ import { CommonModule } from '@angular/common';
         grid-template-columns: 1fr;
       }
     }
+    
+    .loading-container {
+      padding: var(--space-12);
+      text-align: center;
+    }
+    
+    .loading {
+      color: var(--neutral-600);
+      font-size: var(--text-lg);
+    }
   `]
 })
-export class AgenceMediasComponent {}
+export class AgenceMediasComponent implements OnInit {
+  page: PageDTO | null = null;
+  content: AgenceMediasContent | null = null;
+  isLoading = true;
+
+  constructor(private pageService: PageService) {}
+
+  ngOnInit(): void {
+    this.loadPage();
+  }
+
+  loadPage(): void {
+    this.pageService.getPageBySlug('agence-medias').subscribe({
+      next: (page) => {
+        this.page = page;
+        if (page.content) {
+          try {
+            this.content = JSON.parse(page.content);
+          } catch (e) {
+            console.error('Error parsing content:', e);
+            this.loadDefaultContent();
+          }
+        } else {
+          this.loadDefaultContent();
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading page:', error);
+        this.loadDefaultContent();
+        this.isLoading = false;
+      }
+    });
+  }
+
+  loadDefaultContent(): void {
+    // Load default static content as fallback
+    this.content = {
+      heroTitle: 'ANRSI dans les Médias',
+      heroSubtitle: 'Actualités, publications et visibilité médiatique',
+      introText: 'L\'Agence Nationale de la Recherche Scientifique et de l\'Innovation (ANRSI) maintient une présence active dans les médias pour promouvoir la recherche scientifique, l\'innovation technologique, et les initiatives de développement en Mauritanie.',
+      mediaOverview: [
+        {
+          icon: '📺',
+          title: 'Médias Audiovisuels',
+          description: 'Interviews, reportages et émissions spéciales sur les chaînes de télévision et radios nationales et internationales.',
+          items: ['TVM (Télévision de Mauritanie)', 'Radio Mauritanie', 'Chaînes internationales', 'Podcasts scientifiques']
+        },
+        {
+          icon: '📰',
+          title: 'Presse Écrite',
+          description: 'Articles, tribunes et publications dans les journaux nationaux et internationaux.',
+          items: ['Le Calame', 'Horizons', 'Mauritanie News', 'Revues scientifiques']
+        },
+        {
+          icon: '🌐',
+          title: 'Médias Numériques',
+          description: 'Présence active sur les plateformes numériques et réseaux sociaux.',
+          items: ['Site web officiel', 'Réseaux sociaux', 'Newsletters', 'Webinaires']
+        }
+      ],
+      recentCoverage: [
+        {
+          date: '15 Février 2024',
+          title: 'Colloque International sur l\'IA dans l\'Agriculture',
+          description: 'L\'ANRSI organise un colloque international sur l\'application de l\'intelligence artificielle dans l\'agriculture de précision pour la sécurité alimentaire.',
+          mediaOutlets: [
+            { type: '📺', name: 'TVM - Journal 20h' },
+            { type: '📰', name: 'Le Calame' },
+            { type: '🌐', name: 'ANRSI.mr' }
+          ]
+        }
+      ],
+      mediaTypes: [
+        {
+          icon: '🎤',
+          title: 'Interviews et Déclarations',
+          description: 'Interviews exclusives avec le Directeur Général et les experts de l\'ANRSI sur les enjeux scientifiques et technologiques.',
+          items: ['Interviews télévisées', 'Déclarations officielles', 'Points de presse', 'Conférences de presse']
+        },
+        {
+          icon: '📊',
+          title: 'Reportages et Documentaires',
+          description: 'Reportages approfondis sur les projets de recherche, les innovations technologiques et les initiatives de développement.',
+          items: ['Reportages terrain', 'Documentaires scientifiques', 'Émissions spéciales', 'Portraits d\'experts']
+        },
+        {
+          icon: '📝',
+          title: 'Articles et Publications',
+          description: 'Articles de fond, tribunes et publications dans les médias nationaux et internationaux.',
+          items: ['Articles d\'opinion', 'Tribunes libres', 'Publications scientifiques', 'Communiqués de presse']
+        },
+        {
+          icon: '🎥',
+          title: 'Contenu Multimédia',
+          description: 'Production de contenu vidéo, audio et interactif pour les plateformes numériques.',
+          items: ['Vidéos éducatives', 'Podcasts scientifiques', 'Webinaires', 'Contenu interactif']
+        }
+      ],
+      pressReleases: [],
+      mediaKit: [
+        {
+          icon: '📸',
+          title: 'Photos et Images',
+          description: 'Banque d\'images haute résolution des installations, équipements et événements de l\'ANRSI.',
+          link: '#'
+        },
+        {
+          icon: '🎥',
+          title: 'Vidéos et B-Roll',
+          description: 'Vidéos de présentation, interviews et séquences B-Roll pour les reportages télévisés.',
+          link: '#'
+        },
+        {
+          icon: '📄',
+          title: 'Documents et Fiches',
+          description: 'Fiches techniques, présentations et documents d\'information sur les programmes et projets.',
+          link: '#'
+        },
+        {
+          icon: '👥',
+          title: 'Contacts Presse',
+          description: 'Liste des contacts presse et experts disponibles pour interviews et commentaires.',
+          link: '#'
+        }
+      ],
+      socialMedia: [
+        { icon: '📘', name: 'Facebook', handle: '@ANRSI.Mauritanie', link: '#' },
+        { icon: '🐦', name: 'Twitter', handle: '@ANRSI_MR', link: '#' },
+        { icon: '💼', name: 'LinkedIn', handle: 'ANRSI Mauritanie', link: '#' },
+        { icon: '📺', name: 'YouTube', handle: 'ANRSI Mauritanie', link: '#' }
+      ],
+      contactInfo: [
+        { icon: 'fas fa-envelope', label: 'Email Presse', value: 'presse@anrsi.mr' },
+        { icon: 'fas fa-phone', label: 'Téléphone', value: '+222 45 25 44 21' },
+        { icon: 'fas fa-user', label: 'Responsable Presse', value: 'Mme Fatima Mint Ahmed' },
+        { icon: 'fas fa-clock', label: 'Horaires', value: 'Lundi - Vendredi : 8h00 - 16h00' }
+      ]
+    };
+  }
+}

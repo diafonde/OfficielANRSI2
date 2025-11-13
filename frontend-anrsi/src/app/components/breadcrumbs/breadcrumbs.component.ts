@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink, NavigationEnd } from '@angular/router';
 import { filter, distinctUntilChanged } from 'rxjs/operators';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 interface Breadcrumb {
   label: string;
@@ -11,7 +12,7 @@ interface Breadcrumb {
 @Component({
   selector: 'app-breadcrumbs',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslateModule],
   templateUrl: './breadcrumbs.component.html',
   styleUrls: ['./breadcrumbs.component.scss']
 })
@@ -20,7 +21,8 @@ export class BreadcrumbsComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private activatedRoute: ActivatedRoute
+    private activatedRoute: ActivatedRoute,
+    public translate: TranslateService
   ) {}
 
   ngOnInit() {
@@ -63,6 +65,12 @@ export class BreadcrumbsComponent implements OnInit {
   }
 
   formatBreadcrumb(label: string): string {
+    // Try to translate the label first
+    const translated = this.translate.instant(label);
+    if (translated !== label) {
+      return translated;
+    }
+    // If no translation found, format the label
     return label
       .replace(/-/g, ' ')
       .replace(/\b\w/g, l => l.toUpperCase());

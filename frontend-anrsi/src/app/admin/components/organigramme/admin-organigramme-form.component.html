@@ -1,0 +1,122 @@
+<div class="admin-organigramme-form">
+  <div class="form-header">
+    <h1>Edit Organigramme Page</h1>
+    <button (click)="onCancel()" class="btn btn-secondary">
+      <i class="fas fa-times"></i> Cancel
+    </button>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <i class="fas fa-spinner fa-spin"></i> Loading...
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+    <!-- Hero Section -->
+    <div class="form-section">
+      <h2>Hero Section</h2>
+      <div class="form-group">
+        <label>Hero Title *</label>
+        <input type="text" formControlName="heroTitle" class="form-control" />
+      </div>
+      <div class="form-group">
+        <label>Hero Subtitle *</label>
+        <input type="text" formControlName="heroSubtitle" class="form-control" />
+      </div>
+    </div>
+
+    <!-- Content Section -->
+    <div class="form-section">
+      <h2>Content Section</h2>
+      <div class="form-group">
+        <label>Section Title *</label>
+        <input type="text" formControlName="sectionTitle" class="form-control" />
+      </div>
+      <div class="form-group">
+        <label>Intro Text *</label>
+        <textarea formControlName="introText" class="form-control" rows="3"></textarea>
+      </div>
+    </div>
+
+    <!-- Levels Section -->
+    <div class="form-section">
+      <h2>Organizational Levels</h2>
+      <div formArrayName="levels" *ngFor="let level of levels.controls; let levelIndex = index">
+        <div [formGroupName]="levelIndex" class="level-group">
+          <div class="level-header">
+            <h3>Level {{ level.get('levelNumber')?.value }}</h3>
+            <button type="button" (click)="removeLevel(levelIndex)" class="btn btn-danger btn-sm">Remove Level</button>
+          </div>
+          
+          <div formArrayName="positions" *ngFor="let position of getLevelPositions(levelIndex).controls; let posIndex = index">
+            <div [formGroupName]="posIndex" class="nested-form-group">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Icon (Emoji) *</label>
+                  <input type="text" formControlName="icon" class="form-control" placeholder="👔" />
+                </div>
+                <div class="form-group">
+                  <label>Is Director</label>
+                  <input type="checkbox" formControlName="isDirector" />
+                </div>
+                <button type="button" (click)="removePositionFromLevel(levelIndex, posIndex)" class="btn btn-danger btn-sm">Remove</button>
+              </div>
+              <div class="form-group">
+                <label>Title *</label>
+                <input type="text" formControlName="title" class="form-control" />
+              </div>
+              <div class="form-group">
+                <label>Description *</label>
+                <input type="text" formControlName="description" class="form-control" />
+              </div>
+            </div>
+          </div>
+          <button type="button" (click)="addPositionToLevel($any(level))" class="btn btn-primary btn-sm">Add Position</button>
+        </div>
+      </div>
+      <button type="button" (click)="addLevel()" class="btn btn-primary">Add Level</button>
+    </div>
+
+    <!-- Responsibilities Section -->
+    <div class="form-section">
+      <h2>Responsibilities Section</h2>
+      <div class="form-group">
+        <label>Responsibilities Title *</label>
+        <input type="text" formControlName="responsibilitiesTitle" class="form-control" />
+      </div>
+      
+      <h3>Responsibilities</h3>
+      <div formArrayName="responsibilities" *ngFor="let responsibility of responsibilities.controls; let i = index">
+        <div [formGroupName]="i" class="nested-form-group">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Icon (Emoji) *</label>
+              <input type="text" formControlName="icon" class="form-control" placeholder="🎯" />
+            </div>
+            <button type="button" (click)="removeResponsibility(i)" class="btn btn-danger btn-sm">Remove</button>
+          </div>
+          <div class="form-group">
+            <label>Title *</label>
+            <input type="text" formControlName="title" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Description *</label>
+            <textarea formControlName="description" class="form-control" rows="2"></textarea>
+          </div>
+        </div>
+      </div>
+      <button type="button" (click)="addResponsibility()" class="btn btn-primary">Add Responsibility</button>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" (click)="onCancel()" class="btn btn-secondary">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="form.invalid || isSaving">
+        <i class="fas fa-save"></i> {{ isSaving ? 'Saving...' : 'Save Changes' }}
+      </button>
+    </div>
+  </form>
+</div>
+

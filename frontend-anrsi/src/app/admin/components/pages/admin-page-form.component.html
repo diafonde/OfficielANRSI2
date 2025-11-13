@@ -1,0 +1,186 @@
+<div class="admin-page-form">
+  <div class="form-header">
+    <h1>{{ isEditMode ? 'Edit Page' : 'Create New Page' }}</h1>
+    <button (click)="onCancel()" class="btn btn-secondary">
+      <i class="fas fa-times"></i> Cancel
+    </button>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <i class="fas fa-spinner fa-spin"></i> {{ isEditMode ? 'Loading page...' : 'Saving...' }}
+  </div>
+
+  <form [formGroup]="pageForm" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+    <div class="form-grid">
+      <div class="form-section">
+        <h2>Basic Information</h2>
+        
+        <div class="form-group">
+          <label for="slug">Slug *</label>
+          <input
+            type="text"
+            id="slug"
+            formControlName="slug"
+            [readonly]="isEditMode"
+            class="form-control"
+            placeholder="e.g., missions, objectives"
+          />
+          <div *ngIf="pageForm.get('slug')?.invalid && pageForm.get('slug')?.touched" class="error-text">
+            Slug is required
+          </div>
+          <div class="help-text">
+            URL-friendly identifier. Cannot be changed after creation.
+            <div class="quick-slugs">
+              <span>Quick set:</span>
+              <button
+                type="button"
+                *ngFor="let slugKey of getSlugKeys()"
+                (click)="setSlugFromComponent(slugKey)"
+                class="btn-quick-slug"
+              >
+                {{ slugKey }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="title">Title *</label>
+          <input
+            type="text"
+            id="title"
+            formControlName="title"
+            class="form-control"
+            placeholder="Page title"
+          />
+          <div *ngIf="pageForm.get('title')?.invalid && pageForm.get('title')?.touched" class="error-text">
+            Title is required
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="pageType">Page Type *</label>
+          <select id="pageType" formControlName="pageType" class="form-control">
+            <option *ngFor="let type of pageTypes" [value]="type.value">
+              {{ type.label }}
+            </option>
+          </select>
+          <div *ngIf="pageForm.get('pageType')?.invalid && pageForm.get('pageType')?.touched" class="error-text">
+            Page type is required
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h2>Hero Section</h2>
+        
+        <div class="form-group">
+          <label for="heroTitle">Hero Title</label>
+          <input
+            type="text"
+            id="heroTitle"
+            formControlName="heroTitle"
+            class="form-control"
+            placeholder="Hero section title"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="heroSubtitle">Hero Subtitle</label>
+          <input
+            type="text"
+            id="heroSubtitle"
+            formControlName="heroSubtitle"
+            class="form-control"
+            placeholder="Hero section subtitle"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="heroImageUrl">Hero Image URL</label>
+          <input
+            type="text"
+            id="heroImageUrl"
+            formControlName="heroImageUrl"
+            class="form-control"
+            placeholder="https://example.com/image.jpg"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2>Content</h2>
+      
+      <div class="form-group">
+        <label for="content">Content (JSON)</label>
+        <textarea
+          id="content"
+          formControlName="content"
+          class="form-control"
+          rows="15"
+          placeholder='{"sections": [...]}'
+        ></textarea>
+        <div class="help-text">
+          Enter page content as JSON. The structure depends on the page type.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="metadata">Metadata (JSON)</label>
+        <textarea
+          id="metadata"
+          formControlName="metadata"
+          class="form-control"
+          rows="5"
+          placeholder='{"key": "value"}'
+        ></textarea>
+        <div class="help-text">
+          Additional metadata as JSON (optional).
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2>Settings</h2>
+      
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            formControlName="isPublished"
+            class="checkbox"
+          />
+          <span>Published</span>
+        </label>
+        <div class="help-text">Published pages are visible to the public.</div>
+      </div>
+
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            formControlName="isActive"
+            class="checkbox"
+          />
+          <span>Active</span>
+        </label>
+        <div class="help-text">Inactive pages are hidden from all views.</div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" (click)="onCancel()" class="btn btn-secondary">
+        Cancel
+      </button>
+      <button type="submit" class="btn btn-primary" [disabled]="pageForm.invalid || isLoading">
+        <i class="fas fa-save"></i> {{ isEditMode ? 'Update Page' : 'Create Page' }}
+      </button>
+    </div>
+  </form>
+</div>
+

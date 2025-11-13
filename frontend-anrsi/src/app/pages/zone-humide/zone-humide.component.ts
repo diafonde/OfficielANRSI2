@@ -1,5 +1,70 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { PageService, PageDTO } from '../../services/page.service';
+
+interface OverviewItem {
+  icon: string;
+  title: string;
+  content: { label: string; value: string }[];
+}
+
+interface ThemeItem {
+  icon: string;
+  title: string;
+  items: string[];
+}
+
+interface Session {
+  time: string;
+  title: string;
+  description: string;
+}
+
+interface ProgrammeDay {
+  date: string;
+  theme: string;
+  sessions: Session[];
+}
+
+interface Speaker {
+  avatar: string;
+  name: string;
+  title: string;
+  bio: string;
+}
+
+interface RegistrationMode {
+  icon: string;
+  title: string;
+  description: string;
+  items: string[];
+  price: string;
+}
+
+interface ProcessStep {
+  number: number;
+  title: string;
+  description: string;
+}
+
+interface ContactItem {
+  icon: string;
+  label: string;
+  value: string;
+}
+
+interface ZoneHumideContent {
+  heroTitle: string;
+  heroSubtitle: string;
+  introText: string;
+  overview: OverviewItem[];
+  themes: ThemeItem[];
+  programme: ProgrammeDay[];
+  speakers: Speaker[];
+  registrationModes: RegistrationMode[];
+  processSteps: ProcessStep[];
+  contactInfo: ContactItem[];
+}
 
 @Component({
   selector: 'app-zone-humide',
@@ -8,255 +73,63 @@ import { CommonModule } from '@angular/common';
   template: `
     <div class="zone-humide-hero">
       <div class="container">
-        <h1>Zone Humide</h1>
-        <p>Colloque International sur les Zones Humides du Sahel</p>
+        <h1>{{ content?.heroTitle || 'Zone Humide' }}</h1>
+        <p>{{ content?.heroSubtitle || 'Colloque International sur les Zones Humides du Sahel' }}</p>
       </div>
       <div class="hero-overlay"></div>
     </div>
     
-    <div class="container">
+    <div class="container" *ngIf="isLoading">
+      <div class="loading-container">
+        <div class="loading">Loading...</div>
+      </div>
+    </div>
+    
+    <div class="container" *ngIf="!isLoading && content">
       <section class="section zone-humide-section">
         <div class="zone-humide-content">
           <h2>Colloque International sur les Zones Humides du Sahel</h2>
-          <p class="intro-text">
-            L'ANRSI organise un colloque international majeur sur la préservation et la gestion durable des zones humides du Sahel, réunissant experts, chercheurs et décideurs pour échanger sur les enjeux environnementaux et climatiques.
-          </p>
+          <p class="intro-text">{{ content.introText }}</p>
           
-          <div class="colloque-overview">
-            <div class="overview-item">
-              <div class="overview-icon">📅</div>
+          <div class="colloque-overview" *ngIf="content.overview && content.overview.length > 0">
+            <div class="overview-item" *ngFor="let item of content.overview">
+              <div class="overview-icon">{{ item.icon }}</div>
               <div class="overview-content">
-                <h3>Dates et Lieu</h3>
-                <p><strong>Date :</strong> 15-17 Mars 2024</p>
-                <p><strong>Lieu :</strong> Centre International de Conférences, Nouakchott</p>
-                <p><strong>Format :</strong> Présentiel et en ligne</p>
-              </div>
-            </div>
-            
-            <div class="overview-item">
-              <div class="overview-icon">👥</div>
-              <div class="overview-content">
-                <h3>Participants Attendus</h3>
-                <p><strong>Experts internationaux :</strong> 50+ spécialistes</p>
-                <p><strong>Chercheurs :</strong> 100+ scientifiques</p>
-                <p><strong>Décideurs :</strong> Ministres et responsables</p>
-                <p><strong>ONG et OSC :</strong> Organisations de la société civile</p>
-              </div>
-            </div>
-            
-            <div class="overview-item">
-              <div class="overview-icon">🌍</div>
-              <div class="overview-content">
-                <h3>Pays Participants</h3>
-                <p><strong>Afrique de l'Ouest :</strong> Sénégal, Mali, Niger, Burkina Faso</p>
-                <p><strong>Afrique du Nord :</strong> Maroc, Algérie, Tunisie</p>
-                <p><strong>Europe :</strong> France, Belgique, Espagne</p>
-                <p><strong>Organisations :</strong> UICN, Ramsar, PNUE</p>
+                <h3>{{ item.title }}</h3>
+                <p *ngFor="let contentItem of item.content"><strong>{{ contentItem.label }}</strong> {{ contentItem.value }}</p>
               </div>
             </div>
           </div>
           
-          <div class="themes-section">
+          <div class="themes-section" *ngIf="content.themes && content.themes.length > 0">
             <h3>Thématiques du Colloque</h3>
             <div class="themes-grid">
-              <div class="theme-item">
-                <div class="theme-icon">💧</div>
+              <div class="theme-item" *ngFor="let theme of content.themes">
+                <div class="theme-icon">{{ theme.icon }}</div>
                 <div class="theme-content">
-                  <h4>Gestion des Ressources Hydriques</h4>
+                  <h4>{{ theme.title }}</h4>
                   <ul>
-                    <li>Conservation des zones humides</li>
-                    <li>Gestion intégrée des bassins versants</li>
-                    <li>Technologies de traitement de l'eau</li>
-                    <li>Économie de l'eau</li>
-                  </ul>
-                </div>
-              </div>
-              
-              <div class="theme-item">
-                <div class="theme-icon">🌱</div>
-                <div class="theme-content">
-                  <h4>Biodiversité et Écosystèmes</h4>
-                  <ul>
-                    <li>Protection de la faune et flore</li>
-                    <li>Restauration écologique</li>
-                    <li>Services écosystémiques</li>
-                    <li>Corridors écologiques</li>
-                  </ul>
-                </div>
-              </div>
-              
-              <div class="theme-item">
-                <div class="theme-icon">🌡️</div>
-                <div class="theme-content">
-                  <h4>Changement Climatique</h4>
-                  <ul>
-                    <li>Adaptation aux changements climatiques</li>
-                    <li>Atténuation des effets</li>
-                    <li>Modélisation climatique</li>
-                    <li>Stratégies de résilience</li>
-                  </ul>
-                </div>
-              </div>
-              
-              <div class="theme-item">
-                <div class="theme-icon">👨‍🌾</div>
-                <div class="theme-content">
-                  <h4>Développement Durable</h4>
-                  <ul>
-                    <li>Agriculture durable</li>
-                    <li>Pêche responsable</li>
-                    <li>Écotourisme</li>
-                    <li>Économie verte</li>
-                  </ul>
-                </div>
-              </div>
-              
-              <div class="theme-item">
-                <div class="theme-icon">🏛️</div>
-                <div class="theme-content">
-                  <h4>Gouvernance et Politiques</h4>
-                  <ul>
-                    <li>Cadres législatifs</li>
-                    <li>Politiques publiques</li>
-                    <li>Participation communautaire</li>
-                    <li>Coopération internationale</li>
-                  </ul>
-                </div>
-              </div>
-              
-              <div class="theme-item">
-                <div class="theme-icon">🔬</div>
-                <div class="theme-content">
-                  <h4>Recherche et Innovation</h4>
-                  <ul>
-                    <li>Technologies de monitoring</li>
-                    <li>Innovation environnementale</li>
-                    <li>Transfert de connaissances</li>
-                    <li>Formation et éducation</li>
+                    <li *ngFor="let item of theme.items">{{ item }}</li>
                   </ul>
                 </div>
               </div>
             </div>
           </div>
           
-          <div class="programme-section">
+          <div class="programme-section" *ngIf="content.programme && content.programme.length > 0">
             <h3>Programme du Colloque</h3>
             <div class="programme-timeline">
-              <div class="programme-day">
+              <div class="programme-day" *ngFor="let day of content.programme">
                 <div class="day-header">
-                  <h4>Jour 1 - 15 Mars 2024</h4>
-                  <span class="day-theme">Ouverture et Enjeux Globaux</span>
+                  <h4>{{ day.date }}</h4>
+                  <span class="day-theme">{{ day.theme }}</span>
                 </div>
                 <div class="day-sessions">
-                  <div class="session-item">
-                    <div class="session-time">09:00 - 10:30</div>
+                  <div class="session-item" *ngFor="let session of day.sessions">
+                    <div class="session-time">{{ session.time }}</div>
                     <div class="session-content">
-                      <h5>Cérémonie d'Ouverture</h5>
-                      <p>Discours d'ouverture par les autorités mauritaniennes et internationales</p>
-                    </div>
-                  </div>
-                  
-                  <div class="session-item">
-                    <div class="session-time">11:00 - 12:30</div>
-                    <div class="session-content">
-                      <h5>Conférence Plénière</h5>
-                      <p>"Les zones humides du Sahel : enjeux et défis pour le 21ème siècle"</p>
-                    </div>
-                  </div>
-                  
-                  <div class="session-item">
-                    <div class="session-time">14:00 - 15:30</div>
-                    <div class="session-content">
-                      <h5>Session Parallèle 1</h5>
-                      <p>Gestion des ressources hydriques et conservation</p>
-                    </div>
-                  </div>
-                  
-                  <div class="session-item">
-                    <div class="session-time">16:00 - 17:30</div>
-                    <div class="session-content">
-                      <h5>Session Parallèle 2</h5>
-                      <p>Biodiversité et écosystèmes des zones humides</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="programme-day">
-                <div class="day-header">
-                  <h4>Jour 2 - 16 Mars 2024</h4>
-                  <span class="day-theme">Solutions et Innovations</span>
-                </div>
-                <div class="day-sessions">
-                  <div class="session-item">
-                    <div class="session-time">09:00 - 10:30</div>
-                    <div class="session-content">
-                      <h5>Conférence Plénière</h5>
-                      <p>"Innovation technologique pour la préservation des zones humides"</p>
-                    </div>
-                  </div>
-                  
-                  <div class="session-item">
-                    <div class="session-time">11:00 - 12:30</div>
-                    <div class="session-content">
-                      <h5>Session Parallèle 3</h5>
-                      <p>Changement climatique et adaptation</p>
-                    </div>
-                  </div>
-                  
-                  <div class="session-item">
-                    <div class="session-time">14:00 - 15:30</div>
-                    <div class="session-content">
-                      <h5>Session Parallèle 4</h5>
-                      <p>Développement durable et économie verte</p>
-                    </div>
-                  </div>
-                  
-                  <div class="session-item">
-                    <div class="session-time">16:00 - 17:30</div>
-                    <div class="session-content">
-                      <h5>Ateliers Pratiques</h5>
-                      <p>Formation aux outils de monitoring et évaluation</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="programme-day">
-                <div class="day-header">
-                  <h4>Jour 3 - 17 Mars 2024</h4>
-                  <span class="day-theme">Partenariats et Actions</span>
-                </div>
-                <div class="day-sessions">
-                  <div class="session-item">
-                    <div class="session-time">09:00 - 10:30</div>
-                    <div class="session-content">
-                      <h5>Conférence Plénière</h5>
-                      <p>"Gouvernance et coopération internationale"</p>
-                    </div>
-                  </div>
-                  
-                  <div class="session-item">
-                    <div class="session-time">11:00 - 12:30</div>
-                    <div class="session-content">
-                      <h5>Table Ronde</h5>
-                      <p>"Stratégies d'action pour la préservation des zones humides"</p>
-                    </div>
-                  </div>
-                  
-                  <div class="session-item">
-                    <div class="session-time">14:00 - 15:30</div>
-                    <div class="session-content">
-                      <h5>Présentation des Résultats</h5>
-                      <p>Synthèse des travaux et recommandations</p>
-                    </div>
-                  </div>
-                  
-                  <div class="session-item">
-                    <div class="session-time">16:00 - 17:00</div>
-                    <div class="session-content">
-                      <h5>Cérémonie de Clôture</h5>
-                      <p>Signature de la Déclaration de Nouakchott</p>
+                      <h5>{{ session.title }}</h5>
+                      <p>{{ session.description }}</p>
                     </div>
                   </div>
                 </div>
@@ -264,106 +137,45 @@ import { CommonModule } from '@angular/common';
             </div>
           </div>
           
-          <div class="speakers-section">
+          <div class="speakers-section" *ngIf="content.speakers && content.speakers.length > 0">
             <h3>Conférenciers Invités</h3>
             <div class="speakers-grid">
-              <div class="speaker-item">
-                <div class="speaker-avatar">👨‍🔬</div>
+              <div class="speaker-item" *ngFor="let speaker of content.speakers">
+                <div class="speaker-avatar">{{ speaker.avatar }}</div>
                 <div class="speaker-info">
-                  <h4>Dr. Ahmed Ould Sidi</h4>
-                  <p class="speaker-title">Directeur Général, ANRSI</p>
-                  <p class="speaker-bio">Expert en environnement et développement durable, ancien ministre de l'environnement.</p>
-                </div>
-              </div>
-              
-              <div class="speaker-item">
-                <div class="speaker-avatar">👩‍🔬</div>
-                <div class="speaker-info">
-                  <h4>Prof. Fatou Sarr</h4>
-                  <p class="speaker-title">Université Cheikh Anta Diop, Sénégal</p>
-                  <p class="speaker-bio">Spécialiste des zones humides et de la biodiversité en Afrique de l'Ouest.</p>
-                </div>
-              </div>
-              
-              <div class="speaker-item">
-                <div class="speaker-avatar">👨‍💼</div>
-                <div class="speaker-info">
-                  <h4>Dr. Jean-Pierre Hervé</h4>
-                  <p class="speaker-title">Convention de Ramsar</p>
-                  <p class="speaker-bio">Responsable des programmes Afrique pour la Convention sur les zones humides.</p>
-                </div>
-              </div>
-              
-              <div class="speaker-item">
-                <div class="speaker-avatar">👩‍💼</div>
-                <div class="speaker-info">
-                  <h4>Dr. Amina Benkhadra</h4>
-                  <p class="speaker-title">UICN Afrique du Nord</p>
-                  <p class="speaker-bio">Experte en conservation et gestion durable des écosystèmes.</p>
+                  <h4>{{ speaker.name }}</h4>
+                  <p class="speaker-title">{{ speaker.title }}</p>
+                  <p class="speaker-bio">{{ speaker.bio }}</p>
                 </div>
               </div>
             </div>
           </div>
           
-          <div class="registration-section">
+          <div class="registration-section" *ngIf="content.registrationModes && content.registrationModes.length > 0">
             <h3>Inscription et Participation</h3>
             <div class="registration-info">
               <div class="registration-modes">
-                <div class="mode-item">
-                  <div class="mode-icon">🏢</div>
+                <div class="mode-item" *ngFor="let mode of content.registrationModes">
+                  <div class="mode-icon">{{ mode.icon }}</div>
                   <div class="mode-content">
-                    <h4>Participation Présentielle</h4>
-                    <p>Accès complet au colloque avec hébergement et restauration inclus.</p>
+                    <h4>{{ mode.title }}</h4>
+                    <p>{{ mode.description }}</p>
                     <ul>
-                      <li>Accès à toutes les sessions</li>
-                      <li>Matériel de conférence</li>
-                      <li>Pause-café et déjeuners</li>
-                      <li>Certificat de participation</li>
+                      <li *ngFor="let item of mode.items">{{ item }}</li>
                     </ul>
-                    <div class="mode-price">Gratuit</div>
-                  </div>
-                </div>
-                
-                <div class="mode-item">
-                  <div class="mode-icon">💻</div>
-                  <div class="mode-content">
-                    <h4>Participation en Ligne</h4>
-                    <p>Suivi du colloque en direct via plateforme numérique.</p>
-                    <ul>
-                      <li>Diffusion en direct</li>
-                      <li>Interaction avec les speakers</li>
-                      <li>Accès aux présentations</li>
-                      <li>Certificat numérique</li>
-                    </ul>
-                    <div class="mode-price">Gratuit</div>
+                    <div class="mode-price">{{ mode.price }}</div>
                   </div>
                 </div>
               </div>
               
-              <div class="registration-process">
+              <div class="registration-process" *ngIf="content.processSteps && content.processSteps.length > 0">
                 <h4>Processus d'Inscription :</h4>
                 <div class="process-steps">
-                  <div class="process-step">
-                    <div class="step-number">1</div>
+                  <div class="process-step" *ngFor="let step of content.processSteps">
+                    <div class="step-number">{{ step.number }}</div>
                     <div class="step-content">
-                      <h5>Formulaire d'Inscription</h5>
-                      <p>Remplir le formulaire en ligne avec vos informations personnelles et professionnelles.</p>
-                    </div>
-                  </div>
-                  
-                  <div class="process-step">
-                    <div class="step-number">2</div>
-                    <div class="step-content">
-                      <h5>Validation</h5>
-                      <p>Validation de votre inscription par l'équipe organisatrice sous 48h.</p>
-                    </div>
-                  </div>
-                  
-                  <div class="process-step">
-                    <div class="step-number">3</div>
-                    <div class="step-content">
-                      <h5>Confirmation</h5>
-                      <p>Réception de votre confirmation d'inscription avec les détails pratiques.</p>
+                      <h5>{{ step.title }}</h5>
+                      <p>{{ step.description }}</p>
                     </div>
                   </div>
                 </div>
@@ -371,38 +183,14 @@ import { CommonModule } from '@angular/common';
             </div>
           </div>
           
-          <div class="contact-section">
+          <div class="contact-section" *ngIf="content.contactInfo && content.contactInfo.length > 0">
             <h3>Contact et Informations</h3>
             <div class="contact-info">
-              <div class="contact-item">
-                <i class="fas fa-envelope"></i>
+              <div class="contact-item" *ngFor="let contact of content.contactInfo">
+                <i [class]="contact.icon"></i>
                 <div class="contact-details">
-                  <h4>Email</h4>
-                  <p>zonehumide@anrsi.mr</p>
-                </div>
-              </div>
-              
-              <div class="contact-item">
-                <i class="fas fa-phone"></i>
-                <div class="contact-details">
-                  <h4>Téléphone</h4>
-                  <p>+222 45 25 44 21</p>
-                </div>
-              </div>
-              
-              <div class="contact-item">
-                <i class="fas fa-map-marker-alt"></i>
-                <div class="contact-details">
-                  <h4>Lieu</h4>
-                  <p>Centre International de Conférences, Nouakchott</p>
-                </div>
-              </div>
-              
-              <div class="contact-item">
-                <i class="fas fa-calendar"></i>
-                <div class="contact-details">
-                  <h4>Date Limite</h4>
-                  <p>28 Février 2024</p>
+                  <h4>{{ contact.label }}</h4>
+                  <p>{{ contact.value }}</p>
                 </div>
               </div>
             </div>
@@ -903,6 +691,150 @@ import { CommonModule } from '@angular/common';
         grid-template-columns: 1fr;
       }
     }
+    
+    .loading-container {
+      padding: var(--space-12);
+      text-align: center;
+    }
+    
+    .loading {
+      color: var(--neutral-600);
+      font-size: var(--text-lg);
+    }
   `]
 })
-export class ZoneHumideComponent {}
+export class ZoneHumideComponent implements OnInit {
+  page: PageDTO | null = null;
+  content: ZoneHumideContent | null = null;
+  isLoading = true;
+
+  constructor(private pageService: PageService) {}
+
+  ngOnInit(): void {
+    this.loadPage();
+  }
+
+  loadPage(): void {
+    this.pageService.getPageBySlug('zone-humide').subscribe({
+      next: (page) => {
+        this.page = page;
+        if (page.content) {
+          try {
+            this.content = JSON.parse(page.content);
+          } catch (e) {
+            console.error('Error parsing content:', e);
+            this.loadDefaultContent();
+          }
+        } else {
+          this.loadDefaultContent();
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading page:', error);
+        this.loadDefaultContent();
+        this.isLoading = false;
+      }
+    });
+  }
+
+  loadDefaultContent(): void {
+    this.content = {
+      heroTitle: 'Zone Humide',
+      heroSubtitle: 'Colloque International sur les Zones Humides du Sahel',
+      introText: 'L\'ANRSI organise un colloque international majeur sur la préservation et la gestion durable des zones humides du Sahel, réunissant experts, chercheurs et décideurs pour échanger sur les enjeux environnementaux et climatiques.',
+      overview: [
+        {
+          icon: '📅',
+          title: 'Dates et Lieu',
+          content: [
+            { label: 'Date :', value: '15-17 Mars 2024' },
+            { label: 'Lieu :', value: 'Centre International de Conférences, Nouakchott' },
+            { label: 'Format :', value: 'Présentiel et en ligne' }
+          ]
+        },
+        {
+          icon: '👥',
+          title: 'Participants Attendus',
+          content: [
+            { label: 'Experts internationaux :', value: '50+ spécialistes' },
+            { label: 'Chercheurs :', value: '100+ scientifiques' },
+            { label: 'Décideurs :', value: 'Ministres et responsables' },
+            { label: 'ONG et OSC :', value: 'Organisations de la société civile' }
+          ]
+        },
+        {
+          icon: '🌍',
+          title: 'Pays Participants',
+          content: [
+            { label: 'Afrique de l\'Ouest :', value: 'Sénégal, Mali, Niger, Burkina Faso' },
+            { label: 'Afrique du Nord :', value: 'Maroc, Algérie, Tunisie' },
+            { label: 'Europe :', value: 'France, Belgique, Espagne' },
+            { label: 'Organisations :', value: 'UICN, Ramsar, PNUE' }
+          ]
+        }
+      ],
+      themes: [
+        {
+          icon: '💧',
+          title: 'Gestion des Ressources Hydriques',
+          items: ['Conservation des zones humides', 'Gestion intégrée des bassins versants', 'Technologies de traitement de l\'eau', 'Économie de l\'eau']
+        },
+        {
+          icon: '🌱',
+          title: 'Biodiversité et Écosystèmes',
+          items: ['Protection de la faune et flore', 'Restauration écologique', 'Services écosystémiques', 'Corridors écologiques']
+        },
+        {
+          icon: '🌡️',
+          title: 'Changement Climatique',
+          items: ['Adaptation aux changements climatiques', 'Atténuation des effets', 'Modélisation climatique', 'Stratégies de résilience']
+        },
+        {
+          icon: '👨‍🌾',
+          title: 'Développement Durable',
+          items: ['Agriculture durable', 'Pêche responsable', 'Écotourisme', 'Économie verte']
+        },
+        {
+          icon: '🏛️',
+          title: 'Gouvernance et Politiques',
+          items: ['Cadres législatifs', 'Politiques publiques', 'Participation communautaire', 'Coopération internationale']
+        },
+        {
+          icon: '🔬',
+          title: 'Recherche et Innovation',
+          items: ['Technologies de monitoring', 'Innovation environnementale', 'Transfert de connaissances', 'Formation et éducation']
+        }
+      ],
+      programme: [],
+      speakers: [],
+      registrationModes: [
+        {
+          icon: '🏢',
+          title: 'Participation Présentielle',
+          description: 'Accès complet au colloque avec hébergement et restauration inclus.',
+          items: ['Accès à toutes les sessions', 'Matériel de conférence', 'Pause-café et déjeuners', 'Certificat de participation'],
+          price: 'Gratuit'
+        },
+        {
+          icon: '💻',
+          title: 'Participation en Ligne',
+          description: 'Suivi du colloque en direct via plateforme numérique.',
+          items: ['Diffusion en direct', 'Interaction avec les speakers', 'Accès aux présentations', 'Certificat numérique'],
+          price: 'Gratuit'
+        }
+      ],
+      processSteps: [
+        { number: 1, title: 'Formulaire d\'Inscription', description: 'Remplir le formulaire en ligne avec vos informations personnelles et professionnelles.' },
+        { number: 2, title: 'Validation', description: 'Validation de votre inscription par l\'équipe organisatrice sous 48h.' },
+        { number: 3, title: 'Confirmation', description: 'Réception de votre confirmation d\'inscription avec les détails pratiques.' }
+      ],
+      contactInfo: [
+        { icon: 'fas fa-envelope', label: 'Email', value: 'zonehumide@anrsi.mr' },
+        { icon: 'fas fa-phone', label: 'Téléphone', value: '+222 45 25 44 21' },
+        { icon: 'fas fa-map-marker-alt', label: 'Lieu', value: 'Centre International de Conférences, Nouakchott' },
+        { icon: 'fas fa-calendar', label: 'Date Limite', value: '28 Février 2024' }
+      ]
+    };
+  }
+}

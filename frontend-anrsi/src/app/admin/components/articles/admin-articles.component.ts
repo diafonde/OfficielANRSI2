@@ -64,4 +64,17 @@ export class AdminArticlesComponent implements OnInit {
     // This would typically come from a service
     return ['Research', 'Environment', 'Development', 'Technology', 'Collaboration'];
   }
+
+  hasTranslation(article: Article, lang: 'fr' | 'ar' | 'en'): boolean {
+    // Check if article has translations object and the specific language
+    if (article.translations && article.translations[lang]) {
+      const translation = article.translations[lang];
+      return !!(translation && translation.title && translation.content);
+    }
+    // Fallback: check if article language matches (for backward compatibility)
+    if (article.language === lang) {
+      return !!(article.title && article.content);
+    }
+    return false;
+  }
 }

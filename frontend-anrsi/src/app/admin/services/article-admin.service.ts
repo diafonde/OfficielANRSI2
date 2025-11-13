@@ -26,10 +26,25 @@ export class ArticleAdminService {
     return of(article);
   }
 
-  createArticle(article: Omit<Article, 'id'>): Observable<Article> {
+  createArticle(articleData: any): Observable<Article> {
+    // Handle translations structure
+    // The form sends: { author, category, translations: { fr: {...}, ar: {...}, en: {...} } }
+    // We need to create article with translations object
+    
     const newArticle: Article = {
-      ...article,
-      id: this.nextId++
+      id: this.nextId++,
+      // Use first available translation for main fields (for backward compatibility)
+      title: articleData.translations?.fr?.title || articleData.translations?.ar?.title || articleData.translations?.en?.title || '',
+      content: articleData.translations?.fr?.content || articleData.translations?.ar?.content || articleData.translations?.en?.content || '',
+      excerpt: articleData.translations?.fr?.excerpt || articleData.translations?.ar?.excerpt || articleData.translations?.en?.excerpt || '',
+      author: articleData.author,
+      publishDate: articleData.publishDate,
+      imageUrl: articleData.imageUrl,
+      category: articleData.category,
+      tags: articleData.tags || [],
+      featured: articleData.featured || false,
+      published: articleData.published !== false,
+      translations: articleData.translations || {}
     };
     
     const currentArticles = this.articlesSubject.value;
@@ -38,12 +53,36 @@ export class ArticleAdminService {
     return of(newArticle);
   }
 
-  updateArticle(id: number, article: Partial<Article>): Observable<Article> {
+  updateArticle(id: number, articleData: any): Observable<Article> {
     const currentArticles = this.articlesSubject.value;
     const index = currentArticles.findIndex(a => a.id === id);
     
     if (index !== -1) {
-      const updatedArticle = { ...currentArticles[index], ...article };
+      const existingArticle = currentArticles[index];
+      
+      // Merge translations - keep existing translations and update with new ones
+      const existingTranslations = existingArticle.translations || {};
+      const newTranslations = articleData.translations || {};
+      const mergedTranslations = { ...existingTranslations, ...newTranslations };
+      
+      // Update main fields from first available translation (for backward compatibility)
+      const firstTranslation = mergedTranslations.fr || mergedTranslations.ar || mergedTranslations.en;
+      
+      const updatedArticle: Article = {
+        ...existingArticle,
+        title: firstTranslation?.title || existingArticle.title,
+        content: firstTranslation?.content || existingArticle.content,
+        excerpt: firstTranslation?.excerpt || existingArticle.excerpt,
+        author: articleData.author !== undefined ? articleData.author : existingArticle.author,
+        publishDate: articleData.publishDate !== undefined ? articleData.publishDate : existingArticle.publishDate,
+        imageUrl: articleData.imageUrl !== undefined ? articleData.imageUrl : existingArticle.imageUrl,
+        category: articleData.category !== undefined ? articleData.category : existingArticle.category,
+        tags: articleData.tags !== undefined ? articleData.tags : existingArticle.tags,
+        featured: articleData.featured !== undefined ? articleData.featured : existingArticle.featured,
+        published: articleData.published !== undefined ? articleData.published : existingArticle.published,
+        translations: mergedTranslations
+      };
+      
       currentArticles[index] = updatedArticle;
       this.articlesSubject.next([...currentArticles]);
       return of(updatedArticle);

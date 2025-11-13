@@ -1,5 +1,67 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { PageService, PageDTO } from '../../services/page.service';
+
+interface AppelDetail {
+  label: string;
+  value: string;
+}
+
+interface AppelAction {
+  text: string;
+  url: string;
+  type: 'primary' | 'outline';
+}
+
+interface AppelItem {
+  status: 'active' | 'upcoming' | 'closed';
+  title: string;
+  description: string;
+  details: AppelDetail[];
+  actions: AppelAction[];
+}
+
+interface CategoryItem {
+  icon: string;
+  title: string;
+  items: string[];
+}
+
+interface ProcessStep {
+  number: number;
+  title: string;
+  description: string;
+}
+
+interface CriteriaItem {
+  icon: string;
+  title: string;
+  description: string;
+}
+
+interface SupportService {
+  icon: string;
+  title: string;
+  description: string;
+}
+
+interface ContactItem {
+  icon: string;
+  label: string;
+  value: string;
+}
+
+interface AppelsCandidaturesContent {
+  heroTitle: string;
+  heroSubtitle: string;
+  introText: string;
+  appels: AppelItem[];
+  categories: CategoryItem[];
+  processSteps: ProcessStep[];
+  criteria: CriteriaItem[];
+  supportServices: SupportService[];
+  contactInfo: ContactItem[];
+}
 
 @Component({
   selector: 'app-appels-candidatures',
@@ -8,330 +70,110 @@ import { CommonModule } from '@angular/common';
   template: `
     <div class="appels-hero">
       <div class="container">
-        <h1>Appels à Candidatures</h1>
-        <p>Opportunités de recherche et d'innovation en Mauritanie</p>
+        <h1>{{ content?.heroTitle || 'Appels à Candidatures' }}</h1>
+        <p>{{ content?.heroSubtitle || 'Opportunités de recherche et d\'innovation en Mauritanie' }}</p>
       </div>
       <div class="hero-overlay"></div>
     </div>
     
-    <div class="container">
+    <div class="container" *ngIf="isLoading">
+      <div class="loading-container">
+        <div class="loading">Loading...</div>
+      </div>
+    </div>
+    
+    <div class="container" *ngIf="!isLoading && content">
       <section class="section appels-section">
         <div class="appels-content">
           <h2>Appels à Candidatures Ouverts</h2>
-          <p class="intro-text">
-            L'ANRSI lance régulièrement des appels à candidatures pour financer des projets de recherche et d'innovation qui contribuent au développement scientifique et technologique de la Mauritanie.
-          </p>
+          <p class="intro-text">{{ content.introText }}</p>
           
-          <div class="appels-timeline">
-            <div class="appel-item">
-              <div class="appel-status active">Ouvert</div>
-              <div class="appel-content">
-                <h3>Appel à Projets de Recherche 2024</h3>
-                <p class="appel-description">
-                  Financement de projets de recherche dans les domaines prioritaires : agriculture durable, énergies renouvelables, technologies de l'information, et sciences de l'environnement.
-                </p>
-                <div class="appel-details">
-                  <div class="detail-item">
-                    <span class="detail-label">Budget :</span>
-                    <span class="detail-value">Jusqu'à 50 millions MRO par projet</span>
-                  </div>
-                  <div class="detail-item">
-                    <span class="detail-label">Durée :</span>
-                    <span class="detail-value">12-36 mois</span>
-                  </div>
-                  <div class="detail-item">
-                    <span class="detail-label">Date limite :</span>
-                    <span class="detail-value">31 Mars 2024</span>
-                  </div>
-                  <div class="detail-item">
-                    <span class="detail-label">Éligibilité :</span>
-                    <span class="detail-value">Institutions de recherche, universités, entreprises</span>
-                  </div>
-                </div>
-                <div class="appel-actions">
-                  <a href="#" class="btn btn-primary">Consulter l'appel</a>
-                  <a href="#" class="btn btn-outline">Télécharger le dossier</a>
-                </div>
+          <div class="appels-timeline" *ngIf="content.appels && content.appels.length > 0">
+            <div class="appel-item" *ngFor="let appel of content.appels">
+              <div class="appel-status" [ngClass]="{
+                'active': appel.status === 'active',
+                'upcoming': appel.status === 'upcoming',
+                'closed': appel.status === 'closed'
+              }">
+                {{ appel.status === 'active' ? 'Ouvert' : appel.status === 'upcoming' ? 'Prochainement' : 'Fermé' }}
               </div>
-            </div>
-            
-            <div class="appel-item">
-              <div class="appel-status upcoming">Prochainement</div>
               <div class="appel-content">
-                <h3>Programme Innovation Technologique</h3>
-                <p class="appel-description">
-                  Soutien aux projets d'innovation technologique et de transfert de technologie vers l'industrie mauritanienne.
-                </p>
-                <div class="appel-details">
-                  <div class="detail-item">
-                    <span class="detail-label">Budget :</span>
-                    <span class="detail-value">Jusqu'à 30 millions MRO par projet</span>
-                  </div>
-                  <div class="detail-item">
-                    <span class="detail-label">Durée :</span>
-                    <span class="detail-value">6-24 mois</span>
-                  </div>
-                  <div class="detail-item">
-                    <span class="detail-label">Ouverture :</span>
-                    <span class="detail-value">Avril 2024</span>
-                  </div>
-                  <div class="detail-item">
-                    <span class="detail-label">Éligibilité :</span>
-                    <span class="detail-value">Startups, PME, centres de recherche</span>
+                <h3>{{ appel.title }}</h3>
+                <p class="appel-description">{{ appel.description }}</p>
+                <div class="appel-details" *ngIf="appel.details && appel.details.length > 0">
+                  <div class="detail-item" *ngFor="let detail of appel.details">
+                    <span class="detail-label">{{ detail.label }}</span>
+                    <span class="detail-value">{{ detail.value }}</span>
                   </div>
                 </div>
-                <div class="appel-actions">
-                  <a href="#" class="btn btn-outline">S'inscrire aux alertes</a>
-                </div>
-              </div>
-            </div>
-            
-            <div class="appel-item">
-              <div class="appel-status closed">Fermé</div>
-              <div class="appel-content">
-                <h3>Bourses de Doctorat 2023</h3>
-                <p class="appel-description">
-                  Programme de bourses pour soutenir les étudiants mauritaniens dans leurs études doctorales en sciences et technologies.
-                </p>
-                <div class="appel-details">
-                  <div class="detail-item">
-                    <span class="detail-label">Montant :</span>
-                    <span class="detail-value">500,000 MRO/an pendant 3 ans</span>
-                  </div>
-                  <div class="detail-item">
-                    <span class="detail-label">Durée :</span>
-                    <span class="detail-value">3 ans</span>
-                  </div>
-                  <div class="detail-item">
-                    <span class="detail-label">Date limite :</span>
-                    <span class="detail-value">15 Décembre 2023</span>
-                  </div>
-                  <div class="detail-item">
-                    <span class="detail-label">Éligibilité :</span>
-                    <span class="detail-value">Étudiants mauritaniens en master</span>
-                  </div>
-                </div>
-                <div class="appel-actions">
-                  <a href="#" class="btn btn-outline">Voir les résultats</a>
+                <div class="appel-actions" *ngIf="appel.actions && appel.actions.length > 0">
+                  <a *ngFor="let action of appel.actions" [href]="action.url" [class]="'btn btn-' + action.type">{{ action.text }}</a>
                 </div>
               </div>
             </div>
           </div>
           
-          <div class="appels-categories">
+          <div class="appels-categories" *ngIf="content.categories && content.categories.length > 0">
             <h3>Domaines Prioritaires</h3>
             <div class="categories-grid">
-              <div class="category-item">
-                <div class="category-icon">🌱</div>
-                <h4>Agriculture & Sécurité Alimentaire</h4>
+              <div class="category-item" *ngFor="let category of content.categories">
+                <div class="category-icon">{{ category.icon }}</div>
+                <h4>{{ category.title }}</h4>
                 <ul>
-                  <li>Techniques agricoles durables</li>
-                  <li>Amélioration des rendements</li>
-                  <li>Gestion des ressources hydriques</li>
-                  <li>Biotechnologies agricoles</li>
-                </ul>
-              </div>
-              
-              <div class="category-item">
-                <div class="category-icon">⚡</div>
-                <h4>Énergies Renouvelables</h4>
-                <ul>
-                  <li>Énergie solaire et éolienne</li>
-                  <li>Stockage d'énergie</li>
-                  <li>Efficacité énergétique</li>
-                  <li>Électrification rurale</li>
-                </ul>
-              </div>
-              
-              <div class="category-item">
-                <div class="category-icon">💻</div>
-                <h4>Technologies de l'Information</h4>
-                <ul>
-                  <li>Intelligence artificielle</li>
-                  <li>Internet des objets (IoT)</li>
-                  <li>Cybersécurité</li>
-                  <li>Applications mobiles</li>
-                </ul>
-              </div>
-              
-              <div class="category-item">
-                <div class="category-icon">🌍</div>
-                <h4>Environnement & Climat</h4>
-                <ul>
-                  <li>Changement climatique</li>
-                  <li>Biodiversité</li>
-                  <li>Gestion des déchets</li>
-                  <li>Pollution et assainissement</li>
-                </ul>
-              </div>
-              
-              <div class="category-item">
-                <div class="category-icon">🏥</div>
-                <h4>Santé & Médecine</h4>
-                <ul>
-                  <li>Médecine préventive</li>
-                  <li>Télémédecine</li>
-                  <li>Pharmacologie</li>
-                  <li>Santé publique</li>
-                </ul>
-              </div>
-              
-              <div class="category-item">
-                <div class="category-icon">🏭</div>
-                <h4>Industrie & Innovation</h4>
-                <ul>
-                  <li>Processus industriels</li>
-                  <li>Matériaux avancés</li>
-                  <li>Robotique</li>
-                  <li>Transfert de technologie</li>
+                  <li *ngFor="let item of category.items">{{ item }}</li>
                 </ul>
               </div>
             </div>
           </div>
           
-          <div class="application-process">
+          <div class="application-process" *ngIf="content.processSteps && content.processSteps.length > 0">
             <h3>Processus de Candidature</h3>
             <div class="process-steps">
-              <div class="step-item">
-                <div class="step-number">1</div>
+              <div class="step-item" *ngFor="let step of content.processSteps">
+                <div class="step-number">{{ step.number }}</div>
                 <div class="step-content">
-                  <h4>Préparation du Dossier</h4>
-                  <p>Rédaction du projet de recherche, budget détaillé, équipe de recherche, et lettres de recommandation.</p>
-                </div>
-              </div>
-              
-              <div class="step-item">
-                <div class="step-number">2</div>
-                <div class="step-content">
-                  <h4>Soumission en Ligne</h4>
-                  <p>Dépôt du dossier complet via la plateforme de soumission électronique de l'ANRSI.</p>
-                </div>
-              </div>
-              
-              <div class="step-item">
-                <div class="step-number">3</div>
-                <div class="step-content">
-                  <h4>Évaluation Scientifique</h4>
-                  <p>Examen du projet par un comité d'experts indépendants selon des critères scientifiques rigoureux.</p>
-                </div>
-              </div>
-              
-              <div class="step-item">
-                <div class="step-number">4</div>
-                <div class="step-content">
-                  <h4>Entretien</h4>
-                  <p>Présentation orale du projet devant le comité d'évaluation pour les projets présélectionnés.</p>
-                </div>
-              </div>
-              
-              <div class="step-item">
-                <div class="step-number">5</div>
-                <div class="step-content">
-                  <h4>Décision et Financement</h4>
-                  <p>Notification des résultats et signature de la convention de financement pour les projets retenus.</p>
+                  <h4>{{ step.title }}</h4>
+                  <p>{{ step.description }}</p>
                 </div>
               </div>
             </div>
           </div>
           
-          <div class="criteria-section">
+          <div class="criteria-section" *ngIf="content.criteria && content.criteria.length > 0">
             <h3>Critères d'Évaluation</h3>
             <div class="criteria-grid">
-              <div class="criteria-item">
-                <h4>🔬 Excellence Scientifique</h4>
-                <p>Qualité scientifique du projet, innovation, méthodologie rigoureuse, et faisabilité technique.</p>
-              </div>
-              
-              <div class="criteria-item">
-                <h4>👥 Équipe de Recherche</h4>
-                <p>Compétences et expérience de l'équipe, complémentarité des profils, et leadership du projet.</p>
-              </div>
-              
-              <div class="criteria-item">
-                <h4>💡 Impact et Innovation</h4>
-                <p>Potentiel d'innovation, impact attendu sur le développement national, et transfert de connaissances.</p>
-              </div>
-              
-              <div class="criteria-item">
-                <h4>💰 Gestion Financière</h4>
-                <p>Budget réaliste et justifié, coût-efficacité, et capacité de gestion financière du porteur.</p>
+              <div class="criteria-item" *ngFor="let item of content.criteria">
+                <h4>{{ item.icon }} {{ item.title }}</h4>
+                <p>{{ item.description }}</p>
               </div>
             </div>
           </div>
           
-          <div class="support-section">
+          <div class="support-section" *ngIf="content.supportServices && content.supportServices.length > 0">
             <h3>Support et Accompagnement</h3>
             <div class="support-info">
               <p>L'ANRSI offre un accompagnement complet aux porteurs de projets sélectionnés :</p>
               
               <div class="support-services">
-                <div class="service-item">
-                  <div class="service-icon">📋</div>
+                <div class="service-item" *ngFor="let service of content.supportServices">
+                  <div class="service-icon">{{ service.icon }}</div>
                   <div class="service-content">
-                    <h4>Formation à la Gestion de Projet</h4>
-                    <p>Formation aux outils de gestion de projet et aux procédures administratives.</p>
-                  </div>
-                </div>
-                
-                <div class="service-item">
-                  <div class="service-icon">🔍</div>
-                  <div class="service-content">
-                    <h4>Suivi et Évaluation</h4>
-                    <p>Accompagnement dans le suivi du projet et l'évaluation des résultats.</p>
-                  </div>
-                </div>
-                
-                <div class="service-item">
-                  <div class="service-icon">🌐</div>
-                  <div class="service-content">
-                    <h4>Réseau et Partenariats</h4>
-                    <p>Facilitation des partenariats avec des institutions nationales et internationales.</p>
-                  </div>
-                </div>
-                
-                <div class="service-item">
-                  <div class="service-icon">📢</div>
-                  <div class="service-content">
-                    <h4>Valorisation des Résultats</h4>
-                    <p>Support dans la publication et la valorisation des résultats de recherche.</p>
+                    <h4>{{ service.title }}</h4>
+                    <p>{{ service.description }}</p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
           
-          <div class="contact-section">
+          <div class="contact-section" *ngIf="content.contactInfo && content.contactInfo.length > 0">
             <h3>Contact et Informations</h3>
             <div class="contact-info">
-              <div class="contact-item">
-                <i class="fas fa-envelope"></i>
+              <div class="contact-item" *ngFor="let contact of content.contactInfo">
+                <i [class]="contact.icon"></i>
                 <div class="contact-details">
-                  <h4>Email</h4>
-                  <p>appels@anrsi.mr</p>
-                </div>
-              </div>
-              
-              <div class="contact-item">
-                <i class="fas fa-phone"></i>
-                <div class="contact-details">
-                  <h4>Téléphone</h4>
-                  <p>+222 45 25 44 21</p>
-                </div>
-              </div>
-              
-              <div class="contact-item">
-                <i class="fas fa-map-marker-alt"></i>
-                <div class="contact-details">
-                  <h4>Adresse</h4>
-                  <p>ANRSI, Nouakchott, Mauritanie</p>
-                </div>
-              </div>
-              
-              <div class="contact-item">
-                <i class="fas fa-clock"></i>
-                <div class="contact-details">
-                  <h4>Horaires</h4>
-                  <p>Lundi - Vendredi : 8h00 - 16h00</p>
+                  <h4>{{ contact.label }}</h4>
+                  <p>{{ contact.value }}</p>
                 </div>
               </div>
             </div>
@@ -813,6 +655,160 @@ import { CommonModule } from '@angular/common';
         grid-template-columns: 1fr;
       }
     }
+    
+    .loading-container {
+      padding: var(--space-12);
+      text-align: center;
+    }
+    
+    .loading {
+      color: var(--neutral-600);
+      font-size: var(--text-lg);
+    }
   `]
 })
-export class AppelsCandidaturesComponent {}
+export class AppelsCandidaturesComponent implements OnInit {
+  page: PageDTO | null = null;
+  content: AppelsCandidaturesContent | null = null;
+  isLoading = true;
+
+  constructor(private pageService: PageService) {}
+
+  ngOnInit(): void {
+    this.loadPage();
+  }
+
+  loadPage(): void {
+    this.pageService.getPageBySlug('appels-candidatures').subscribe({
+      next: (page) => {
+        this.page = page;
+        if (page.content) {
+          try {
+            this.content = JSON.parse(page.content);
+          } catch (e) {
+            console.error('Error parsing content:', e);
+            this.loadDefaultContent();
+          }
+        } else {
+          this.loadDefaultContent();
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading page:', error);
+        this.loadDefaultContent();
+        this.isLoading = false;
+      }
+    });
+  }
+
+  loadDefaultContent(): void {
+    this.content = {
+      heroTitle: 'Appels à Candidatures',
+      heroSubtitle: 'Opportunités de recherche et d\'innovation en Mauritanie',
+      introText: 'L\'ANRSI lance régulièrement des appels à candidatures pour financer des projets de recherche et d\'innovation qui contribuent au développement scientifique et technologique de la Mauritanie.',
+      appels: [
+        {
+          status: 'active',
+          title: 'Appel à Projets de Recherche 2024',
+          description: 'Financement de projets de recherche dans les domaines prioritaires : agriculture durable, énergies renouvelables, technologies de l\'information, et sciences de l\'environnement.',
+          details: [
+            { label: 'Budget :', value: 'Jusqu\'à 50 millions MRO par projet' },
+            { label: 'Durée :', value: '12-36 mois' },
+            { label: 'Date limite :', value: '31 Mars 2024' },
+            { label: 'Éligibilité :', value: 'Institutions de recherche, universités, entreprises' }
+          ],
+          actions: [
+            { text: 'Consulter l\'appel', url: '#', type: 'primary' },
+            { text: 'Télécharger le dossier', url: '#', type: 'outline' }
+          ]
+        },
+        {
+          status: 'upcoming',
+          title: 'Programme Innovation Technologique',
+          description: 'Soutien aux projets d\'innovation technologique et de transfert de technologie vers l\'industrie mauritanienne.',
+          details: [
+            { label: 'Budget :', value: 'Jusqu\'à 30 millions MRO par projet' },
+            { label: 'Durée :', value: '6-24 mois' },
+            { label: 'Ouverture :', value: 'Avril 2024' },
+            { label: 'Éligibilité :', value: 'Startups, PME, centres de recherche' }
+          ],
+          actions: [
+            { text: 'S\'inscrire aux alertes', url: '#', type: 'outline' }
+          ]
+        },
+        {
+          status: 'closed',
+          title: 'Bourses de Doctorat 2023',
+          description: 'Programme de bourses pour soutenir les étudiants mauritaniens dans leurs études doctorales en sciences et technologies.',
+          details: [
+            { label: 'Montant :', value: '500,000 MRO/an pendant 3 ans' },
+            { label: 'Durée :', value: '3 ans' },
+            { label: 'Date limite :', value: '15 Décembre 2023' },
+            { label: 'Éligibilité :', value: 'Étudiants mauritaniens en master' }
+          ],
+          actions: [
+            { text: 'Voir les résultats', url: '#', type: 'outline' }
+          ]
+        }
+      ],
+      categories: [
+        {
+          icon: '🌱',
+          title: 'Agriculture & Sécurité Alimentaire',
+          items: ['Techniques agricoles durables', 'Amélioration des rendements', 'Gestion des ressources hydriques', 'Biotechnologies agricoles']
+        },
+        {
+          icon: '⚡',
+          title: 'Énergies Renouvelables',
+          items: ['Énergie solaire et éolienne', 'Stockage d\'énergie', 'Efficacité énergétique', 'Électrification rurale']
+        },
+        {
+          icon: '💻',
+          title: 'Technologies de l\'Information',
+          items: ['Intelligence artificielle', 'Internet des objets (IoT)', 'Cybersécurité', 'Applications mobiles']
+        },
+        {
+          icon: '🌍',
+          title: 'Environnement & Climat',
+          items: ['Changement climatique', 'Biodiversité', 'Gestion des déchets', 'Pollution et assainissement']
+        },
+        {
+          icon: '🏥',
+          title: 'Santé & Médecine',
+          items: ['Médecine préventive', 'Télémédecine', 'Pharmacologie', 'Santé publique']
+        },
+        {
+          icon: '🏭',
+          title: 'Industrie & Innovation',
+          items: ['Processus industriels', 'Matériaux avancés', 'Robotique', 'Transfert de technologie']
+        }
+      ],
+      processSteps: [
+        { number: 1, title: 'Préparation du Dossier', description: 'Rédaction du projet de recherche, budget détaillé, équipe de recherche, et lettres de recommandation.' },
+        { number: 2, title: 'Soumission en Ligne', description: 'Dépôt du dossier complet via la plateforme de soumission électronique de l\'ANRSI.' },
+        { number: 3, title: 'Évaluation Scientifique', description: 'Examen du projet par un comité d\'experts indépendants selon des critères scientifiques rigoureux.' },
+        { number: 4, title: 'Entretien', description: 'Présentation orale du projet devant le comité d\'évaluation pour les projets présélectionnés.' },
+        { number: 5, title: 'Décision et Financement', description: 'Notification des résultats et signature de la convention de financement pour les projets retenus.' }
+      ],
+      criteria: [
+        { icon: '🔬', title: 'Excellence Scientifique', description: 'Qualité scientifique du projet, innovation, méthodologie rigoureuse, et faisabilité technique.' },
+        { icon: '👥', title: 'Équipe de Recherche', description: 'Compétences et expérience de l\'équipe, complémentarité des profils, et leadership du projet.' },
+        { icon: '💡', title: 'Impact et Innovation', description: 'Potentiel d\'innovation, impact attendu sur le développement national, et transfert de connaissances.' },
+        { icon: '💰', title: 'Gestion Financière', description: 'Budget réaliste et justifié, coût-efficacité, et capacité de gestion financière du porteur.' }
+      ],
+      supportServices: [
+        { icon: '📋', title: 'Formation à la Gestion de Projet', description: 'Formation aux outils de gestion de projet et aux procédures administratives.' },
+        { icon: '🔍', title: 'Suivi et Évaluation', description: 'Accompagnement dans le suivi du projet et l\'évaluation des résultats.' },
+        { icon: '🌐', title: 'Réseau et Partenariats', description: 'Facilitation des partenariats avec des institutions nationales et internationales.' },
+        { icon: '📢', title: 'Valorisation des Résultats', description: 'Support dans la publication et la valorisation des résultats de recherche.' }
+      ],
+      contactInfo: [
+        { icon: 'fas fa-envelope', label: 'Email', value: 'appels@anrsi.mr' },
+        { icon: 'fas fa-phone', label: 'Téléphone', value: '+222 45 25 44 21' },
+        { icon: 'fas fa-map-marker-alt', label: 'Adresse', value: 'ANRSI, Nouakchott, Mauritanie' },
+        { icon: 'fas fa-clock', label: 'Horaires', value: 'Lundi - Vendredi : 8h00 - 16h00' }
+      ]
+    };
+  }
+}

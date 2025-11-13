@@ -37,6 +37,7 @@
       <div class="table-row">
         <div class="col-image">Image</div>
         <div class="col-title">Title</div>
+        <div class="col-languages">Languages</div>
         <div class="col-author">Author</div>
         <div class="col-category">Category</div>
         <div class="col-date">Date</div>
@@ -53,6 +54,19 @@
           <div class="title-content">
             <h3>{{ article.title }}</h3>
             <p>{{ article.excerpt }}</p>
+          </div>
+        </div>
+        <div class="col-languages">
+          <div class="language-status">
+            <span class="lang-badge" [class.available]="hasTranslation(article, 'fr')" title="Français">
+              🇫🇷
+            </span>
+            <span class="lang-badge" [class.available]="hasTranslation(article, 'ar')" title="العربية">
+              🇲🇷
+            </span>
+            <span class="lang-badge" [class.available]="hasTranslation(article, 'en')" title="English">
+              🇺🇸
+            </span>
           </div>
         </div>
         <div class="col-author">

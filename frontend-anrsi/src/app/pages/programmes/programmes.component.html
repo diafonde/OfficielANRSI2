@@ -2,8 +2,8 @@
   <div class="hero-section">
     <div class="container">
       <div class="hero-content" data-aos="fade-up">
-        <h1>{{ 'Programmes' | translate }}</h1>
-        <p class="hero-subtitle">{{ 'Programmes de l\'Agence' | translate }}</p>
+        <h1>{{ heroTitle || ('Programmes' | translate) }}</h1>
+        <p class="hero-subtitle">{{ heroSubtitle || ('Programmes de l\'Agence' | translate) }}</p>
       </div>
     </div>
   </div>
@@ -51,8 +51,8 @@
   <div class="cta-section">
     <div class="container">
       <div class="cta-content" data-aos="fade-up">
-        <h2>{{ 'Intéressé par nos programmes ?' | translate }}</h2>
-        <p>{{ 'Découvrez comment participer à nos programmes de recherche et d\'innovation' | translate }}</p>
+        <h2>{{ ctaTitle || ('Intéressé par nos programmes ?' | translate) }}</h2>
+        <p>{{ ctaDescription || ('Découvrez comment participer à nos programmes de recherche et d\'innovation' | translate) }}</p>
         <div class="cta-buttons">
           <button class="btn btn-primary">{{ 'Appels à candidatures' | translate }}</button>
           <button class="btn btn-secondary">{{ 'Nous contacter' | translate }}</button>

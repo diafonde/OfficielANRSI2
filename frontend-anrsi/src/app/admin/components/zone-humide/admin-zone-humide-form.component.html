@@ -1,0 +1,273 @@
+<div class="admin-zone-humide-form">
+  <div class="form-header">
+    <h1>Edit Zone Humide Page</h1>
+    <button (click)="onCancel()" class="btn btn-secondary">
+      <i class="fas fa-times"></i> Cancel
+    </button>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <i class="fas fa-spinner fa-spin"></i> Loading...
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+    <!-- Hero Section -->
+    <div class="form-section">
+      <h2>Hero Section</h2>
+      <div class="form-group">
+        <label>Hero Title *</label>
+        <input type="text" formControlName="heroTitle" class="form-control" />
+      </div>
+      <div class="form-group">
+        <label>Hero Subtitle *</label>
+        <input type="text" formControlName="heroSubtitle" class="form-control" />
+      </div>
+    </div>
+
+    <!-- Intro Text -->
+    <div class="form-section">
+      <h2>Introduction</h2>
+      <div class="form-group">
+        <label>Intro Text *</label>
+        <textarea formControlName="introText" class="form-control" rows="4"></textarea>
+      </div>
+    </div>
+
+    <!-- Overview -->
+    <div class="form-section">
+      <h2>Colloque Overview</h2>
+      <div formArrayName="overview" *ngFor="let item of overview.controls; let i = index">
+        <div [formGroupName]="i" class="nested-form-group">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Icon</label>
+              <input type="text" formControlName="icon" class="form-control" placeholder="📅" />
+            </div>
+            <div class="form-group">
+              <label>Title *</label>
+              <input type="text" formControlName="title" class="form-control" />
+            </div>
+            <button type="button" (click)="removeOverview(i)" class="btn btn-danger btn-sm">Remove</button>
+          </div>
+          <div class="form-group">
+            <label>Content Items</label>
+            <div formArrayName="content" *ngFor="let contentCtrl of getOverviewContent(i).controls; let j = index">
+              <div [formGroupName]="j" class="form-row">
+                <input type="text" formControlName="label" placeholder="Label" class="form-control" />
+                <input type="text" formControlName="value" placeholder="Value" class="form-control" />
+                <button type="button" (click)="removeOverviewContentItem(i, j)" class="btn btn-danger btn-sm">Remove</button>
+              </div>
+            </div>
+            <button type="button" (click)="addOverviewContentItem(i)" class="btn btn-secondary btn-sm">Add Content Item</button>
+          </div>
+        </div>
+      </div>
+      <button type="button" (click)="addOverview()" class="btn btn-primary">Add Overview Item</button>
+    </div>
+
+    <!-- Themes -->
+    <div class="form-section">
+      <h2>Themes</h2>
+      <div formArrayName="themes" *ngFor="let item of themes.controls; let i = index">
+        <div [formGroupName]="i" class="nested-form-group">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Icon</label>
+              <input type="text" formControlName="icon" class="form-control" placeholder="💧" />
+            </div>
+            <div class="form-group">
+              <label>Title *</label>
+              <input type="text" formControlName="title" class="form-control" />
+            </div>
+            <button type="button" (click)="removeTheme(i)" class="btn btn-danger btn-sm">Remove</button>
+          </div>
+          <div class="form-group">
+            <label>Items</label>
+            <div formArrayName="items" *ngFor="let itemCtrl of getThemeItems(i).controls; let j = index">
+              <div class="form-row">
+                <input type="text" [formControlName]="j" class="form-control" />
+                <button type="button" (click)="removeThemeItem(i, j)" class="btn btn-danger btn-sm">Remove</button>
+              </div>
+            </div>
+            <button type="button" (click)="addThemeItem(i)" class="btn btn-secondary btn-sm">Add Item</button>
+          </div>
+        </div>
+      </div>
+      <button type="button" (click)="addTheme()" class="btn btn-primary">Add Theme</button>
+    </div>
+
+    <!-- Programme -->
+    <div class="form-section">
+      <h2>Programme</h2>
+      <div formArrayName="programme" *ngFor="let day of programme.controls; let i = index">
+        <div [formGroupName]="i" class="nested-form-group">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Date *</label>
+              <input type="text" formControlName="date" class="form-control" placeholder="Jour 1 - 15 Mars 2024" />
+            </div>
+            <div class="form-group">
+              <label>Theme *</label>
+              <input type="text" formControlName="theme" class="form-control" placeholder="Ouverture et Enjeux Globaux" />
+            </div>
+            <button type="button" (click)="removeProgrammeDay(i)" class="btn btn-danger btn-sm">Remove Day</button>
+          </div>
+          <div class="form-group">
+            <label>Sessions</label>
+            <div formArrayName="sessions" *ngFor="let session of getDaySessions(i).controls; let j = index">
+              <div [formGroupName]="j" class="nested-form-group">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Time *</label>
+                    <input type="text" formControlName="time" class="form-control" placeholder="09:00 - 10:30" />
+                  </div>
+                  <button type="button" (click)="removeSession(i, j)" class="btn btn-danger btn-sm">Remove</button>
+                </div>
+                <div class="form-group">
+                  <label>Title *</label>
+                  <input type="text" formControlName="title" class="form-control" />
+                </div>
+                <div class="form-group">
+                  <label>Description *</label>
+                  <textarea formControlName="description" class="form-control" rows="2"></textarea>
+                </div>
+              </div>
+            </div>
+            <button type="button" (click)="addSession(i)" class="btn btn-secondary btn-sm">Add Session</button>
+          </div>
+        </div>
+      </div>
+      <button type="button" (click)="addProgrammeDay()" class="btn btn-primary">Add Programme Day</button>
+    </div>
+
+    <!-- Speakers -->
+    <div class="form-section">
+      <h2>Speakers</h2>
+      <div formArrayName="speakers" *ngFor="let speaker of speakers.controls; let i = index">
+        <div [formGroupName]="i" class="nested-form-group">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Avatar (Emoji)</label>
+              <input type="text" formControlName="avatar" class="form-control" placeholder="👨‍🔬" />
+            </div>
+            <div class="form-group">
+              <label>Name *</label>
+              <input type="text" formControlName="name" class="form-control" />
+            </div>
+            <button type="button" (click)="removeSpeaker(i)" class="btn btn-danger btn-sm">Remove</button>
+          </div>
+          <div class="form-group">
+            <label>Title *</label>
+            <input type="text" formControlName="title" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Bio *</label>
+            <textarea formControlName="bio" class="form-control" rows="3"></textarea>
+          </div>
+        </div>
+      </div>
+      <button type="button" (click)="addSpeaker()" class="btn btn-primary">Add Speaker</button>
+    </div>
+
+    <!-- Registration Modes -->
+    <div class="form-section">
+      <h2>Registration Modes</h2>
+      <div formArrayName="registrationModes" *ngFor="let mode of registrationModes.controls; let i = index">
+        <div [formGroupName]="i" class="nested-form-group">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Icon</label>
+              <input type="text" formControlName="icon" class="form-control" placeholder="🏢" />
+            </div>
+            <div class="form-group">
+              <label>Title *</label>
+              <input type="text" formControlName="title" class="form-control" />
+            </div>
+            <button type="button" (click)="removeRegistrationMode(i)" class="btn btn-danger btn-sm">Remove</button>
+          </div>
+          <div class="form-group">
+            <label>Description *</label>
+            <textarea formControlName="description" class="form-control" rows="2"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Items</label>
+            <div formArrayName="items" *ngFor="let itemCtrl of getModeItems(i).controls; let j = index">
+              <div class="form-row">
+                <input type="text" [formControlName]="j" class="form-control" />
+                <button type="button" (click)="removeModeItem(i, j)" class="btn btn-danger btn-sm">Remove</button>
+              </div>
+            </div>
+            <button type="button" (click)="addModeItem(i)" class="btn btn-secondary btn-sm">Add Item</button>
+          </div>
+          <div class="form-group">
+            <label>Price *</label>
+            <input type="text" formControlName="price" class="form-control" placeholder="Gratuit" />
+          </div>
+        </div>
+      </div>
+      <button type="button" (click)="addRegistrationMode()" class="btn btn-primary">Add Registration Mode</button>
+    </div>
+
+    <!-- Process Steps -->
+    <div class="form-section">
+      <h2>Registration Process Steps</h2>
+      <div formArrayName="processSteps" *ngFor="let step of processSteps.controls; let i = index">
+        <div [formGroupName]="i" class="nested-form-group">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Step Number *</label>
+              <input type="number" formControlName="number" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label>Title *</label>
+              <input type="text" formControlName="title" class="form-control" />
+            </div>
+            <button type="button" (click)="removeProcessStep(i)" class="btn btn-danger btn-sm">Remove</button>
+          </div>
+          <div class="form-group">
+            <label>Description *</label>
+            <textarea formControlName="description" class="form-control" rows="2"></textarea>
+          </div>
+        </div>
+      </div>
+      <button type="button" (click)="addProcessStep()" class="btn btn-primary">Add Process Step</button>
+    </div>
+
+    <!-- Contact Info -->
+    <div class="form-section">
+      <h2>Contact Information</h2>
+      <div formArrayName="contactInfo" *ngFor="let item of contactInfo.controls; let i = index">
+        <div [formGroupName]="i" class="nested-form-group">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Icon (FontAwesome class) *</label>
+              <input type="text" formControlName="icon" class="form-control" placeholder="fas fa-envelope" />
+            </div>
+            <div class="form-group">
+              <label>Label *</label>
+              <input type="text" formControlName="label" class="form-control" />
+            </div>
+            <button type="button" (click)="removeContactItem(i)" class="btn btn-danger btn-sm">Remove</button>
+          </div>
+          <div class="form-group">
+            <label>Value *</label>
+            <input type="text" formControlName="value" class="form-control" />
+          </div>
+        </div>
+      </div>
+      <button type="button" (click)="addContactItem()" class="btn btn-primary">Add Contact Item</button>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" (click)="onCancel()" class="btn btn-secondary">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="form.invalid || isSaving">
+        <i class="fas fa-save"></i> {{ isSaving ? 'Saving...' : 'Save Changes' }}
+      </button>
+    </div>
+  </form>
+</div>
+

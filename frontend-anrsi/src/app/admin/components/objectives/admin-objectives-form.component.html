@@ -1,0 +1,74 @@
+<div class="admin-objectives-form">
+  <div class="form-header">
+    <h1>Edit Objectives Page</h1>
+    <button (click)="onCancel()" class="btn btn-secondary">
+      <i class="fas fa-times"></i> Cancel
+    </button>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <i class="fas fa-spinner fa-spin"></i> Loading...
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+    <!-- Hero Section -->
+    <div class="form-section">
+      <h2>Hero Section</h2>
+      <div class="form-group">
+        <label>Hero Title *</label>
+        <input type="text" formControlName="heroTitle" class="form-control" />
+      </div>
+      <div class="form-group">
+        <label>Hero Subtitle *</label>
+        <input type="text" formControlName="heroSubtitle" class="form-control" />
+      </div>
+    </div>
+
+    <!-- Section Title -->
+    <div class="form-section">
+      <h2>Content Section</h2>
+      <div class="form-group">
+        <label>Section Title *</label>
+        <input type="text" formControlName="sectionTitle" class="form-control" />
+      </div>
+    </div>
+
+    <!-- Objectives Section -->
+    <div class="form-section">
+      <h2>Objectives</h2>
+      <div formArrayName="objectives" *ngFor="let objective of objectives.controls; let i = index">
+        <div [formGroupName]="i" class="nested-form-group">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Number *</label>
+              <input type="number" formControlName="number" class="form-control" min="1" readonly />
+              <small class="form-help">Auto-generated based on position</small>
+            </div>
+            <button type="button" (click)="removeObjective(i)" class="btn btn-danger btn-sm">Remove</button>
+          </div>
+          <div class="form-group">
+            <label>Title *</label>
+            <input type="text" formControlName="title" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Description *</label>
+            <textarea formControlName="description" class="form-control" rows="4"></textarea>
+          </div>
+        </div>
+      </div>
+      <button type="button" (click)="addObjective()" class="btn btn-primary">Add Objective</button>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" (click)="onCancel()" class="btn btn-secondary">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="form.invalid || isSaving">
+        <i class="fas fa-save"></i> {{ isSaving ? 'Saving...' : 'Save Changes' }}
+      </button>
+    </div>
+  </form>
+</div>
+

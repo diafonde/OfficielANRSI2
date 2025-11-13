@@ -54,9 +54,144 @@
 }
 
 .article-form {
+  .language-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 0;
+
+    .lang-tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 14px;
+      font-weight: 500;
+      color: #666;
+      position: relative;
+
+      .lang-flag {
+        font-size: 18px;
+      }
+
+      .lang-name {
+        font-weight: 500;
+      }
+
+      .lang-status {
+        margin-left: 8px;
+        
+        .fa-check-circle {
+          color: #28a745;
+        }
+        
+        .fa-exclamation-circle {
+          color: #ffc107;
+        }
+      }
+
+      &:hover {
+        background-color: #f5f5f5;
+        color: #333;
+      }
+
+      &.active {
+        color: #667eea;
+        border-bottom-color: #667eea;
+        background-color: #f8f9fa;
+      }
+
+      &.has-content {
+        &::before {
+          content: '';
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background-color: #ffc107;
+        }
+      }
+
+      &.valid.has-content::before {
+        background-color: #28a745;
+      }
+    }
+  }
+
   .form-grid {
     display: grid;
+    grid-template-columns: 1fr 2fr;
     gap: 30px;
+  }
+
+  .shared-fields {
+    border-right: 1px solid #e1e5e9;
+    padding-right: 24px;
+  }
+
+  .translation-content {
+    min-height: 500px;
+  }
+
+  .checkbox-group {
+    label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      
+      input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+      }
+    }
+  }
+
+  .translation-summary {
+    display: flex;
+    gap: 20px;
+    padding: 16px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+
+    .summary-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+
+      .lang-flag {
+        font-size: 16px;
+      }
+
+      .status {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+
+        &.complete {
+          background-color: #d4edda;
+          color: #155724;
+        }
+
+        &.incomplete {
+          background-color: #fff3cd;
+          color: #856404;
+        }
+      }
+    }
   }
 
   .form-section {
@@ -215,8 +350,40 @@
   }
 
   .article-form {
+    .language-tabs {
+      flex-wrap: wrap;
+      
+      .lang-tab {
+        flex: 1;
+        min-width: 100px;
+        padding: 10px 12px;
+        font-size: 12px;
+        
+        .lang-name {
+          display: none;
+        }
+      }
+    }
+
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .shared-fields {
+      border-right: none;
+      border-bottom: 1px solid #e1e5e9;
+      padding-right: 0;
+      padding-bottom: 24px;
+      margin-bottom: 24px;
+    }
+
     .form-section {
       padding: 20px;
+    }
+
+    .translation-summary {
+      flex-direction: column;
+      gap: 12px;
     }
 
     .form-actions {

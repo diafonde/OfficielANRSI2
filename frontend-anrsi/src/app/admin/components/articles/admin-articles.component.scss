@@ -118,7 +118,7 @@
 
     .table-row {
       display: grid;
-      grid-template-columns: 80px 1fr 150px 120px 120px 200px;
+      grid-template-columns: 80px 1fr 120px 120px 120px 120px 200px;
       gap: 20px;
       padding: 16px 20px;
       font-weight: 600;
@@ -130,7 +130,7 @@
   .table-body {
     .article-row {
       display: grid;
-      grid-template-columns: 80px 1fr 150px 120px 120px 200px;
+      grid-template-columns: 80px 1fr 120px 120px 120px 120px 200px;
       gap: 20px;
       padding: 20px;
       border-bottom: 1px solid #f1f3f4;
@@ -175,6 +175,25 @@
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
+      }
+    }
+  }
+
+  .col-languages {
+    .language-status {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+
+      .lang-badge {
+        font-size: 20px;
+        opacity: 0.3;
+        transition: opacity 0.3s ease;
+        cursor: default;
+
+        &.available {
+          opacity: 1;
+        }
       }
     }
   }

@@ -32,7 +32,7 @@
     </nav>
     <div class="actions">
       <img src="assets/images/ministre.png" alt="ministre Logo" class="ministre-logo">
-      <button class="mobile-menu-btn" (click)="toggleMobileMenu()" aria-label="Menu">
+      <button class="mobile-menu-btn" (click)="toggleMobileMenu()" [attr.aria-label]="'Menu' | translate">
         <span [class.open]="mobileMenuOpen"></span>
         <span [class.open]="mobileMenuOpen"></span>
         <span [class.open]="mobileMenuOpen"></span>

@@ -1,0 +1,233 @@
+<div class="admin-pages">
+  <div class="page-header">
+    <h1>Pages Management</h1>
+    <a routerLink="/admin/pages/new" class="btn btn-primary">
+      <i class="fas fa-plus"></i> New Page
+    </a>
+  </div>
+
+  <div class="filters">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input
+        type="text"
+        placeholder="Search pages..."
+        [(ngModel)]="searchTerm"
+        class="search-input"
+      />
+    </div>
+    <select [(ngModel)]="filterType" class="filter-select">
+      <option value="">All Types</option>
+      <option *ngFor="let type of pageTypes" [value]="type">
+        {{ getPageTypeLabel(type) }}
+      </option>
+    </select>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <i class="fas fa-spinner fa-spin"></i> Loading pages...
+  </div>
+
+  <div *ngIf="!isLoading && filteredPages.length === 0" class="empty-state">
+    <i class="fas fa-file-alt"></i>
+    <p>No pages found</p>
+  </div>
+
+  <div *ngIf="!isLoading && filteredPages.length > 0" class="pages-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Slug</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th>Updated</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let page of filteredPages">
+          <td>
+            <strong>{{ page.title }}</strong>
+            <div *ngIf="page.heroTitle" class="subtitle">{{ page.heroTitle }}</div>
+          </td>
+          <td>
+            <code>{{ page.slug }}</code>
+          </td>
+          <td>
+            <span class="badge badge-type">{{ getPageTypeLabel(page.pageType) }}</span>
+          </td>
+          <td>
+            <span
+              class="badge"
+              [class.badge-published]="page.isPublished"
+              [class.badge-draft]="!page.isPublished"
+            >
+              {{ page.isPublished ? 'Published' : 'Draft' }}
+            </span>
+            <span
+              *ngIf="!page.isActive"
+              class="badge badge-inactive"
+            >
+              Inactive
+            </span>
+          </td>
+          <td>
+            {{ page.updatedAt | date: 'short' }}
+          </td>
+          <td class="actions">
+            <a
+              *ngIf="page.slug === 'agence-medias'"
+              routerLink="/admin/agence-medias"
+              class="btn btn-sm btn-edit"
+              title="Edit Agence Medias"
+            >
+              <i class="fas fa-edit"></i>
+            </a>
+            <a
+              *ngIf="page.slug === 'zone-humide'"
+              routerLink="/admin/zone-humide"
+              class="btn btn-sm btn-edit"
+              title="Edit Zone Humide"
+            >
+              <i class="fas fa-edit"></i>
+            </a>
+            <a
+              *ngIf="page.slug === 'plateformes'"
+              routerLink="/admin/plateformes"
+              class="btn btn-sm btn-edit"
+              title="Edit Plateformes"
+            >
+              <i class="fas fa-edit"></i>
+            </a>
+            <a
+              *ngIf="page.slug === 'appels-candidatures'"
+              routerLink="/admin/appels-candidatures"
+              class="btn btn-sm btn-edit"
+              title="Edit Appels Candidatures"
+            >
+              <i class="fas fa-edit"></i>
+            </a>
+            <a
+              *ngIf="page.slug === 'ai4agri'"
+              routerLink="/admin/ai4agri"
+              class="btn btn-sm btn-edit"
+              title="Edit AI 4 AGRI"
+            >
+              <i class="fas fa-edit"></i>
+            </a>
+            <a
+              *ngIf="page.slug === 'expert-anrsi'"
+              routerLink="/admin/expert-anrsi"
+              class="btn btn-sm btn-edit"
+              title="Edit Expert ANRSI"
+            >
+              <i class="fas fa-edit"></i>
+            </a>
+            <a
+              *ngIf="page.slug === 'cooperation'"
+              routerLink="/admin/cooperation"
+              class="btn btn-sm btn-edit"
+              title="Edit Coopération"
+            >
+              <i class="fas fa-edit"></i>
+            </a>
+            <a
+              *ngIf="page.slug === 'programmes'"
+              routerLink="/admin/programmes"
+              class="btn btn-sm btn-edit"
+              title="Edit Programmes"
+            >
+              <i class="fas fa-edit"></i>
+            </a>
+            <a
+              *ngIf="page.slug === 'financement'"
+              routerLink="/admin/financement"
+              class="btn btn-sm btn-edit"
+              title="Edit Financement"
+            >
+              <i class="fas fa-edit"></i>
+            </a>
+            <a
+              *ngIf="page.slug === 'videos'"
+              routerLink="/admin/videos"
+              class="btn btn-sm btn-edit"
+              title="Edit Videos"
+            >
+              <i class="fas fa-edit"></i>
+            </a>
+            <a
+              *ngIf="page.slug === 'objectives'"
+              routerLink="/admin/objectives"
+              class="btn btn-sm btn-edit"
+              title="Edit Objectives"
+            >
+              <i class="fas fa-edit"></i>
+            </a>
+            <a
+              *ngIf="page.slug === 'strategic-vision'"
+              routerLink="/admin/strategic-vision"
+              class="btn btn-sm btn-edit"
+              title="Edit Strategic Vision"
+            >
+              <i class="fas fa-edit"></i>
+            </a>
+            <a
+              *ngIf="page.slug === 'organigramme'"
+              routerLink="/admin/organigramme"
+              class="btn btn-sm btn-edit"
+              title="Edit Organigramme"
+            >
+              <i class="fas fa-edit"></i>
+            </a>
+            <a
+              *ngIf="page.slug === 'conseil-administration'"
+              routerLink="/admin/conseil-administration"
+              class="btn btn-sm btn-edit"
+              title="Edit Conseil d'Administration"
+            >
+              <i class="fas fa-edit"></i>
+            </a>
+            <a
+              *ngIf="page.slug === 'priorites-recherche-2026'"
+              routerLink="/admin/priorites-recherche-2026"
+              class="btn btn-sm btn-edit"
+              title="Edit Priorités de la Recherche 2026"
+            >
+              <i class="fas fa-edit"></i>
+            </a>
+            <a
+              *ngIf="page.slug !== 'agence-medias' && page.slug !== 'zone-humide' && page.slug !== 'plateformes' && page.slug !== 'appels-candidatures' && page.slug !== 'ai4agri' && page.slug !== 'expert-anrsi' && page.slug !== 'cooperation' && page.slug !== 'programmes' && page.slug !== 'financement' && page.slug !== 'videos' && page.slug !== 'objectives' && page.slug !== 'strategic-vision' && page.slug !== 'organigramme' && page.slug !== 'conseil-administration' && page.slug !== 'priorites-recherche-2026'"
+              [routerLink]="['/admin/pages/edit', page.id]"
+              class="btn btn-sm btn-edit"
+              title="Edit"
+            >
+              <i class="fas fa-edit"></i>
+            </a>
+            <button
+              (click)="togglePublish(page)"
+              class="btn btn-sm"
+              [class.btn-publish]="!page.isPublished"
+              [class.btn-unpublish]="page.isPublished"
+              [title]="page.isPublished ? 'Unpublish' : 'Publish'"
+            >
+              <i [class]="page.isPublished ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+            </button>
+            <button
+              (click)="deletePage(page.id)"
+              class="btn btn-sm btn-delete"
+              title="Delete"
+            >
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
