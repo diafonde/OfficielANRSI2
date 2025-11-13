@@ -90,18 +90,40 @@ export class ArticleAdminService {
 
   createArticle(articleData: any): Observable<Article> {
     // Transform translations to backend format
-    // Backend expects: { title, content, excerpt, author, publishDate, imageUrl, category, tags, featured, published }
+    // Backend now expects: { translations: { "fr": {...}, "ar": {...}, "en": {...} }, author, publishDate, ... }
     // Frontend sends: { author, category, translations: { fr: {...}, ar: {...}, en: {...} }, ... }
     
-    // Use first available translation for main fields (prefer fr, then ar, then en)
     const translations = articleData.translations || {};
-    const firstTranslation = translations.fr || translations.ar || translations.en || {};
+    
+    // Prepare translations map for backend
+    const translationsMap: any = {};
+    if (translations.fr) {
+      translationsMap.fr = {
+        language: 'fr',
+        title: translations.fr.title || '',
+        content: translations.fr.content || '',
+        excerpt: translations.fr.excerpt || ''
+      };
+    }
+    if (translations.ar) {
+      translationsMap.ar = {
+        language: 'ar',
+        title: translations.ar.title || '',
+        content: translations.ar.content || '',
+        excerpt: translations.ar.excerpt || ''
+      };
+    }
+    if (translations.en) {
+      translationsMap.en = {
+        language: 'en',
+        title: translations.en.title || '',
+        content: translations.en.content || '',
+        excerpt: translations.en.excerpt || ''
+      };
+    }
     
     // Prepare data for backend
-    const backendData = {
-      title: firstTranslation.title || '',
-      content: firstTranslation.content || '',
-      excerpt: firstTranslation.excerpt || '',
+    const backendData: any = {
       author: articleData.author,
       publishDate: articleData.publishDate,
       imageUrl: articleData.imageUrl,
@@ -110,6 +132,11 @@ export class ArticleAdminService {
       featured: articleData.featured || false,
       published: articleData.published !== false
     };
+    
+    // Add translations if available
+    if (Object.keys(translationsMap).length > 0) {
+      backendData.translations = translationsMap;
+    }
     
     console.log('Creating article with data:', backendData);
     
@@ -132,13 +159,36 @@ export class ArticleAdminService {
   updateArticle(id: number, articleData: any): Observable<Article> {
     // Transform translations to backend format
     const translations = articleData.translations || {};
-    const firstTranslation = translations.fr || translations.ar || translations.en || {};
+    
+    // Prepare translations map for backend
+    const translationsMap: any = {};
+    if (translations.fr) {
+      translationsMap.fr = {
+        language: 'fr',
+        title: translations.fr.title || '',
+        content: translations.fr.content || '',
+        excerpt: translations.fr.excerpt || ''
+      };
+    }
+    if (translations.ar) {
+      translationsMap.ar = {
+        language: 'ar',
+        title: translations.ar.title || '',
+        content: translations.ar.content || '',
+        excerpt: translations.ar.excerpt || ''
+      };
+    }
+    if (translations.en) {
+      translationsMap.en = {
+        language: 'en',
+        title: translations.en.title || '',
+        content: translations.en.content || '',
+        excerpt: translations.en.excerpt || ''
+      };
+    }
     
     // Prepare data for backend
-    const backendData = {
-      title: firstTranslation.title || '',
-      content: firstTranslation.content || '',
-      excerpt: firstTranslation.excerpt || '',
+    const backendData: any = {
       author: articleData.author,
       publishDate: articleData.publishDate,
       imageUrl: articleData.imageUrl,
@@ -147,6 +197,11 @@ export class ArticleAdminService {
       featured: articleData.featured || false,
       published: articleData.published !== false
     };
+    
+    // Add translations if available
+    if (Object.keys(translationsMap).length > 0) {
+      backendData.translations = translationsMap;
+    }
     
     console.log('Updating article with data:', backendData);
     

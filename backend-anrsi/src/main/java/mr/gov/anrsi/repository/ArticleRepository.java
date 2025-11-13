@@ -22,8 +22,6 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
     
     List<Article> findByCategorySlug(String slug);
     
-    List<Article> findByTitleContainingIgnoreCaseOrContentContainingIgnoreCase(String title, String content);
-    
     List<Article> findByPublishDateBeforeOrderByPublishDateDesc(LocalDateTime date);
     
     List<Article> findAllByOrderByPublishDateDesc();

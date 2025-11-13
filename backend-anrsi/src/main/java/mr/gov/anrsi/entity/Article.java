@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -14,6 +15,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -30,15 +32,6 @@ public class Article {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
-    @Column(nullable = false, length = 500)
-    private String title;
-    
-    @Column(columnDefinition = "TEXT", nullable = false)
-    private String content;
-    
-    @Column(columnDefinition = "TEXT")
-    private String excerpt;
     
     @Column(nullable = false, length = 255)
     private String author;
@@ -62,6 +55,9 @@ public class Article {
     @CollectionTable(name = "article_tags", joinColumns = @JoinColumn(name = "article_id"))
     @Column(name = "tag")
     private List<String> tags = new ArrayList<>();
+    
+    @OneToMany(mappedBy = "article", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<ArticleTranslation> translations = new ArrayList<>();
     
     @Column(name = "featured")
     private Boolean featured = false;

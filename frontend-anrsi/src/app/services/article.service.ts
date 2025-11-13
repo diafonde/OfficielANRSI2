@@ -3,6 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Article } from '../models/article.model';
 import { Observable, map, catchError, throwError, of } from 'rxjs';
 
+interface ArticleTranslationDTO {
+  language: string;
+  title: string;
+  content: string;
+  excerpt: string;
+}
+
 interface ArticleDTO {
   id: number;
   title: string;
@@ -18,6 +25,11 @@ interface ArticleDTO {
   published?: boolean;
   createdAt?: string;
   updatedAt?: string;
+  translations?: {
+    fr?: ArticleTranslationDTO;
+    ar?: ArticleTranslationDTO;
+    en?: ArticleTranslationDTO;
+  };
 }
 
 @Injectable({
@@ -44,7 +56,8 @@ export class ArticleService {
       category: dto.category || '',
       tags: dto.tags || [],
       featured: dto.featured || false,
-      published: dto.published !== false
+      published: dto.published !== false,
+      translations: dto.translations || undefined
     };
   }
 

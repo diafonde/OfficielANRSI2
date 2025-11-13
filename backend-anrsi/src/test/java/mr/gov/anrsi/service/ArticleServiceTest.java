@@ -5,6 +5,8 @@ import mr.gov.anrsi.dto.ArticleDTO;
 import mr.gov.anrsi.entity.Article;
 import mr.gov.anrsi.exception.ArticleNotFoundException;
 import mr.gov.anrsi.repository.ArticleRepository;
+import mr.gov.anrsi.repository.ArticleTranslationRepository;
+import mr.gov.anrsi.repository.CategoriesRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,6 +28,12 @@ class ArticleServiceTest {
 
     @Mock
     private ArticleRepository articleRepository;
+    
+    @Mock
+    private ArticleTranslationRepository translationRepository;
+    
+    @Mock
+    private CategoriesRepository categoriesRepository;
 
     @InjectMocks
     private ArticleService articleService;
@@ -167,7 +175,7 @@ class ArticleServiceTest {
     @Test
     void searchArticles_ShouldReturnMatchingArticles() {
         // Arrange
-        when(articleRepository.findByTitleContainingIgnoreCaseOrContentContainingIgnoreCase("test", "test"))
+        when(translationRepository.findArticlesByTranslationTitleOrContentOrExcerptContainingIgnoreCase("test"))
                 .thenReturn(Arrays.asList(testArticle));
 
         // Act
@@ -176,8 +184,8 @@ class ArticleServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(1, result.size());
-        verify(articleRepository, times(1))
-                .findByTitleContainingIgnoreCaseOrContentContainingIgnoreCase("test", "test");
+        verify(translationRepository, times(1))
+                .findArticlesByTranslationTitleOrContentOrExcerptContainingIgnoreCase("test");
     }
 
     @Test

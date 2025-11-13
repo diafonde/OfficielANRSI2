@@ -1,29 +1,48 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { Article } from '../../models/article.model';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { Subscription } from 'rxjs';
+import { Article, ArticleTranslation } from '../../models/article.model';
 import { ArticleService } from '../../services/article.service';
 
 @Component({
   selector: 'app-article-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslateModule],
   templateUrl: './article-detail.component.html',
   styleUrls: ['./article-detail.component.scss']
 })
-export class ArticleDetailComponent implements OnInit {
+export class ArticleDetailComponent implements OnInit, OnDestroy {
   article: Article | undefined;
   articleParagraphs: string[] = [];
   relatedArticles: Article[] = [];
   articleNotFound = false;
   loading = true;
+  currentLang = 'fr';
+  private langSubscription?: Subscription;
+
+  // Translated content
+  displayTitle = '';
+  displayContent = '';
+  displayExcerpt = '';
 
   constructor(
     private route: ActivatedRoute,
-    private articleService: ArticleService
+    private articleService: ArticleService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
+    // Get current language
+    this.currentLang = this.translate.currentLang || this.translate.defaultLang || 'fr';
+    
+    // Subscribe to language changes
+    this.langSubscription = this.translate.onLangChange.subscribe(event => {
+      this.currentLang = event.lang;
+      this.updateTranslatedContent();
+    });
+
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
       console.log('Article ID:', id); // Debug log
@@ -39,8 +58,7 @@ export class ArticleDetailComponent implements OnInit {
             this.loading = false;
             
             if (this.article) {
-              // Create paragraphs from content
-              this.articleParagraphs = this.article.content.split('\n\n').filter(p => p.trim() !== '');
+              this.updateTranslatedContent();
               
               // Find related articles
               this.articleService.getAllArticles().subscribe((articles: Article[]) => {
@@ -67,6 +85,53 @@ export class ArticleDetailComponent implements OnInit {
         this.articleNotFound = true;
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    if (this.langSubscription) {
+      this.langSubscription.unsubscribe();
+    }
+  }
+
+  /**
+   * Get translated content for the current language, with fallback to default
+   */
+  private updateTranslatedContent(): void {
+    if (!this.article) return;
+
+    const translation = this.getTranslation(this.article, this.currentLang);
+    
+    this.displayTitle = translation.title;
+    this.displayContent = translation.content;
+    this.displayExcerpt = translation.excerpt;
+    
+    // Create paragraphs from content
+    this.articleParagraphs = this.displayContent.split('\n\n').filter(p => p.trim() !== '');
+  }
+
+  /**
+   * Get translation for a specific language, with fallback to default article fields
+   */
+  private getTranslation(article: Article, lang: string): ArticleTranslation {
+    // Try to get translation for the requested language
+    if (article.translations && article.translations[lang as 'fr' | 'ar' | 'en']) {
+      return article.translations[lang as 'fr' | 'ar' | 'en']!;
+    }
+    
+    // Fallback to default article fields
+    return {
+      title: article.title,
+      content: article.content,
+      excerpt: article.excerpt
+    };
+  }
+
+  /**
+   * Get translated title for an article (used for related articles)
+   */
+  getTranslatedTitle(article: Article): string {
+    const translation = this.getTranslation(article, this.currentLang);
+    return translation.title;
   }
 
   onImageError(event: any) {

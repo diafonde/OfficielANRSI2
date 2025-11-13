@@ -1,8 +1,8 @@
 <div class="article-card" [class.featured]="isFeatured">
-    <div class="article-image"><img [src]="article.imageUrl" [alt]="article.title" class="img-fluid" (error)="onImageError($event)">
+    <div class="article-image"><img [src]="article.imageUrl" [alt]="displayTitle || article.title" class="img-fluid" (error)="onImageError($event)">
         <div class="article-category">{{ article.category }}</div></div>
-        <div class="article-content"><h3 class="article-title"><a [routerLink]="['/article', article.id]">{{ article.title }}</a></h3>
-            <p class="article-summary">{{ article.excerpt }}</p><a [routerLink]="['/article', article.id]" class="read-more">{{ 'Read More' | translate }}
+        <div class="article-content"><h3 class="article-title"><a [routerLink]="['/article', article.id]">{{ displayTitle || article.title }}</a></h3>
+            <p class="article-summary">{{ displayExcerpt || article.excerpt }}</p><a [routerLink]="['/article', article.id]" class="read-more">{{ 'Read More' | translate }}
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="5" y1="12" x2="19" y2="12"></line>
                     <polyline points="12 5 19 12 12 19"></polyline>

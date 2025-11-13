@@ -2,29 +2,23 @@ package mr.gov.anrsi.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class ArticleCreateDTO {
-    @NotBlank(message = "Title is required")
-    @Size(min = 5, max = 500, message = "Title must be between 5 and 500 characters")
+    // Keep these for backward compatibility - will use first available translation if translations not provided
     private String title;
-    
-    @NotBlank(message = "Content is required")
-    @Size(min = 50, message = "Content must be at least 50 characters")
     private String content;
-    
-    @NotBlank(message = "Excerpt is required")
-    @Size(min = 20, message = "Excerpt must be at least 20 characters")
     private String excerpt;
     
     @NotBlank(message = "Author is required")
@@ -45,5 +39,8 @@ public class ArticleCreateDTO {
     private Boolean featured = false;
     
     private Boolean published = true;
+    
+    // Translations map: { "fr": {...}, "ar": {...}, "en": {...} }
+    private Map<String, ArticleTranslationDTO> translations = new HashMap<>();
 }
 
