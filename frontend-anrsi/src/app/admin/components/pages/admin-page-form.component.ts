@@ -42,7 +42,9 @@ export class AdminPageFormComponent implements OnInit {
     'conseil-administration': 'conseil-administration',
     'appels-candidatures': 'appels-candidatures',
     'ai4agri': 'ai4agri',
-    'agence-medias': 'agence-medias'
+    'agence-medias': 'agence-medias',
+    'rapports-annuels': 'rapports-annuels',
+    'texts-juridiques': 'texts-juridiques'
   };
 
   constructor(

@@ -1,0 +1,40 @@
+<div class="texts-hero">
+  <div class="container">
+    <h1>{{ heroTitle || 'Textes Juridiques' }}</h1>
+    <p>{{ heroSubtitle || "Textes juridiques régissant l'Agence Nationale de la Recherche Scientifique et de l'Innovation" }}</p>
+  </div>
+  <div class="hero-overlay"></div>
+</div>
+
+<div class="container" *ngIf="isLoading">
+  <div class="loading-container">
+    <div class="loading">Loading...</div>
+  </div>
+</div>
+
+<div class="container" *ngIf="!isLoading">
+  <section class="section texts-section">
+    <div class="texts-content">
+      <h2>{{ sectionTitle || 'Textes Juridiques' }}</h2>
+      <div class="texts-list" *ngIf="texts && texts.length > 0">
+        <div class="text-item" *ngFor="let text of texts">
+          <div class="text-info">
+            <h3>{{ text.title }}</h3>
+            <p class="text-description" *ngIf="text.description">{{ text.description }}</p>
+          </div>
+          <button 
+            class="download-btn" 
+            (click)="downloadText(text)"
+            [disabled]="!text.downloadUrl">
+            <span class="download-icon">📥</span>
+            Télécharger
+          </button>
+        </div>
+      </div>
+      <div class="no-texts" *ngIf="!texts || texts.length === 0">
+        <p>Aucun texte juridique disponible pour le moment.</p>
+      </div>
+    </div>
+  </section>
+</div>
+

@@ -2,13 +2,15 @@ import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { HeroSectionComponent } from '../../components/hero-section/hero-section.component';
 import { ArticleCardComponent } from '../../components/article-card/article-card.component';
 import { ArticleService } from '../../services/article.service';
 import { ANRSIDataService, ANRSIArticle, ANRSIEvent, ANRSIVideo } from '../../services/anrsi-data.service';
 import { Article } from '../../models/article.model';
 import { SafePipe } from '../videos/safe.pipe';
+import { PageService, PageDTO } from '../../services/page.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-home',
@@ -37,6 +39,10 @@ export class HomeComponent implements OnInit, OnDestroy {
   // Video modal properties
   selectedVideo: ANRSIVideo | null = null;
   showVideoModal = false;
+  
+  // Language and page loading
+  currentLang = 'fr';
+  langSubscription?: Subscription;
   
   researchAreas = [
     {
@@ -94,7 +100,9 @@ export class HomeComponent implements OnInit, OnDestroy {
   constructor(
     private articleService: ArticleService,
     private anrsiDataService: ANRSIDataService,
-    private http: HttpClient
+    private http: HttpClient,
+    private pageService: PageService,
+    private translate: TranslateService
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -104,6 +112,15 @@ export class HomeComponent implements OnInit, OnDestroy {
     } catch (error) {
       console.warn('AOS library could not be loaded:', error);
     }
+    
+    // Get current language
+    this.currentLang = this.translate.currentLang || this.translate.defaultLang || 'fr';
+    
+    // Subscribe to language changes
+    this.langSubscription = this.translate.onLangChange.subscribe(event => {
+      this.currentLang = event.lang;
+      this.loadVideos();
+    });
     
     // Set initial slides per view based on screen size
     this.updateSlidesPerView();
@@ -139,9 +156,9 @@ export class HomeComponent implements OnInit, OnDestroy {
     // Load ANRSI data
     this.anrsiArticles = this.anrsiDataService.getFeaturedArticles();
     this.upcomingEvents = this.anrsiDataService.getEvents();
-    // Load videos for videotheque (show at least 4 videos to enable navigation)
-    const allVideos = this.anrsiDataService.getVideos();
-    this.featuredVideos = allVideos.length >= 4 ? allVideos.slice(0, allVideos.length) : allVideos.slice(0, 3);
+    
+    // Load videos from database
+    this.loadVideos();
     
     // Ensure no auto-slideshow is running - videos will only move when user clicks navigation buttons
     this.stopVideoSlideshow();
@@ -207,6 +224,70 @@ export class HomeComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.stopSlideshow();
     this.stopVideoSlideshow(); // Ensure any running interval is cleared
+    if (this.langSubscription) {
+      this.langSubscription.unsubscribe();
+    }
+  }
+  
+  loadVideos(): void {
+    this.pageService.getPageBySlug('videos').subscribe({
+      next: (page) => {
+        this.parseVideosContent(page);
+      },
+      error: (error) => {
+        console.error('Error loading videos page:', error);
+        // Fallback to static videos if database fails
+        const allVideos = this.anrsiDataService.getVideos();
+        this.featuredVideos = allVideos.length >= 4 ? allVideos.slice(0, allVideos.length) : allVideos.slice(0, 3);
+      }
+    });
+  }
+  
+  parseVideosContent(page: PageDTO): void {
+    if (!page?.content) {
+      // Fallback to static videos
+      const allVideos = this.anrsiDataService.getVideos();
+      this.featuredVideos = allVideos.length >= 4 ? allVideos.slice(0, allVideos.length) : allVideos.slice(0, 3);
+      return;
+    }
+
+    try {
+      const content = JSON.parse(page.content);
+      
+      // Check if it's the new format with translations
+      let videosData;
+      if (content.translations) {
+        // New format: get videos for current language, fallback to French
+        const langContent = content.translations[this.currentLang] || content.translations['fr'] || content.translations['ar'] || content.translations['en'];
+        videosData = langContent?.videos || [];
+      } else {
+        // Old format: single language
+        videosData = content.videos || [];
+      }
+      
+      // Convert VideoItem[] to ANRSIVideo[]
+      this.featuredVideos = videosData.map((video: any, index: number) => ({
+        id: index + 1,
+        title: video.title || '',
+        url: video.url || '',
+        type: video.type || 'youtube',
+        videoUrl: video.url || '' // For backward compatibility
+      }));
+      
+      // Ensure we have at least some videos, fallback to static if empty
+      if (this.featuredVideos.length === 0) {
+        const allVideos = this.anrsiDataService.getVideos();
+        this.featuredVideos = allVideos.length >= 4 ? allVideos.slice(0, allVideos.length) : allVideos.slice(0, 3);
+      }
+      
+      // Reset video slide when videos change
+      this.currentVideoSlide = 0;
+    } catch (e) {
+      console.error('Error parsing videos content:', e);
+      // Fallback to static videos
+      const allVideos = this.anrsiDataService.getVideos();
+      this.featuredVideos = allVideos.length >= 4 ? allVideos.slice(0, allVideos.length) : allVideos.slice(0, 3);
+    }
   }
 
   startSlideshow(): void {
@@ -365,7 +446,27 @@ export class HomeComponent implements OnInit, OnDestroy {
   
   getSelectedVideoUrl(): string {
     if (!this.selectedVideo) return '';
-    return this.selectedVideo.url || this.selectedVideo.videoUrl || '';
+    const url = this.selectedVideo.url || this.selectedVideo.videoUrl || '';
+    return this.convertToEmbedUrl(url);
+  }
+  
+  convertToEmbedUrl(url: string): string {
+    if (!url) return '';
+    
+    // If already in embed format, return as is (may already have parameters)
+    if (url.includes('youtube.com/embed/') || url.includes('youtu.be/embed/')) {
+      return url;
+    }
+    
+    // Extract video ID from various YouTube URL formats
+    const videoId = this.extractYouTubeVideoId(url);
+    if (videoId) {
+      // Convert to embed format - YouTube requires embed URLs for iframes
+      return `https://www.youtube.com/embed/${videoId}`;
+    }
+    
+    // If not a YouTube URL, return as is (for Vimeo, etc.)
+    return url;
   }
   
   getVideoThumbnail(video: ANRSIVideo): string {
@@ -419,15 +520,24 @@ export class HomeComponent implements OnInit, OnDestroy {
     // https://youtube.com/embed/VIDEO_ID
     // https://www.youtube.com/watch?v=VIDEO_ID
     // https://youtu.be/VIDEO_ID
+    // https://m.youtube.com/watch?v=VIDEO_ID
     
-    const embedMatch = url.match(/(?:youtube\.com\/embed\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    // First try embed format
+    const embedMatch = url.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/);
     if (embedMatch) {
       return embedMatch[1];
     }
     
-    const watchMatch = url.match(/(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/);
+    // Then try watch format
+    const watchMatch = url.match(/youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/);
     if (watchMatch) {
       return watchMatch[1];
+    }
+    
+    // Finally try youtu.be short URLs
+    const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+    if (shortMatch) {
+      return shortMatch[1];
     }
     
     return null;

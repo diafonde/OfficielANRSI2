@@ -101,9 +101,45 @@
               <button type="button" (click)="removePhoto(i)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
             </div>
             <div class="form-group">
-              <label>{{ getLabel('url') }} (Image Path)</label>
-              <input type="text" formControlName="url" class="form-control" placeholder="assets/images/photo.jpg" />
-              <small class="form-help">Relative path from assets folder (e.g., assets/images/photo.jpg)</small>
+              <label>{{ getLabel('url') }} *</label>
+              <div class="file-upload-container">
+                <input
+                  type="file"
+                  [id]="'photoFile-' + activeLanguage + '-' + i"
+                  accept="image/*"
+                  (change)="onPhotoSelected($event, i)"
+                  class="file-input"
+                >
+                <div class="file-upload-preview" *ngIf="getPhotoUploadState(i).preview || photo.get('url')?.value">
+                  <img [src]="getPhotoUploadState(i).preview || photo.get('url')?.value" alt="Preview" class="preview-image">
+                  <button type="button" class="remove-image" (click)="removePhotoImage(i)" title="Remove image">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+                <div class="file-upload-placeholder" *ngIf="!getPhotoUploadState(i).preview && !photo.get('url')?.value && !getPhotoUploadState(i).file">
+                  <i class="fas fa-cloud-upload-alt"></i>
+                  <span>{{ getLabel('clickToUpload') }}</span>
+                  <small>PNG, JPG, GIF up to 10MB</small>
+                </div>
+                <div class="file-upload-info" *ngIf="getPhotoUploadState(i).file && !getPhotoUploadState(i).preview && !photo.get('url')?.value">
+                  <i class="fas fa-file-image"></i>
+                  <span>{{ getPhotoUploadState(i).file?.name }}</span>
+                  <span class="file-size">({{ formatFileSize(getPhotoUploadState(i).file?.size || 0) }})</span>
+                </div>
+                <div class="upload-progress" *ngIf="getPhotoUploadState(i).isUploading">
+                  <div class="progress-bar">
+                    <div class="progress-fill" [style.width.%]="getPhotoUploadState(i).uploadProgress"></div>
+                  </div>
+                  <span>{{ getLabel('uploading') }}... {{ getPhotoUploadState(i).uploadProgress }}%</span>
+                </div>
+              </div>
+              <input
+                type="hidden"
+                formControlName="url"
+              >
+              <div class="error-message" *ngIf="errorMessage && getPhotoUploadState(i).file">
+                {{ errorMessage }}
+              </div>
             </div>
           </div>
         </div>

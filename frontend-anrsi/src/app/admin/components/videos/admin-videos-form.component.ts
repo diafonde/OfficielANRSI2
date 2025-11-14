@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { PageAdminService, PageDTO, PageCreateDTO, PageUpdateDTO } from '../../services/page-admin.service';
+import { ArticleAdminService } from '../../services/article-admin.service';
 
 interface VideoItem {
   title: string;
@@ -45,6 +46,14 @@ export class AdminVideosFormComponent implements OnInit {
   errorMessage = '';
   isSaving = false;
   activeLanguage: 'fr' | 'ar' | 'en' = 'fr';
+  
+  // Photo upload state - track per photo index
+  photoUploadState: Map<string, {
+    file: File | null;
+    preview: string | null;
+    isUploading: boolean;
+    uploadProgress: number;
+  }> = new Map();
 
   languages = [
     { code: 'fr', name: 'Français', flag: '🇫🇷' },
@@ -55,6 +64,7 @@ export class AdminVideosFormComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private pageService: PageAdminService,
+    private articleService: ArticleAdminService,
     private router: Router,
     private route: ActivatedRoute
   ) {
@@ -93,6 +103,8 @@ export class AdminVideosFormComponent implements OnInit {
   switchLanguage(lang: string): void {
     if (lang === 'fr' || lang === 'ar' || lang === 'en') {
       this.activeLanguage = lang as 'fr' | 'ar' | 'en';
+      // Clear error message when switching languages
+      this.errorMessage = '';
     }
   }
 
@@ -156,7 +168,154 @@ export class AdminVideosFormComponent implements OnInit {
   }
 
   removePhoto(index: number): void {
+    // Clear upload state for this photo
+    const stateKey = `${this.activeLanguage}-${index}`;
+    this.photoUploadState.delete(stateKey);
     this.photos.removeAt(index);
+  }
+
+  // Photo upload methods
+  getPhotoUploadState(index: number): { file: File | null; preview: string | null; isUploading: boolean; uploadProgress: number } {
+    const stateKey = `${this.activeLanguage}-${index}`;
+    return this.photoUploadState.get(stateKey) || { file: null, preview: null, isUploading: false, uploadProgress: 0 };
+  }
+
+  onPhotoSelected(event: Event, index: number): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      const stateKey = `${this.activeLanguage}-${index}`;
+      
+      // Clear previous errors
+      this.errorMessage = '';
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        this.errorMessage = this.getLabel('invalidImageFile');
+        return;
+      }
+      
+      // Validate file size (10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        this.errorMessage = this.getLabel('fileTooLarge');
+        return;
+      }
+      
+      // Update state
+      this.photoUploadState.set(stateKey, {
+        file: file,
+        preview: null,
+        isUploading: false,
+        uploadProgress: 0
+      });
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        const state = this.photoUploadState.get(stateKey);
+        if (state) {
+          state.preview = e.target.result;
+          this.photoUploadState.set(stateKey, state);
+        }
+      };
+      reader.readAsDataURL(file);
+      
+      // Upload file
+      this.uploadPhoto(file, index);
+    }
+  }
+
+  uploadPhoto(file: File, index: number): void {
+    const stateKey = `${this.activeLanguage}-${index}`;
+    const state = this.photoUploadState.get(stateKey);
+    if (!state) return;
+    
+    state.isUploading = true;
+    state.uploadProgress = 0;
+    this.photoUploadState.set(stateKey, state);
+    this.errorMessage = '';
+    
+    // Simulate progress
+    const progressInterval = setInterval(() => {
+      const currentState = this.photoUploadState.get(stateKey);
+      if (currentState && currentState.uploadProgress < 90) {
+        currentState.uploadProgress += 10;
+        this.photoUploadState.set(stateKey, currentState);
+      }
+    }, 200);
+    
+    this.articleService.uploadImage(file).subscribe({
+      next: (response) => {
+        clearInterval(progressInterval);
+        const currentState = this.photoUploadState.get(stateKey);
+        if (currentState) {
+          currentState.uploadProgress = 100;
+          currentState.isUploading = false;
+          this.photoUploadState.set(stateKey, currentState);
+        }
+        
+        // Update form with uploaded URL
+        const photoGroup = this.photos.at(index);
+        if (photoGroup) {
+          photoGroup.patchValue({ url: response.url });
+        }
+        
+        setTimeout(() => {
+          const finalState = this.photoUploadState.get(stateKey);
+          if (finalState) {
+            finalState.uploadProgress = 0;
+            this.photoUploadState.set(stateKey, finalState);
+          }
+        }, 500);
+      },
+      error: (error) => {
+        clearInterval(progressInterval);
+        const currentState = this.photoUploadState.get(stateKey);
+        if (currentState) {
+          currentState.isUploading = false;
+          currentState.uploadProgress = 0;
+          this.photoUploadState.set(stateKey, currentState);
+        }
+        
+        let errorMsg = this.getLabel('uploadError');
+        if (error.status === 0) {
+          errorMsg = this.getLabel('connectionError');
+        } else if (error.status === 401 || error.status === 403) {
+          errorMsg = this.getLabel('authError');
+        } else if (error.status === 413) {
+          errorMsg = this.getLabel('fileTooLarge');
+        } else if (error.status >= 500) {
+          errorMsg = this.getLabel('serverError');
+        }
+        
+        this.errorMessage = errorMsg;
+      }
+    });
+  }
+
+  removePhotoImage(index: number): void {
+    const stateKey = `${this.activeLanguage}-${index}`;
+    this.photoUploadState.delete(stateKey);
+    
+    // Reset form value
+    const photoGroup = this.photos.at(index);
+    if (photoGroup) {
+      photoGroup.patchValue({ url: '' });
+    }
+    
+    // Reset file input
+    const fileInput = document.getElementById(`photoFile-${this.activeLanguage}-${index}`) as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  }
+
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   }
 
   loadPage(): void {
@@ -450,6 +609,46 @@ export class AdminVideosFormComponent implements OnInit {
         fr: 'Erreur lors de la création de la page',
         ar: 'خطأ في إنشاء الصفحة',
         en: 'Error creating page'
+      },
+      'invalidImageFile': {
+        fr: 'Veuillez sélectionner un fichier image',
+        ar: 'يرجى اختيار ملف صورة',
+        en: 'Please select an image file'
+      },
+      'fileTooLarge': {
+        fr: 'La taille du fichier doit être inférieure à 10 Mo',
+        ar: 'يجب أن يكون حجم الملف أقل من 10 ميجابايت',
+        en: 'File size must be less than 10MB'
+      },
+      'uploadError': {
+        fr: 'Échec du téléchargement de l\'image',
+        ar: 'فشل تحميل الصورة',
+        en: 'Failed to upload image'
+      },
+      'connectionError': {
+        fr: 'Impossible de se connecter au serveur',
+        ar: 'لا يمكن الاتصال بالخادم',
+        en: 'Cannot connect to server'
+      },
+      'authError': {
+        fr: 'Authentification requise',
+        ar: 'مطلوب المصادقة',
+        en: 'Authentication required'
+      },
+      'serverError': {
+        fr: 'Erreur serveur. Veuillez réessayer plus tard',
+        ar: 'خطأ في الخادم. يرجى المحاولة مرة أخرى لاحقًا',
+        en: 'Server error. Please try again later'
+      },
+      'clickToUpload': {
+        fr: 'Cliquez pour télécharger ou glissez-déposez',
+        ar: 'انقر للتحميل أو اسحب وأفلت',
+        en: 'Click to upload or drag and drop'
+      },
+      'uploading': {
+        fr: 'Téléchargement',
+        ar: 'جاري التحميل',
+        en: 'Uploading'
       }
     };
 

@@ -1,0 +1,40 @@
+<div class="rapports-hero">
+  <div class="container">
+    <h1>{{ heroTitle || 'Rapports Annuels' }}</h1>
+    <p>{{ heroSubtitle || "Rapports annuels de l'Agence Nationale de la Recherche Scientifique et de l'Innovation" }}</p>
+  </div>
+  <div class="hero-overlay"></div>
+</div>
+
+<div class="container" *ngIf="isLoading">
+  <div class="loading-container">
+    <div class="loading">Loading...</div>
+  </div>
+</div>
+
+<div class="container" *ngIf="!isLoading">
+  <section class="section rapports-section">
+    <div class="rapports-content">
+      <h2>{{ sectionTitle || 'Rapports Annuels' }}</h2>
+      <div class="rapports-list" *ngIf="rapports && rapports.length > 0">
+        <div class="rapport-item" *ngFor="let rapport of rapports">
+          <div class="rapport-info">
+            <h3>{{ rapport.title }}</h3>
+            <p class="rapport-year">Année: {{ rapport.year }}</p>
+          </div>
+          <button 
+            class="download-btn" 
+            (click)="downloadRapport(rapport)"
+            [disabled]="!rapport.downloadUrl">
+            <span class="download-icon">📥</span>
+            Télécharger
+          </button>
+        </div>
+      </div>
+      <div class="no-rapports" *ngIf="!rapports || rapports.length === 0">
+        <p>Aucun rapport disponible pour le moment.</p>
+      </div>
+    </div>
+  </section>
+</div>
+

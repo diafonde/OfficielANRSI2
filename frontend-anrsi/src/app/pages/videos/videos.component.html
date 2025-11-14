@@ -21,7 +21,7 @@
         <div class="media-card" *ngFor="let video of videos">
           <div class="media-thumb">
             <iframe
-              [src]="video.url | safe"
+              [src]="getEmbedUrl(video) | safe"
               frameborder="0"
               allowfullscreen
               [title]="video.title">

@@ -60,6 +60,28 @@ export class ArticleAdminService {
     });
   }
 
+  uploadDocument(file: File): Observable<{ url: string; filename: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    // Get auth token if available
+    const token = localStorage.getItem('admin_token');
+    let headers = new HttpHeaders();
+    
+    // Don't set Content-Type header - let browser set it with boundary for multipart/form-data
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    
+    console.log('Uploading document to:', `/api/upload/document`);
+    console.log('Has token:', !!token);
+    
+    return this.http.post<{ url: string; filename: string }>(`/api/upload/document`, formData, { 
+      headers,
+      reportProgress: false
+    });
+  }
+
   getAllArticles(): Observable<Article[]> {
     return this.http.get<Article[]>(`${this.apiUrl}/admin/all`, {
       headers: this.getAuthHeaders()

@@ -21,6 +21,8 @@ import { ZoneHumideComponent } from './pages/zone-humide/zone-humide.component';
 import { AgenceMediasComponent } from './pages/agence-medias/agence-medias.component';
 import { ConseilAdministrationComponent } from './pages/conseil-administration/conseil-administration.component';
 import { PrioritesRecherche2026Component } from './pages/priorites-recherche-2026/priorites-recherche-2026.component';
+import { RapportsAnnuelsComponent } from './pages/rapports-annuels/rapports-annuels.component';
+import { TextsJuridiquesComponent } from './pages/texts-juridiques/texts-juridiques.component';
 import { adminRoutes } from './admin/admin.routes';
 
 export const routes: Routes = [
@@ -46,6 +48,8 @@ export const routes: Routes = [
   { path: 'agence-medias', component: AgenceMediasComponent },
   { path: 'conseil-administration', component: ConseilAdministrationComponent },
   { path: 'priorites-recherche-2026', component: PrioritesRecherche2026Component },
+  { path: 'rapports-annuels', component: RapportsAnnuelsComponent },
+  { path: 'texts-juridiques', component: TextsJuridiquesComponent },
   ...adminRoutes,
   { path: '**', redirectTo: '' }
 ];

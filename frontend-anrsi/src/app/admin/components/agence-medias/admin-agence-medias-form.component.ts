@@ -507,6 +507,190 @@ export class AdminAgenceMediasFormComponent implements OnInit {
     this.addContactItem({ icon: 'fas fa-phone', label: 'Téléphone', value: '+222 45 25 44 21' }, 'fr');
     this.addContactItem({ icon: 'fas fa-user', label: 'Responsable Presse', value: 'Mme Fatima Mint Ahmed' }, 'fr');
     this.addContactItem({ icon: 'fas fa-clock', label: 'Horaires', value: 'Lundi - Vendredi : 8h00 - 16h00' }, 'fr');
+
+    // ========== ARABIC TRANSLATIONS ==========
+    const arGroup = this.getLanguageFormGroup('ar');
+    arGroup.patchValue({
+      heroTitle: 'الوكالة الوطنية للبحث العلمي والابتكار في الإعلام',
+      heroSubtitle: 'الأخبار والمنشورات والظهور الإعلامي',
+      introText: 'تحافظ الوكالة الوطنية للبحث العلمي والابتكار (ANRSI) على وجود نشط في وسائل الإعلام لتعزيز البحث العلمي والابتكار التكنولوجي ومبادرات التنمية في موريتانيا.'
+    });
+
+    // Add default media overview items for Arabic
+    this.addMediaOverview({ 
+      icon: '📺', 
+      title: 'الإعلام السمعي البصري', 
+      description: 'مقابلات وتقارير وبرامج خاصة على القنوات التلفزيونية والإذاعية الوطنية والدولية.', 
+      items: ['تلفزيون موريتانيا', 'راديو موريتانيا', 'القنوات الدولية', 'البودكاست العلمية'] 
+    }, 'ar');
+    this.addMediaOverview({ 
+      icon: '📰', 
+      title: 'الصحافة المكتوبة', 
+      description: 'مقالات وافتتاحيات ومنشورات في الصحف الوطنية والدولية.', 
+      items: ['الكلام', 'الأفق', 'موريتانيا نيوز', 'المجلات العلمية'] 
+    }, 'ar');
+    this.addMediaOverview({ 
+      icon: '🌐', 
+      title: 'الإعلام الرقمي', 
+      description: 'وجود نشط على المنصات الرقمية ووسائل التواصل الاجتماعي.', 
+      items: ['الموقع الرسمي', 'وسائل التواصل الاجتماعي', 'النشرات الإخبارية', 'الندوات عبر الإنترنت'] 
+    }, 'ar');
+
+    // Add default media types for Arabic
+    this.addMediaType({ 
+      icon: '🎤', 
+      title: 'المقابلات والتصريحات', 
+      description: 'مقابلات حصرية مع المدير العام وخبراء الوكالة الوطنية للبحث العلمي والابتكار حول القضايا العلمية والتكنولوجية.', 
+      items: ['مقابلات تلفزيونية', 'تصريحات رسمية', 'نقاط صحفية', 'مؤتمرات صحفية'] 
+    }, 'ar');
+    this.addMediaType({ 
+      icon: '📊', 
+      title: 'التقارير والأفلام الوثائقية', 
+      description: 'تقارير متعمقة حول مشاريع البحث والابتكارات التكنولوجية ومبادرات التنمية.', 
+      items: ['تقارير ميدانية', 'أفلام وثائقية علمية', 'برامج خاصة', 'صور الخبراء'] 
+    }, 'ar');
+    this.addMediaType({ 
+      icon: '📝', 
+      title: 'المقالات والمنشورات', 
+      description: 'مقالات متعمقة وافتتاحيات ومنشورات في وسائل الإعلام الوطنية والدولية.', 
+      items: ['مقالات رأي', 'مقالات حرة', 'منشورات علمية', 'بيانات صحفية'] 
+    }, 'ar');
+    this.addMediaType({ 
+      icon: '🎥', 
+      title: 'المحتوى متعدد الوسائط', 
+      description: 'إنتاج محتوى فيديو وصوتي وتفاعلي للمنصات الرقمية.', 
+      items: ['فيديوهات تعليمية', 'بودكاست علمية', 'ندوات عبر الإنترنت', 'محتوى تفاعلي'] 
+    }, 'ar');
+
+    // Add default media kit for Arabic
+    this.addMediaKitItem({ 
+      icon: '📸', 
+      title: 'الصور والصور', 
+      description: 'بنك صور عالية الدقة للمنشآت والمعدات والفعاليات التابعة للوكالة الوطنية للبحث العلمي والابتكار.', 
+      link: '#' 
+    }, 'ar');
+    this.addMediaKitItem({ 
+      icon: '🎥', 
+      title: 'الفيديوهات واللقطات الإضافية', 
+      description: 'فيديوهات تقديمية ومقابلات ولقطات إضافية للتقارير التلفزيونية.', 
+      link: '#' 
+    }, 'ar');
+    this.addMediaKitItem({ 
+      icon: '📄', 
+      title: 'الوثائق والملفات', 
+      description: 'ملفات تقنية وعروض تقديمية ووثائق معلوماتية حول البرامج والمشاريع.', 
+      link: '#' 
+    }, 'ar');
+    this.addMediaKitItem({ 
+      icon: '👥', 
+      title: 'جهات الاتصال الصحفية', 
+      description: 'قائمة بجهات الاتصال الصحفية والخبراء المتاحين للمقابلات والتعليقات.', 
+      link: '#' 
+    }, 'ar');
+
+    // Add default social media for Arabic
+    this.addSocialPlatform({ icon: '📘', name: 'فيسبوك', handle: '@ANRSI.Mauritanie', link: '#' }, 'ar');
+    this.addSocialPlatform({ icon: '🐦', name: 'تويتر', handle: '@ANRSI_MR', link: '#' }, 'ar');
+    this.addSocialPlatform({ icon: '💼', name: 'لينكد إن', handle: 'ANRSI Mauritanie', link: '#' }, 'ar');
+    this.addSocialPlatform({ icon: '📺', name: 'يوتيوب', handle: 'ANRSI Mauritanie', link: '#' }, 'ar');
+
+    // Add default contact info for Arabic
+    this.addContactItem({ icon: 'fas fa-envelope', label: 'البريد الإلكتروني للصحافة', value: 'presse@anrsi.mr' }, 'ar');
+    this.addContactItem({ icon: 'fas fa-phone', label: 'الهاتف', value: '+222 45 25 44 21' }, 'ar');
+    this.addContactItem({ icon: 'fas fa-user', label: 'مسؤولة الصحافة', value: 'السيدة فاطمة منت أحمد' }, 'ar');
+    this.addContactItem({ icon: 'fas fa-clock', label: 'ساعات العمل', value: 'الاثنين - الجمعة: 8:00 - 16:00' }, 'ar');
+
+    // ========== ENGLISH TRANSLATIONS ==========
+    const enGroup = this.getLanguageFormGroup('en');
+    enGroup.patchValue({
+      heroTitle: 'ANRSI in the Media',
+      heroSubtitle: 'News, publications and media visibility',
+      introText: 'The National Agency for Scientific Research and Innovation (ANRSI) maintains an active presence in the media to promote scientific research, technological innovation, and development initiatives in Mauritania.'
+    });
+
+    // Add default media overview items for English
+    this.addMediaOverview({ 
+      icon: '📺', 
+      title: 'Audiovisual Media', 
+      description: 'Interviews, reports and special programs on national and international television and radio channels.', 
+      items: ['TVM (Mauritania Television)', 'Radio Mauritania', 'International channels', 'Scientific podcasts'] 
+    }, 'en');
+    this.addMediaOverview({ 
+      icon: '📰', 
+      title: 'Print Media', 
+      description: 'Articles, editorials and publications in national and international newspapers.', 
+      items: ['Le Calame', 'Horizons', 'Mauritania News', 'Scientific journals'] 
+    }, 'en');
+    this.addMediaOverview({ 
+      icon: '🌐', 
+      title: 'Digital Media', 
+      description: 'Active presence on digital platforms and social networks.', 
+      items: ['Official website', 'Social networks', 'Newsletters', 'Webinars'] 
+    }, 'en');
+
+    // Add default media types for English
+    this.addMediaType({ 
+      icon: '🎤', 
+      title: 'Interviews and Statements', 
+      description: 'Exclusive interviews with the Director General and ANRSI experts on scientific and technological issues.', 
+      items: ['Television interviews', 'Official statements', 'Press briefings', 'Press conferences'] 
+    }, 'en');
+    this.addMediaType({ 
+      icon: '📊', 
+      title: 'Reports and Documentaries', 
+      description: 'In-depth reports on research projects, technological innovations and development initiatives.', 
+      items: ['Field reports', 'Scientific documentaries', 'Special programs', 'Expert profiles'] 
+    }, 'en');
+    this.addMediaType({ 
+      icon: '📝', 
+      title: 'Articles and Publications', 
+      description: 'In-depth articles, editorials and publications in national and international media.', 
+      items: ['Opinion articles', 'Editorials', 'Scientific publications', 'Press releases'] 
+    }, 'en');
+    this.addMediaType({ 
+      icon: '🎥', 
+      title: 'Multimedia Content', 
+      description: 'Production of video, audio and interactive content for digital platforms.', 
+      items: ['Educational videos', 'Scientific podcasts', 'Webinars', 'Interactive content'] 
+    }, 'en');
+
+    // Add default media kit for English
+    this.addMediaKitItem({ 
+      icon: '📸', 
+      title: 'Photos and Images', 
+      description: 'High-resolution image bank of ANRSI facilities, equipment and events.', 
+      link: '#' 
+    }, 'en');
+    this.addMediaKitItem({ 
+      icon: '🎥', 
+      title: 'Videos and B-Roll', 
+      description: 'Presentation videos, interviews and B-roll footage for television reports.', 
+      link: '#' 
+    }, 'en');
+    this.addMediaKitItem({ 
+      icon: '📄', 
+      title: 'Documents and Fact Sheets', 
+      description: 'Technical sheets, presentations and information documents on programs and projects.', 
+      link: '#' 
+    }, 'en');
+    this.addMediaKitItem({ 
+      icon: '👥', 
+      title: 'Press Contacts', 
+      description: 'List of press contacts and experts available for interviews and comments.', 
+      link: '#' 
+    }, 'en');
+
+    // Add default social media for English
+    this.addSocialPlatform({ icon: '📘', name: 'Facebook', handle: '@ANRSI.Mauritanie', link: '#' }, 'en');
+    this.addSocialPlatform({ icon: '🐦', name: 'Twitter', handle: '@ANRSI_MR', link: '#' }, 'en');
+    this.addSocialPlatform({ icon: '💼', name: 'LinkedIn', handle: 'ANRSI Mauritania', link: '#' }, 'en');
+    this.addSocialPlatform({ icon: '📺', name: 'YouTube', handle: 'ANRSI Mauritania', link: '#' }, 'en');
+
+    // Add default contact info for English
+    this.addContactItem({ icon: 'fas fa-envelope', label: 'Press Email', value: 'presse@anrsi.mr' }, 'en');
+    this.addContactItem({ icon: 'fas fa-phone', label: 'Phone', value: '+222 45 25 44 21' }, 'en');
+    this.addContactItem({ icon: 'fas fa-user', label: 'Press Officer', value: 'Ms. Fatima Mint Ahmed' }, 'en');
+    this.addContactItem({ icon: 'fas fa-clock', label: 'Hours', value: 'Monday - Friday: 8:00 AM - 4:00 PM' }, 'en');
   }
 
   populateForm(content: AgenceMediasContent): void {

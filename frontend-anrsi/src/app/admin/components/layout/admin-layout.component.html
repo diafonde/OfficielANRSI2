@@ -26,6 +26,19 @@
             <span>Pages</span>
           </a>
         </li>
+        <li>
+          <a routerLink="/admin/rapports-annuels" routerLinkActive="active">
+            <i class="fas fa-file-alt"></i>
+            <span>Rapports Annuels</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/admin/texts-juridiques" routerLinkActive="active">
+            <i class="fas fa-file-pdf"></i>
+            <span>Texts Juridiques</span>
+          </a>
+        </li>
+        <li>
         <li *ngIf="isAdmin()">
           <a routerLink="/admin/users" routerLinkActive="active">
             <i class="fas fa-users"></i>

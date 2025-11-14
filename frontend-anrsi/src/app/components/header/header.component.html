@@ -15,12 +15,14 @@
         <li class="dropdown" [class.open]="dropdownOpen === 'presentation'" (mouseenter)="dropdownOpen = 'presentation'" (mouseleave)="dropdownOpen = null">
           <a href="#" (click)="togglePresentationDropdown(); $event.preventDefault()">{{ 'Présentation' | translate }} <span class="arrow">▼</span></a>
           <div class="dropdown-menu">
-            <a routerLink="/missions" routerLinkActive="active" (click)="closeMobileMenu(); dropdownOpen = null">{{ 'Missions' | translate }}</a>
+            
             <a routerLink="/objectives" routerLinkActive="active" (click)="closeMobileMenu(); dropdownOpen = null">{{ 'Objectifs' | translate }}</a>
             <a routerLink="/strategic-vision" routerLinkActive="active" (click)="closeMobileMenu(); dropdownOpen = null">{{ 'Vision Stratégique' | translate }}</a>
             <a routerLink="/organigramme" routerLinkActive="active" (click)="closeMobileMenu(); dropdownOpen = null">{{ 'Organigramme' | translate }}</a>
             <a routerLink="/conseil-administration" routerLinkActive="active" (click)="closeMobileMenu(); dropdownOpen = null">{{ 'Conseil d\'Administration' | translate }}</a>
             <a routerLink="/priorites-recherche-2026" routerLinkActive="active" (click)="closeMobileMenu(); dropdownOpen = null">{{ 'Priorités Recherche 2026' | translate }}</a>
+            <a routerLink="/rapports-annuels" routerLinkActive="active" (click)="closeMobileMenu(); dropdownOpen = null">{{ 'Rapports Annuels' | translate }}</a>
+            <a routerLink="/texts-juridiques" routerLinkActive="active" (click)="closeMobileMenu(); dropdownOpen = null">{{ 'Texts Juridiques' | translate }}</a>
           </div>
         </li>
         <li><a routerLink="/videos" routerLinkActive="active" (click)="closeMobileMenu()">{{ 'Media' | translate }}</a></li>

@@ -1,0 +1,98 @@
+<div class="admin-rapports-annuels-form">
+  <div class="form-header">
+    <h1>Modifier la page Rapports Annuels</h1>
+    <button (click)="onCancel()" class="btn btn-secondary">
+      <i class="fas fa-times"></i> Annuler
+    </button>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <i class="fas fa-spinner fa-spin"></i> Chargement...
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+    <!-- Hero Section -->
+    <div class="form-section">
+      <h2>Section Hero</h2>
+      <div class="form-group">
+        <label>Titre Hero *</label>
+        <input type="text" formControlName="heroTitle" class="form-control" />
+      </div>
+      <div class="form-group">
+        <label>Sous-titre Hero *</label>
+        <input type="text" formControlName="heroSubtitle" class="form-control" />
+      </div>
+    </div>
+
+    <!-- Content Section -->
+    <div class="form-section">
+      <h2>Section Contenu</h2>
+      <div class="form-group">
+        <label>Titre de la section *</label>
+        <input type="text" formControlName="sectionTitle" class="form-control" />
+      </div>
+    </div>
+
+    <!-- Rapports Section -->
+    <div class="form-section">
+      <h2>Rapports Annuels</h2>
+      <div formArrayName="rapports" *ngFor="let rapport of rapports.controls; let i = index">
+        <div [formGroupName]="i" class="nested-form-group">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Année *</label>
+              <input type="text" formControlName="year" class="form-control" placeholder="2023" />
+            </div>
+            <div class="form-group">
+              <label>Titre *</label>
+              <input type="text" formControlName="title" class="form-control" placeholder="Rapport 2023" />
+            </div>
+            <button type="button" (click)="removeRapport(i)" class="btn btn-danger btn-sm">
+              <i class="fas fa-trash"></i> Supprimer
+            </button>
+          </div>
+          <div class="form-group">
+            <label>Fichier PDF</label>
+            <div class="file-upload-container">
+              <input
+                type="file"
+                [id]="'file-' + i"
+                accept=".pdf,.doc,.docx"
+                (change)="onFileSelected($event, i)"
+                class="file-input"
+              >
+              <div class="file-upload-info" *ngIf="rapport.get('downloadUrl')?.value">
+                <i class="fas fa-file-pdf"></i>
+                <span>Fichier: {{ rapport.get('downloadUrl')?.value | slice:rapport.get('downloadUrl')?.value.lastIndexOf('/')+1 }}</span>
+                <a [href]="rapport.get('downloadUrl')?.value" target="_blank" class="btn btn-sm btn-link">
+                  <i class="fas fa-external-link-alt"></i> Voir
+                </a>
+              </div>
+              <div class="file-upload-placeholder" *ngIf="!rapport.get('downloadUrl')?.value">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <span>Cliquez pour télécharger un fichier PDF</span>
+                <small>PDF, DOC, DOCX jusqu'à 50MB</small>
+              </div>
+            </div>
+            <input type="hidden" formControlName="downloadUrl" />
+          </div>
+        </div>
+      </div>
+      <button type="button" (click)="addRapport()" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Ajouter un rapport
+      </button>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" (click)="onCancel()" class="btn btn-secondary">Annuler</button>
+      <button type="submit" class="btn btn-primary" [disabled]="isSaving || form.invalid">
+        <i class="fas fa-save"></i> {{ isSaving ? 'Enregistrement...' : 'Enregistrer les modifications' }}
+      </button>
+    </div>
+  </form>
+</div>
+

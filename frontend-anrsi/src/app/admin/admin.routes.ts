@@ -23,6 +23,8 @@ import { AdminStrategicVisionFormComponent } from './components/strategic-vision
 import { AdminOrganigrammeFormComponent } from './components/organigramme/admin-organigramme-form.component';
 import { AdminConseilAdministrationFormComponent } from './components/conseil-administration/admin-conseil-administration-form.component';
 import { AdminPrioritesRecherche2026FormComponent } from './components/priorites-recherche-2026/admin-priorites-recherche-2026-form.component';
+import { AdminRapportsAnnuelsFormComponent } from './components/rapports-annuels/admin-rapports-annuels-form.component';
+import { AdminTextsJuridiquesFormComponent } from './components/texts-juridiques/admin-texts-juridiques-form.component';
 
 
 
@@ -135,6 +137,14 @@ export const adminRoutes: Routes = [
           {
             path: 'priorites-recherche-2026',
             component: AdminPrioritesRecherche2026FormComponent
+          },
+          {
+            path: 'rapports-annuels',
+            component: AdminRapportsAnnuelsFormComponent
+          },
+          {
+            path: 'texts-juridiques',
+            component: AdminTextsJuridiquesFormComponent
           }
         ]
       }
