@@ -1,8 +1,8 @@
 <div class="admin-expert-anrsi-form">
   <div class="form-header">
-    <h1>Edit Expert ANRSI Page</h1>
+    <h1>{{ getLabel('editPage') }}</h1>
     <button (click)="onCancel()" class="btn btn-secondary">
-      <i class="fas fa-times"></i> Cancel
+      <i class="fas fa-times"></i> {{ getLabel('cancel') }}
     </button>
   </div>
 
@@ -11,186 +11,231 @@
   </div>
 
   <div *ngIf="isLoading" class="loading">
-    <i class="fas fa-spinner fa-spin"></i> Loading...
+    <i class="fas fa-spinner fa-spin"></i> {{ getLabel('loading') }}
   </div>
 
   <form [formGroup]="form" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+    <!-- Language Tabs -->
+    <div class="language-tabs">
+      <button
+        *ngFor="let lang of languages"
+        type="button"
+        class="lang-tab"
+        [class.active]="activeLanguage === lang.code"
+        [class.has-content]="hasTranslation(lang.code)"
+        [class.valid]="isLanguageFormValid(lang.code)"
+        (click)="switchLanguage(lang.code)">
+        <span class="lang-flag">{{ lang.flag }}</span>
+        <span class="lang-name">{{ lang.name }}</span>
+        <span class="lang-status">
+          <i *ngIf="isLanguageFormValid(lang.code)" class="fas fa-check-circle"></i>
+          <i *ngIf="!isLanguageFormValid(lang.code) && hasTranslation(lang.code)" class="fas fa-exclamation-circle"></i>
+        </span>
+      </button>
+    </div>
     <!-- Hero Section -->
     <div class="form-section">
-      <h2>Hero Section</h2>
-      <div class="form-group">
-        <label>Hero Title *</label>
-        <input type="text" formControlName="heroTitle" class="form-control" />
-      </div>
-      <div class="form-group">
-        <label>Hero Subtitle *</label>
-        <input type="text" formControlName="heroSubtitle" class="form-control" />
+      <h2>{{ getLabel('heroSection') }} - {{ getActiveLanguageName() }}</h2>
+      <div [formGroup]="getActiveLanguageFormGroup()">
+        <div class="form-group">
+          <label>{{ getLabel('heroTitle') }}</label>
+          <input type="text" formControlName="heroTitle" class="form-control" />
+        </div>
+        <div class="form-group">
+          <label>{{ getLabel('heroSubtitle') }}</label>
+          <input type="text" formControlName="heroSubtitle" class="form-control" />
+        </div>
       </div>
     </div>
 
     <!-- Intro Text -->
     <div class="form-section">
-      <h2>Introduction</h2>
-      <div class="form-group">
-        <label>Intro Text *</label>
-        <textarea formControlName="introText" class="form-control" rows="4"></textarea>
+      <h2>{{ getLabel('introSection') }} - {{ getActiveLanguageName() }}</h2>
+      <div [formGroup]="getActiveLanguageFormGroup()">
+        <div class="form-group">
+          <label>{{ getLabel('introText') }}</label>
+          <textarea formControlName="introText" class="form-control" rows="4"></textarea>
+        </div>
       </div>
     </div>
 
     <!-- Requirements -->
     <div class="form-section">
-      <h2>Profil Requis (Requirements)</h2>
-      <div formArrayName="requirements" *ngFor="let requirement of requirements.controls; let i = index">
-        <div [formGroupName]="i" class="nested-form-group">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Icon</label>
-              <input type="text" formControlName="icon" class="form-control" placeholder="🎓" />
-            </div>
-            <div class="form-group">
-              <label>Title *</label>
-              <input type="text" formControlName="title" class="form-control" />
-            </div>
-            <button type="button" (click)="removeRequirement(i)" class="btn btn-danger btn-sm">Remove</button>
-          </div>
-          <div class="form-group">
-            <label>Items</label>
-            <div formArrayName="items" *ngFor="let itemCtrl of getRequirementItems(i).controls; let j = index">
-              <div class="form-row">
-                <input type="text" [formControlName]="j" class="form-control" />
-                <button type="button" (click)="removeRequirementItem(i, j)" class="btn btn-danger btn-sm">Remove</button>
+      <h2>{{ getLabel('requirementsSection') }} - {{ getActiveLanguageName() }}</h2>
+      <div [formGroup]="getActiveLanguageFormGroup()">
+        <div formArrayName="requirements" *ngFor="let requirement of requirements.controls; let i = index">
+          <div [formGroupName]="i" class="nested-form-group">
+            <div class="form-row">
+              <div class="form-group">
+                <label>{{ getLabel('icon') }}</label>
+                <input type="text" formControlName="icon" class="form-control" placeholder="🎓" />
               </div>
+              <div class="form-group">
+                <label>{{ getLabel('title') }}</label>
+                <input type="text" formControlName="title" class="form-control" />
+              </div>
+              <button type="button" (click)="removeRequirement(i)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
             </div>
-            <button type="button" (click)="addRequirementItem(i)" class="btn btn-secondary btn-sm">Add Item</button>
+            <div class="form-group">
+              <label>{{ getLabel('items') }}</label>
+              <div formArrayName="items" *ngFor="let itemCtrl of getRequirementItems(i).controls; let j = index">
+                <div class="form-row">
+                  <input type="text" [formControlName]="j" class="form-control" />
+                  <button type="button" (click)="removeRequirementItem(i, j)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
+                </div>
+              </div>
+              <button type="button" (click)="addRequirementItem(i)" class="btn btn-secondary btn-sm">{{ getLabel('addItem') }}</button>
+            </div>
           </div>
         </div>
+        <button type="button" (click)="addRequirement()" class="btn btn-primary">{{ getLabel('addRequirement') }}</button>
       </div>
-      <button type="button" (click)="addRequirement()" class="btn btn-primary">Add Requirement</button>
     </div>
 
     <!-- Domains -->
     <div class="form-section">
-      <h2>Domaines d'Expertise</h2>
-      <div formArrayName="domains" *ngFor="let domain of domains.controls; let i = index">
-        <div [formGroupName]="i" class="nested-form-group">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Icon</label>
-              <input type="text" formControlName="icon" class="form-control" placeholder="🔬" />
+      <h2>{{ getLabel('domainsSection') }} - {{ getActiveLanguageName() }}</h2>
+      <div [formGroup]="getActiveLanguageFormGroup()">
+        <div formArrayName="domains" *ngFor="let domain of domains.controls; let i = index">
+          <div [formGroupName]="i" class="nested-form-group">
+            <div class="form-row">
+              <div class="form-group">
+                <label>{{ getLabel('icon') }}</label>
+                <input type="text" formControlName="icon" class="form-control" placeholder="🔬" />
+              </div>
+              <div class="form-group">
+                <label>{{ getLabel('title') }}</label>
+                <input type="text" formControlName="title" class="form-control" />
+              </div>
+              <button type="button" (click)="removeDomain(i)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
             </div>
             <div class="form-group">
-              <label>Title *</label>
-              <input type="text" formControlName="title" class="form-control" />
+              <label>{{ getLabel('description') }}</label>
+              <input type="text" formControlName="description" class="form-control" />
             </div>
-            <button type="button" (click)="removeDomain(i)" class="btn btn-danger btn-sm">Remove</button>
-          </div>
-          <div class="form-group">
-            <label>Description *</label>
-            <input type="text" formControlName="description" class="form-control" />
           </div>
         </div>
+        <button type="button" (click)="addDomain()" class="btn btn-primary">{{ getLabel('addDomain') }}</button>
       </div>
-      <button type="button" (click)="addDomain()" class="btn btn-primary">Add Domain</button>
     </div>
 
     <!-- Process Steps -->
     <div class="form-section">
-      <h2>Processus de Recrutement</h2>
-      <div formArrayName="processSteps" *ngFor="let step of processSteps.controls; let i = index">
-        <div [formGroupName]="i" class="nested-form-group">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Step Number *</label>
-              <input type="number" formControlName="number" class="form-control" />
+      <h2>{{ getLabel('processStepsSection') }} - {{ getActiveLanguageName() }}</h2>
+      <div [formGroup]="getActiveLanguageFormGroup()">
+        <div formArrayName="processSteps" *ngFor="let step of processSteps.controls; let i = index">
+          <div [formGroupName]="i" class="nested-form-group">
+            <div class="form-row">
+              <div class="form-group">
+                <label>{{ getLabel('stepNumber') }}</label>
+                <input type="number" formControlName="number" class="form-control" />
+              </div>
+              <div class="form-group">
+                <label>{{ getLabel('title') }}</label>
+                <input type="text" formControlName="title" class="form-control" />
+              </div>
+              <button type="button" (click)="removeProcessStep(i)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
             </div>
             <div class="form-group">
-              <label>Title *</label>
-              <input type="text" formControlName="title" class="form-control" />
+              <label>{{ getLabel('description') }}</label>
+              <textarea formControlName="description" class="form-control" rows="2"></textarea>
             </div>
-            <button type="button" (click)="removeProcessStep(i)" class="btn btn-danger btn-sm">Remove</button>
-          </div>
-          <div class="form-group">
-            <label>Description *</label>
-            <textarea formControlName="description" class="form-control" rows="2"></textarea>
           </div>
         </div>
+        <button type="button" (click)="addProcessStep()" class="btn btn-primary">{{ getLabel('addProcessStep') }}</button>
       </div>
-      <button type="button" (click)="addProcessStep()" class="btn btn-primary">Add Process Step</button>
     </div>
 
     <!-- Benefits -->
     <div class="form-section">
-      <h2>Avantages d'être Expert ANRSI</h2>
-      <div formArrayName="benefits" *ngFor="let benefit of benefits.controls; let i = index">
-        <div [formGroupName]="i" class="nested-form-group">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Icon</label>
-              <input type="text" formControlName="icon" class="form-control" placeholder="💼" />
+      <h2>{{ getLabel('benefitsSection') }} - {{ getActiveLanguageName() }}</h2>
+      <div [formGroup]="getActiveLanguageFormGroup()">
+        <div formArrayName="benefits" *ngFor="let benefit of benefits.controls; let i = index">
+          <div [formGroupName]="i" class="nested-form-group">
+            <div class="form-row">
+              <div class="form-group">
+                <label>{{ getLabel('icon') }}</label>
+                <input type="text" formControlName="icon" class="form-control" placeholder="💼" />
+              </div>
+              <div class="form-group">
+                <label>{{ getLabel('title') }}</label>
+                <input type="text" formControlName="title" class="form-control" />
+              </div>
+              <button type="button" (click)="removeBenefit(i)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
             </div>
             <div class="form-group">
-              <label>Title *</label>
-              <input type="text" formControlName="title" class="form-control" />
+              <label>{{ getLabel('description') }}</label>
+              <textarea formControlName="description" class="form-control" rows="2"></textarea>
             </div>
-            <button type="button" (click)="removeBenefit(i)" class="btn btn-danger btn-sm">Remove</button>
-          </div>
-          <div class="form-group">
-            <label>Description *</label>
-            <textarea formControlName="description" class="form-control" rows="2"></textarea>
           </div>
         </div>
+        <button type="button" (click)="addBenefit()" class="btn btn-primary">{{ getLabel('addBenefit') }}</button>
       </div>
-      <button type="button" (click)="addBenefit()" class="btn btn-primary">Add Benefit</button>
     </div>
 
     <!-- Application Section -->
     <div class="form-section">
-      <h2>Comment Postuler</h2>
-      <div class="form-group">
-        <label>Application Text *</label>
-        <textarea formControlName="applicationText" class="form-control" rows="2"></textarea>
-      </div>
-      <div class="form-group">
-        <label>Contact Information</label>
-        <div formArrayName="contactInfo" *ngFor="let item of contactInfo.controls; let i = index">
-          <div [formGroupName]="i" class="nested-form-group">
+      <h2>{{ getLabel('applicationSection') }} - {{ getActiveLanguageName() }}</h2>
+      <div [formGroup]="getActiveLanguageFormGroup()">
+        <div class="form-group">
+          <label>{{ getLabel('applicationText') }}</label>
+          <textarea formControlName="applicationText" class="form-control" rows="2"></textarea>
+        </div>
+        <div class="form-group">
+          <label>{{ getLabel('contactInformation') }}</label>
+          <div formArrayName="contactInfo" *ngFor="let item of contactInfo.controls; let i = index">
+            <div [formGroupName]="i" class="nested-form-group">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>{{ getLabel('iconFontAwesome') }}</label>
+                  <input type="text" formControlName="icon" class="form-control" placeholder="fas fa-envelope" />
+                </div>
+                <div class="form-group">
+                  <label>{{ getLabel('label') }}</label>
+                  <input type="text" formControlName="label" class="form-control" />
+                </div>
+                <button type="button" (click)="removeContactItem(i)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
+              </div>
+              <div class="form-group">
+                <label>{{ getLabel('value') }}</label>
+                <input type="text" formControlName="value" class="form-control" />
+              </div>
+            </div>
+          </div>
+          <button type="button" (click)="addContactItem()" class="btn btn-primary">{{ getLabel('addContactItem') }}</button>
+        </div>
+        <div class="form-group">
+          <label>{{ getLabel('requiredDocuments') }}</label>
+          <div formArrayName="requiredDocuments" *ngFor="let doc of requiredDocuments.controls; let i = index">
             <div class="form-row">
-              <div class="form-group">
-                <label>Icon (FontAwesome class) *</label>
-                <input type="text" formControlName="icon" class="form-control" placeholder="fas fa-envelope" />
-              </div>
-              <div class="form-group">
-                <label>Label *</label>
-                <input type="text" formControlName="label" class="form-control" />
-              </div>
-              <button type="button" (click)="removeContactItem(i)" class="btn btn-danger btn-sm">Remove</button>
-            </div>
-            <div class="form-group">
-              <label>Value *</label>
-              <input type="text" formControlName="value" class="form-control" />
+              <input type="text" [formControlName]="i" class="form-control" />
+              <button type="button" (click)="removeRequiredDocument(i)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
             </div>
           </div>
+          <button type="button" (click)="addRequiredDocument()" class="btn btn-primary">{{ getLabel('addRequiredDocument') }}</button>
         </div>
-        <button type="button" (click)="addContactItem()" class="btn btn-primary">Add Contact Item</button>
-      </div>
-      <div class="form-group">
-        <label>Required Documents</label>
-        <div formArrayName="requiredDocuments" *ngFor="let doc of requiredDocuments.controls; let i = index">
-          <div class="form-row">
-            <input type="text" [formControlName]="i" class="form-control" />
-            <button type="button" (click)="removeRequiredDocument(i)" class="btn btn-danger btn-sm">Remove</button>
-          </div>
-        </div>
-        <button type="button" (click)="addRequiredDocument()" class="btn btn-primary">Add Required Document</button>
       </div>
     </div>
 
     <div class="form-actions">
-      <button type="button" (click)="onCancel()" class="btn btn-secondary">Cancel</button>
-      <button type="submit" class="btn btn-primary" [disabled]="form.invalid || isSaving">
-        <i class="fas fa-save"></i> {{ isSaving ? 'Saving...' : 'Save Changes' }}
-      </button>
+      <div class="translation-summary">
+        <div class="summary-item" *ngFor="let lang of languages">
+          <span class="lang-flag">{{ lang.flag }}</span>
+          <span class="lang-name">{{ lang.name }}:</span>
+          <span [class]="'status ' + (isLanguageFormValid(lang.code) ? 'complete' : 'incomplete')">
+            {{ isLanguageFormValid(lang.code) ? getLabel('complete') : getLabel('incomplete') }}
+          </span>
+        </div>
+      </div>
+      <div class="action-buttons">
+        <button type="button" (click)="onCancel()" class="btn btn-secondary">{{ getLabel('cancel') }}</button>
+        <button type="submit" class="btn btn-primary" [disabled]="isSaving">
+          <i class="fas fa-save"></i> {{ isSaving ? getLabel('saving') : getLabel('saveChanges') }}
+        </button>
+      </div>
     </div>
   </form>
 </div>
+
+
 

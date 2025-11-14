@@ -52,19 +52,6 @@
 </section>
 
 
-<section id="featured" class="featured-sections" data-aos="fade-up-right">
-  <div class="container">
-    <h2 class="section-title">{{ 'Recherches mises en avant' | translate }}</h2>
-    <div class="grid grid-4">
-      <app-article-card 
-        *ngFor="let article of featuredArticles" 
-        [article]="article" 
-        [isFeatured]="true">
-      </app-article-card>
-    </div>
-  </div>
-</section>
-
 <section id="videotheque" class="section videotheque-section" data-aos="fade-up">
   <div class="videotheque-container">
     <h2 class="videotheque-title">{{ 'VIDÉOTHÈQUE' | translate }}</h2>

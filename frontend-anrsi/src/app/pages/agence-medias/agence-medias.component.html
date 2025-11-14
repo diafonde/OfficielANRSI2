@@ -1,0 +1,134 @@
+<div class="medias-hero">
+  <div class="container">
+    <h1>{{ content?.heroTitle || 'ANRSI dans les Médias' }}</h1>
+    <p>{{ content?.heroSubtitle || 'Actualités, publications et visibilité médiatique' }}</p>
+  </div>
+  <div class="hero-overlay"></div>
+</div>
+
+<div class="container" *ngIf="isLoading">
+  <div class="loading-container">
+    <div class="loading">Loading...</div>
+  </div>
+</div>
+
+<div class="container" *ngIf="!isLoading && content">
+  <section class="section medias-section">
+    <div class="medias-content">
+      <h2>Présence Médias de l'ANRSI</h2>
+      <p class="intro-text">{{ content.introText }}</p>
+      
+      <div class="medias-overview" *ngIf="content.mediaOverview && content.mediaOverview.length > 0">
+        <div class="overview-item" *ngFor="let item of content.mediaOverview">
+          <div class="overview-icon">{{ item.icon }}</div>
+          <div class="overview-content">
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.description }}</p>
+            <ul>
+              <li *ngFor="let listItem of item.items">{{ listItem }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <div class="recent-coverage" *ngIf="content.recentCoverage && content.recentCoverage.length > 0">
+        <h3>Couverture Médias Récente</h3>
+        <div class="coverage-timeline">
+          <div class="coverage-item" *ngFor="let item of content.recentCoverage">
+            <div class="coverage-date">{{ item.date }}</div>
+            <div class="coverage-content">
+              <h4>{{ item.title }}</h4>
+              <p class="coverage-description">{{ item.description }}</p>
+              <div class="coverage-media" *ngIf="item.mediaOutlets && item.mediaOutlets.length > 0">
+                <div class="media-outlet" *ngFor="let outlet of item.mediaOutlets">
+                  <span class="media-type">{{ outlet.type }}</span>
+                  <span class="media-name">{{ outlet.name }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="media-types" *ngIf="content.mediaTypes && content.mediaTypes.length > 0">
+        <h3>Types de Couverture Médias</h3>
+        <div class="types-grid">
+          <div class="type-item" *ngFor="let item of content.mediaTypes">
+            <div class="type-icon">{{ item.icon }}</div>
+            <div class="type-content">
+              <h4>{{ item.title }}</h4>
+              <p>{{ item.description }}</p>
+              <ul>
+                <li *ngFor="let listItem of item.items">{{ listItem }}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="press-releases" *ngIf="content.pressReleases && content.pressReleases.length > 0">
+        <h3>Communiqués de Presse</h3>
+        <div class="releases-list">
+          <div class="release-item" *ngFor="let release of content.pressReleases">
+            <div class="release-date">{{ release.date }}</div>
+            <div class="release-content">
+              <h4>{{ release.title }}</h4>
+              <p>{{ release.description }}</p>
+              <a [href]="release.link || '#'" class="release-link" *ngIf="release.link">Lire le communiqué complet</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="media-kit" *ngIf="content.mediaKit && content.mediaKit.length > 0">
+        <h3>Kit Médias</h3>
+        <div class="kit-content">
+          <p>L'ANRSI met à disposition des médias un kit complet pour faciliter la couverture de ses activités :</p>
+          
+          <div class="kit-items">
+            <div class="kit-item" *ngFor="let item of content.mediaKit">
+              <div class="kit-icon">{{ item.icon }}</div>
+              <div class="kit-details">
+                <h4>{{ item.title }}</h4>
+                <p>{{ item.description }}</p>
+                <a [href]="item.link || '#'" class="kit-link" *ngIf="item.link">Voir plus</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="social-media" *ngIf="content.socialMedia && content.socialMedia.length > 0">
+        <h3>Réseaux Sociaux</h3>
+        <div class="social-content">
+          <p>Suivez l'ANRSI sur les réseaux sociaux pour les dernières actualités et informations :</p>
+          
+          <div class="social-platforms">
+            <div class="platform-item" *ngFor="let platform of content.socialMedia">
+              <div class="platform-icon">{{ platform.icon }}</div>
+              <div class="platform-info">
+                <h4>{{ platform.name }}</h4>
+                <p>{{ platform.handle }}</p>
+                <a [href]="platform.link || '#'" class="platform-link" *ngIf="platform.link">Suivre</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="contact-section" *ngIf="content.contactInfo && content.contactInfo.length > 0">
+        <h3>Contact Presse</h3>
+        <div class="contact-info">
+          <div class="contact-item" *ngFor="let contact of content.contactInfo">
+            <i [class]="contact.icon"></i>
+            <div class="contact-details">
+              <h4>{{ contact.label }}</h4>
+              <p>{{ contact.value }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+

@@ -190,3 +190,5 @@ Set these environment variables in production:
 
 All endpoints are functional, secured with JWT authentication, and include proper error handling and validation.
 
+
+

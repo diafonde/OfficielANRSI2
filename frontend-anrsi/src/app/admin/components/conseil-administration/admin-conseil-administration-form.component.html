@@ -1,8 +1,8 @@
 <div class="admin-conseil-administration-form">
   <div class="form-header">
-    <h1>Edit Conseil d'Administration Page</h1>
+    <h1>{{ getLabel('editPage') }}</h1>
     <button (click)="onCancel()" class="btn btn-secondary">
-      <i class="fas fa-times"></i> Cancel
+      <i class="fas fa-times"></i> {{ getLabel('cancel') }}
     </button>
   </div>
 
@@ -11,68 +11,105 @@
   </div>
 
   <div *ngIf="isLoading" class="loading">
-    <i class="fas fa-spinner fa-spin"></i> Loading...
+    <i class="fas fa-spinner fa-spin"></i> {{ getLabel('loading') }}
   </div>
 
   <form [formGroup]="form" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+    <!-- Language Tabs -->
+    <div class="language-tabs">
+      <button
+        *ngFor="let lang of languages"
+        type="button"
+        class="lang-tab"
+        [class.active]="activeLanguage === lang.code"
+        [class.has-content]="hasTranslation(lang.code)"
+        [class.valid]="isLanguageFormValid(lang.code)"
+        (click)="switchLanguage(lang.code)">
+        <span class="lang-flag">{{ lang.flag }}</span>
+        <span class="lang-name">{{ lang.name }}</span>
+        <span class="lang-status">
+          <i *ngIf="isLanguageFormValid(lang.code)" class="fas fa-check-circle"></i>
+          <i *ngIf="!isLanguageFormValid(lang.code) && hasTranslation(lang.code)" class="fas fa-exclamation-circle"></i>
+        </span>
+      </button>
+    </div>
     <!-- Hero Section -->
     <div class="form-section">
-      <h2>Hero Section</h2>
-      <div class="form-group">
-        <label>Hero Title *</label>
-        <input type="text" formControlName="heroTitle" class="form-control" />
-      </div>
-      <div class="form-group">
-        <label>Hero Subtitle *</label>
-        <input type="text" formControlName="heroSubtitle" class="form-control" />
+      <h2>{{ getLabel('heroSection') }} - {{ getActiveLanguageName() }}</h2>
+      <div [formGroup]="getActiveLanguageFormGroup()">
+        <div class="form-group">
+          <label>{{ getLabel('heroTitle') }}</label>
+          <input type="text" formControlName="heroTitle" class="form-control" />
+        </div>
+        <div class="form-group">
+          <label>{{ getLabel('heroSubtitle') }}</label>
+          <input type="text" formControlName="heroSubtitle" class="form-control" />
+        </div>
       </div>
     </div>
 
     <!-- Content Section -->
     <div class="form-section">
-      <h2>Content Section</h2>
-      <div class="form-group">
-        <label>Section Title *</label>
-        <input type="text" formControlName="sectionTitle" class="form-control" />
-      </div>
-      <div class="form-group">
-        <label>Intro Text *</label>
-        <textarea formControlName="introText" class="form-control" rows="3"></textarea>
-      </div>
-      <div class="form-group">
-        <label>Update Date *</label>
-        <input type="text" formControlName="updateDate" class="form-control" placeholder="11 Novembre 2021" />
-        <small class="form-help">Date format: e.g., "11 Novembre 2021"</small>
+      <h2>{{ getLabel('contentSection') }} - {{ getActiveLanguageName() }}</h2>
+      <div [formGroup]="getActiveLanguageFormGroup()">
+        <div class="form-group">
+          <label>{{ getLabel('sectionTitle') }}</label>
+          <input type="text" formControlName="sectionTitle" class="form-control" />
+        </div>
+        <div class="form-group">
+          <label>{{ getLabel('introText') }}</label>
+          <textarea formControlName="introText" class="form-control" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label>{{ getLabel('updateDate') }}</label>
+          <input type="text" formControlName="updateDate" class="form-control" placeholder="11 Novembre 2021" />
+          <small class="form-help">Date format: e.g., "11 Novembre 2021"</small>
+        </div>
       </div>
     </div>
 
     <!-- Board Members Section -->
     <div class="form-section">
-      <h2>Board Members</h2>
-      <div formArrayName="boardMembers" *ngFor="let member of boardMembers.controls; let i = index">
-        <div [formGroupName]="i" class="nested-form-group">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Name *</label>
-              <input type="text" formControlName="name" class="form-control" />
+      <h2>{{ getLabel('boardMembers') }} - {{ getActiveLanguageName() }}</h2>
+      <div [formGroup]="getActiveLanguageFormGroup()">
+        <div formArrayName="boardMembers" *ngFor="let member of boardMembers.controls; let i = index">
+          <div [formGroupName]="i" class="nested-form-group">
+            <div class="form-row">
+              <div class="form-group">
+                <label>{{ getLabel('name') }}</label>
+                <input type="text" formControlName="name" class="form-control" />
+              </div>
+              <button type="button" (click)="removeBoardMember(i)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
             </div>
-            <button type="button" (click)="removeBoardMember(i)" class="btn btn-danger btn-sm">Remove</button>
-          </div>
-          <div class="form-group">
-            <label>Position *</label>
-            <input type="text" formControlName="position" class="form-control" />
+            <div class="form-group">
+              <label>{{ getLabel('position') }}</label>
+              <input type="text" formControlName="position" class="form-control" />
+            </div>
           </div>
         </div>
+        <button type="button" (click)="addBoardMember()" class="btn btn-primary">{{ getLabel('addBoardMember') }}</button>
       </div>
-      <button type="button" (click)="addBoardMember()" class="btn btn-primary">Add Board Member</button>
     </div>
 
     <div class="form-actions">
-      <button type="button" (click)="onCancel()" class="btn btn-secondary">Cancel</button>
-      <button type="submit" class="btn btn-primary" [disabled]="form.invalid || isSaving">
-        <i class="fas fa-save"></i> {{ isSaving ? 'Saving...' : 'Save Changes' }}
-      </button>
+      <div class="translation-summary">
+        <div class="summary-item" *ngFor="let lang of languages">
+          <span class="lang-flag">{{ lang.flag }}</span>
+          <span class="lang-name">{{ lang.name }}:</span>
+          <span [class]="'status ' + (isLanguageFormValid(lang.code) ? 'complete' : 'incomplete')">
+            {{ isLanguageFormValid(lang.code) ? getLabel('complete') : getLabel('incomplete') }}
+          </span>
+        </div>
+      </div>
+      <div class="action-buttons">
+        <button type="button" (click)="onCancel()" class="btn btn-secondary">{{ getLabel('cancel') }}</button>
+        <button type="submit" class="btn btn-primary" [disabled]="isSaving">
+          <i class="fas fa-save"></i> {{ isSaving ? getLabel('saving') : getLabel('saveChanges') }}
+        </button>
+      </div>
     </div>
   </form>
 </div>
+
+
 

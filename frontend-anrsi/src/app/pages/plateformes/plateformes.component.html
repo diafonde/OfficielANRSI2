@@ -1,0 +1,117 @@
+<div class="plateformes-hero">
+  <div class="container">
+    <h1>{{ content?.heroTitle || 'Plateformes' }}</h1>
+    <p>{{ content?.heroSubtitle || 'Outils et technologies pour la recherche et l\'innovation' }}</p>
+  </div>
+  <div class="hero-overlay"></div>
+</div>
+
+<div class="container" *ngIf="isLoading">
+  <div class="loading-container">
+    <div class="loading">Loading...</div>
+  </div>
+</div>
+
+<div class="container" *ngIf="!isLoading && content">
+  <section class="section plateformes-section">
+    <div class="plateformes-content">
+      <h2>Plateformes Technologiques ANRSI</h2>
+      <p class="intro-text">{{ content.introText }}</p>
+      
+      <div class="plateformes-grid" *ngIf="content.plateformes && content.plateformes.length > 0">
+        <div class="plateforme-item" *ngFor="let plateforme of content.plateformes">
+          <div class="plateforme-icon">{{ plateforme.icon }}</div>
+          <div class="plateforme-content">
+            <h3>{{ plateforme.title }}</h3>
+            <p class="plateforme-description">{{ plateforme.description }}</p>
+            <div class="plateforme-equipments" *ngIf="plateforme.equipments && plateforme.equipments.length > 0">
+              <h4>Équipements :</h4>
+              <ul>
+                <li *ngFor="let equipment of plateforme.equipments">{{ equipment }}</li>
+              </ul>
+            </div>
+            <div class="plateforme-services" *ngIf="plateforme.services && plateforme.services.length > 0">
+              <h4>Services :</h4>
+              <ul>
+                <li *ngFor="let service of plateforme.services">{{ service }}</li>
+              </ul>
+            </div>
+            <div class="plateforme-contact">
+              <span class="contact-label">Contact :</span>
+              <span class="contact-value">{{ plateforme.contact }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="access-section" *ngIf="content.accessModes && content.accessModes.length > 0">
+        <h3>Accès aux Plateformes</h3>
+        <div class="access-info">
+          <p>Les plateformes ANRSI sont accessibles aux chercheurs, étudiants, et entreprises mauritaniennes selon des modalités spécifiques :</p>
+          
+          <div class="access-modes">
+            <div class="access-mode" *ngFor="let mode of content.accessModes">
+              <div class="mode-icon">{{ mode.icon }}</div>
+              <div class="mode-content">
+                <h4>{{ mode.title }}</h4>
+                <p>{{ mode.description }}</p>
+                <ul>
+                  <li *ngFor="let item of mode.items">{{ item }}</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="booking-section" *ngIf="content.bookingSteps && content.bookingSteps.length > 0">
+        <h3>Réservation et Utilisation</h3>
+        <div class="booking-process">
+          <div class="booking-steps">
+            <div class="booking-step" *ngFor="let step of content.bookingSteps">
+              <div class="step-number">{{ step.number }}</div>
+              <div class="step-content">
+                <h4>{{ step.title }}</h4>
+                <p>{{ step.description }}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="booking-requirements" *ngIf="content.bookingRequirements && content.bookingRequirements.length > 0">
+            <h4>Exigences pour l'Accès :</h4>
+            <ul>
+              <li *ngFor="let requirement of content.bookingRequirements">{{ requirement }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <div class="support-section" *ngIf="content.supportItems && content.supportItems.length > 0">
+        <h3>Support et Formation</h3>
+        <div class="support-services">
+          <div class="support-item" *ngFor="let item of content.supportItems">
+            <div class="support-icon">{{ item.icon }}</div>
+            <div class="support-content">
+              <h4>{{ item.title }}</h4>
+              <p>{{ item.description }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="contact-section" *ngIf="content.contactInfo && content.contactInfo.length > 0">
+        <h3>Contact et Informations</h3>
+        <div class="contact-info">
+          <div class="contact-item" *ngFor="let contact of content.contactInfo">
+            <i [class]="contact.icon"></i>
+            <div class="contact-details">
+              <h4>{{ contact.label }}</h4>
+              <p>{{ contact.value }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+

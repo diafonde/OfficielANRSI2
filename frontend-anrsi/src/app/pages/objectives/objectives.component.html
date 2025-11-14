@@ -1,0 +1,31 @@
+<div class="objectives-hero">
+  <div class="container">
+    <h1>{{ heroTitle || 'Objectifs' }}</h1>
+    <p>{{ heroSubtitle || "Les objectifs stratégiques de l'Agence Nationale de la Recherche Scientifique et de l'Innovation" }}</p>
+  </div>
+  <div class="hero-overlay"></div>
+</div>
+
+<div class="container" *ngIf="isLoading">
+  <div class="loading-container">
+    <div class="loading">Loading...</div>
+  </div>
+</div>
+
+<div class="container" *ngIf="!isLoading">
+  <section class="section objectives-section">
+    <div class="objectives-content">
+      <h2>{{ sectionTitle || 'Nos Objectifs' }}</h2>
+      <div class="objectives-list" *ngIf="objectives && objectives.length > 0">
+        <div class="objective-item" *ngFor="let objective of objectives">
+          <div class="objective-number">{{ objective.number }}</div>
+          <div class="objective-text">
+            <h3>{{ objective.title }}</h3>
+            <p>{{ objective.description }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+

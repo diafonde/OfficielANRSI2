@@ -1,0 +1,48 @@
+<div class="contact-hero">
+  <div class="container">
+    <h1>{{ heroTitle || 'Mediatique' }}</h1>
+    <p>{{ heroSubtitle || 'Get in touch with our research teams and support staff' }}</p>
+  </div>
+  <div class="hero-overlay"></div>
+</div>
+
+<div class="container" *ngIf="isLoading">
+  <div class="loading-container">
+    <div class="loading">Loading...</div>
+  </div>
+</div>
+
+<div class="container" *ngIf="!isLoading">
+  <!-- Container for the image gallery -->
+  <div class="media-sections">
+    <section class="media-block" *ngIf="videos && videos.length > 0">
+      <h2 class="media-title">Vidéos</h2>
+      <div class="media-grid">
+        <div class="media-card" *ngFor="let video of videos">
+          <div class="media-thumb">
+            <iframe
+              [src]="video.url | safe"
+              frameborder="0"
+              allowfullscreen
+              [title]="video.title">
+            </iframe>
+          </div>
+          <div class="media-caption">{{ video.title }}</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="media-block" *ngIf="photos && photos.length > 0">
+      <h2 class="media-title">Photos</h2>
+      <div class="media-grid">
+        <div class="media-card" *ngFor="let photo of photos">
+          <div class="media-thumb">
+            <img [src]="photo.url" [alt]="photo.title || 'Photo'" loading="lazy" />
+          </div>
+          <div class="media-caption">{{ photo.title || 'Photo' }}</div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+

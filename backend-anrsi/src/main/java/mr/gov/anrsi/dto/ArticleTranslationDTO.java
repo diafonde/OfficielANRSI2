@@ -14,3 +14,5 @@ public class ArticleTranslationDTO {
     private String excerpt;
 }
 
+
+

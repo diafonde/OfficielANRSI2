@@ -1,0 +1,128 @@
+<div class="zone-humide-hero">
+  <div class="container">
+    <h1>{{ content?.heroTitle || 'Zone Humide' }}</h1>
+    <p>{{ content?.heroSubtitle || 'Colloque International sur les Zones Humides du Sahel' }}</p>
+  </div>
+  <div class="hero-overlay"></div>
+</div>
+
+<div class="container" *ngIf="isLoading">
+  <div class="loading-container">
+    <div class="loading">Loading...</div>
+  </div>
+</div>
+
+<div class="container" *ngIf="!isLoading && content">
+  <section class="section zone-humide-section">
+    <div class="zone-humide-content">
+      <h2>Colloque International sur les Zones Humides du Sahel</h2>
+      <p class="intro-text">{{ content.introText }}</p>
+      
+      <div class="colloque-overview" *ngIf="content.overview && content.overview.length > 0">
+        <div class="overview-item" *ngFor="let item of content.overview">
+          <div class="overview-icon">{{ item.icon }}</div>
+          <div class="overview-content">
+            <h3>{{ item.title }}</h3>
+            <p *ngFor="let contentItem of item.content"><strong>{{ contentItem.label }}</strong> {{ contentItem.value }}</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="themes-section" *ngIf="content.themes && content.themes.length > 0">
+        <h3>Thématiques du Colloque</h3>
+        <div class="themes-grid">
+          <div class="theme-item" *ngFor="let theme of content.themes">
+            <div class="theme-icon">{{ theme.icon }}</div>
+            <div class="theme-content">
+              <h4>{{ theme.title }}</h4>
+              <ul>
+                <li *ngFor="let item of theme.items">{{ item }}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="programme-section" *ngIf="content.programme && content.programme.length > 0">
+        <h3>Programme du Colloque</h3>
+        <div class="programme-timeline">
+          <div class="programme-day" *ngFor="let day of content.programme">
+            <div class="day-header">
+              <h4>{{ day.date }}</h4>
+              <span class="day-theme">{{ day.theme }}</span>
+            </div>
+            <div class="day-sessions">
+              <div class="session-item" *ngFor="let session of day.sessions">
+                <div class="session-time">{{ session.time }}</div>
+                <div class="session-content">
+                  <h5>{{ session.title }}</h5>
+                  <p>{{ session.description }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="speakers-section" *ngIf="content.speakers && content.speakers.length > 0">
+        <h3>Conférenciers Invités</h3>
+        <div class="speakers-grid">
+          <div class="speaker-item" *ngFor="let speaker of content.speakers">
+            <div class="speaker-avatar">{{ speaker.avatar }}</div>
+            <div class="speaker-info">
+              <h4>{{ speaker.name }}</h4>
+              <p class="speaker-title">{{ speaker.title }}</p>
+              <p class="speaker-bio">{{ speaker.bio }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="registration-section" *ngIf="content.registrationModes && content.registrationModes.length > 0">
+        <h3>Inscription et Participation</h3>
+        <div class="registration-info">
+          <div class="registration-modes">
+            <div class="mode-item" *ngFor="let mode of content.registrationModes">
+              <div class="mode-icon">{{ mode.icon }}</div>
+              <div class="mode-content">
+                <h4>{{ mode.title }}</h4>
+                <p>{{ mode.description }}</p>
+                <ul>
+                  <li *ngFor="let item of mode.items">{{ item }}</li>
+                </ul>
+                <div class="mode-price">{{ mode.price }}</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="registration-process" *ngIf="content.processSteps && content.processSteps.length > 0">
+            <h4>Processus d'Inscription :</h4>
+            <div class="process-steps">
+              <div class="process-step" *ngFor="let step of content.processSteps">
+                <div class="step-number">{{ step.number }}</div>
+                <div class="step-content">
+                  <h5>{{ step.title }}</h5>
+                  <p>{{ step.description }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="contact-section" *ngIf="content.contactInfo && content.contactInfo.length > 0">
+        <h3>Contact et Informations</h3>
+        <div class="contact-info">
+          <div class="contact-item" *ngFor="let contact of content.contactInfo">
+            <i [class]="contact.icon"></i>
+            <div class="contact-details">
+              <h4>{{ contact.label }}</h4>
+              <p>{{ contact.value }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+

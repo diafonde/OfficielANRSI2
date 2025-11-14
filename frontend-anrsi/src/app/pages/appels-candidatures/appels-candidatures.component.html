@@ -1,0 +1,114 @@
+<div class="appels-hero">
+  <div class="container">
+    <h1>{{ content?.heroTitle || 'Appels à Candidatures' }}</h1>
+    <p>{{ content?.heroSubtitle || 'Opportunités de recherche et d\'innovation en Mauritanie' }}</p>
+  </div>
+  <div class="hero-overlay"></div>
+</div>
+
+<div class="container" *ngIf="isLoading">
+  <div class="loading-container">
+    <div class="loading">Loading...</div>
+  </div>
+</div>
+
+<div class="container" *ngIf="!isLoading && content">
+  <section class="section appels-section">
+    <div class="appels-content">
+      <h2>Appels à Candidatures Ouverts</h2>
+      <p class="intro-text">{{ content.introText }}</p>
+      
+      <div class="appels-timeline" *ngIf="content.appels && content.appels.length > 0">
+        <div class="appel-item" *ngFor="let appel of content.appels">
+          <div class="appel-status" [ngClass]="{
+            'active': appel.status === 'active',
+            'upcoming': appel.status === 'upcoming',
+            'closed': appel.status === 'closed'
+          }">
+            {{ appel.status === 'active' ? 'Ouvert' : appel.status === 'upcoming' ? 'Prochainement' : 'Fermé' }}
+          </div>
+          <div class="appel-content">
+            <h3>{{ appel.title }}</h3>
+            <p class="appel-description">{{ appel.description }}</p>
+            <div class="appel-details" *ngIf="appel.details && appel.details.length > 0">
+              <div class="detail-item" *ngFor="let detail of appel.details">
+                <span class="detail-label">{{ detail.label }}</span>
+                <span class="detail-value">{{ detail.value }}</span>
+              </div>
+            </div>
+            <div class="appel-actions" *ngIf="appel.actions && appel.actions.length > 0">
+              <a *ngFor="let action of appel.actions" [href]="action.url" [class]="'btn btn-' + action.type">{{ action.text }}</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="appels-categories" *ngIf="content.categories && content.categories.length > 0">
+        <h3>Domaines Prioritaires</h3>
+        <div class="categories-grid">
+          <div class="category-item" *ngFor="let category of content.categories">
+            <div class="category-icon">{{ category.icon }}</div>
+            <h4>{{ category.title }}</h4>
+            <ul>
+              <li *ngFor="let item of category.items">{{ item }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <div class="application-process" *ngIf="content.processSteps && content.processSteps.length > 0">
+        <h3>Processus de Candidature</h3>
+        <div class="process-steps">
+          <div class="step-item" *ngFor="let step of content.processSteps">
+            <div class="step-number">{{ step.number }}</div>
+            <div class="step-content">
+              <h4>{{ step.title }}</h4>
+              <p>{{ step.description }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="criteria-section" *ngIf="content.criteria && content.criteria.length > 0">
+        <h3>Critères d'Évaluation</h3>
+        <div class="criteria-grid">
+          <div class="criteria-item" *ngFor="let item of content.criteria">
+            <h4>{{ item.icon }} {{ item.title }}</h4>
+            <p>{{ item.description }}</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="support-section" *ngIf="content.supportServices && content.supportServices.length > 0">
+        <h3>Support et Accompagnement</h3>
+        <div class="support-info">
+          <p>L'ANRSI offre un accompagnement complet aux porteurs de projets sélectionnés :</p>
+          
+          <div class="support-services">
+            <div class="service-item" *ngFor="let service of content.supportServices">
+              <div class="service-icon">{{ service.icon }}</div>
+              <div class="service-content">
+                <h4>{{ service.title }}</h4>
+                <p>{{ service.description }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="contact-section" *ngIf="content.contactInfo && content.contactInfo.length > 0">
+        <h3>Contact et Informations</h3>
+        <div class="contact-info">
+          <div class="contact-item" *ngFor="let contact of content.contactInfo">
+            <i [class]="contact.icon"></i>
+            <div class="contact-details">
+              <h4>{{ contact.label }}</h4>
+              <p>{{ contact.value }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+

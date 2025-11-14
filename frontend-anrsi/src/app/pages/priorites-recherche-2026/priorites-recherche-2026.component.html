@@ -1,0 +1,42 @@
+<div class="priorities-hero">
+  <div class="container">
+    <h1>{{ heroTitle || 'LES PRIORITÉS DE LA RECHERCHE À L\'HORIZON 2026' }}</h1>
+    <p>{{ heroSubtitle || "L'ANRSI définit les priorités de la recherche scientifique et de l'innovation pour le développement national" }}</p>
+  </div>
+  <div class="hero-overlay"></div>
+</div>
+
+<div class="container" *ngIf="isLoading">
+  <div class="loading-container">
+    <div class="loading">Loading...</div>
+  </div>
+</div>
+
+<div class="container" *ngIf="!isLoading">
+  <section class="section priorities-section">
+    <div class="priorities-content">
+      <div class="intro-text" *ngIf="introParagraphs && introParagraphs.length > 0">
+        <p *ngFor="let paragraph of introParagraphs">{{ paragraph }}</p>
+      </div>
+      
+      <h2>{{ sectionTitle || ('Les Sept Axes Stratégiques' | translate) }}</h2>
+      
+      <div class="priorities-grid" *ngIf="researchPriorities && researchPriorities.length > 0">
+        <div class="priority-card" *ngFor="let priority of researchPriorities">
+          <div class="priority-icon">
+            <i [class]="priority.icon"></i>
+          </div>
+          <div class="priority-content">
+            <h3>{{ priority.title }}</h3>
+            <p>{{ priority.description }}</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="priorities-date" *ngIf="publicationDate">
+        <p><strong>{{ 'Date de publication' | translate }} :</strong> {{ publicationDate }}</p>
+      </div>
+    </div>
+  </section>
+</div>
+

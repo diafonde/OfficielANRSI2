@@ -22,3 +22,5 @@ public class VideoCreateDTO {
     private String thumbnailUrl;
 }
 
+
+

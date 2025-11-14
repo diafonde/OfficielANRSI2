@@ -1,0 +1,62 @@
+<div class="ai4agri-hero">
+  <div class="container">
+    <h1>{{ displayContent?.heroTitle || 'AI 4 AGRI' }}</h1>
+    <p>{{ displayContent?.heroSubtitle || 'Intelligence Artificielle pour l\'Agriculture de Précision' }}</p>
+  </div>
+  <div class="hero-overlay"></div>
+</div>
+
+<div class="container" *ngIf="isLoading">
+  <div class="loading-container">
+    <div class="loading">{{ 'LOADING' | translate }}</div>
+  </div>
+</div>
+
+<div class="container" *ngIf="!isLoading && displayContent">
+  <section class="section ai4agri-section">
+    <div class="ai4agri-content">
+      <h2>{{ 'WORKSHOPS_TITLE' | translate }}</h2>
+      <p class="intro-text">{{ displayContent.introText }}</p>
+      
+      <div class="workshops-timeline" *ngIf="displayContent.workshops && displayContent.workshops.length > 0">
+        <div class="workshop-item" *ngFor="let workshop of displayContent.workshops">
+          <div class="workshop-date">{{ workshop.date }}</div>
+          <div class="workshop-content">
+            <h3>{{ workshop.title }}</h3>
+            <p>{{ workshop.description }}</p>
+            <div class="workshop-details" *ngIf="workshop.detailsItems && workshop.detailsItems.length > 0">
+              <h4 *ngIf="workshop.detailsTitle">{{ workshop.detailsTitle }}</h4>
+              <ul>
+                <li *ngFor="let item of workshop.detailsItems">{{ item }}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="ai-benefits" *ngIf="displayContent.benefits && displayContent.benefits.length > 0">
+        <h3>{{ 'BENEFITS_TITLE' | translate }}</h3>
+        <div class="benefits-grid">
+          <div class="benefit-item" *ngFor="let benefit of displayContent.benefits">
+            <div class="benefit-icon">{{ benefit.icon }}</div>
+            <h4>{{ benefit.title }}</h4>
+            <p>{{ benefit.description }}</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="partnership-section" *ngIf="displayContent.partnershipHighlights && displayContent.partnershipHighlights.length > 0">
+        <h3>{{ 'PARTNERSHIP_TITLE' | translate }}</h3>
+        <p>{{ displayContent.partnershipText }}</p>
+        
+        <div class="partnership-highlights">
+          <div class="highlight-item" *ngFor="let highlight of displayContent.partnershipHighlights">
+            <h4>{{ highlight.icon }} {{ highlight.title }}</h4>
+            <p>{{ highlight.description }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+

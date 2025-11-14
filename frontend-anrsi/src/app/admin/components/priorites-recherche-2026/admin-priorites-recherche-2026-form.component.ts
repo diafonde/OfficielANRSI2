@@ -11,13 +11,21 @@ interface ResearchPriority {
   icon: string;
 }
 
-interface PrioritesRecherche2026Content {
+interface PrioritesRecherche2026LanguageContent {
   heroTitle: string;
   heroSubtitle: string;
   introParagraphs: string[];
   sectionTitle: string;
   researchPriorities: ResearchPriority[];
   publicationDate: string;
+}
+
+interface PrioritesRecherche2026Content {
+  translations: {
+    fr: PrioritesRecherche2026LanguageContent;
+    ar: PrioritesRecherche2026LanguageContent;
+    en: PrioritesRecherche2026LanguageContent;
+  };
 }
 
 @Component({
@@ -33,6 +41,13 @@ export class AdminPrioritesRecherche2026FormComponent implements OnInit {
   isLoading = false;
   errorMessage = '';
   isSaving = false;
+  activeLanguage: 'fr' | 'ar' | 'en' = 'fr';
+
+  languages = [
+    { code: 'fr', name: 'Français', flag: '🇫🇷' },
+    { code: 'ar', name: 'العربية', flag: '🇲🇷' },
+    { code: 'en', name: 'English', flag: '🇺🇸' }
+  ];
 
   constructor(
     private fb: FormBuilder,
@@ -44,30 +59,77 @@ export class AdminPrioritesRecherche2026FormComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Check for language query parameter
+    this.route.queryParams.subscribe(params => {
+      if (params['lang'] && ['fr', 'ar', 'en'].includes(params['lang'])) {
+        this.activeLanguage = params['lang'] as 'fr' | 'ar' | 'en';
+      }
+    });
     this.loadPage();
   }
 
   createForm(): FormGroup {
     return this.fb.group({
-      heroTitle: ['LES PRIORITÉS DE LA RECHERCHE À L\'HORIZON 2026', Validators.required],
-      heroSubtitle: ['L\'ANRSI définit les priorités de la recherche scientifique et de l\'innovation pour le développement national', Validators.required],
+      translations: this.fb.group({
+        fr: this.createLanguageFormGroup(),
+        ar: this.createLanguageFormGroup(),
+        en: this.createLanguageFormGroup()
+      })
+    });
+  }
+
+  private createLanguageFormGroup(): FormGroup {
+    return this.fb.group({
+      heroTitle: ['', Validators.required],
+      heroSubtitle: ['', Validators.required],
       introParagraphs: this.fb.array([]),
-      sectionTitle: ['Les Sept Axes Stratégiques', Validators.required],
+      sectionTitle: ['', Validators.required],
       researchPriorities: this.fb.array([]),
       publicationDate: ['', Validators.required]
     });
   }
 
-  // Intro Paragraphs FormArray methods
-  get introParagraphs(): FormArray {
-    return this.form.get('introParagraphs') as FormArray;
+  switchLanguage(lang: string): void {
+    if (lang === 'fr' || lang === 'ar' || lang === 'en') {
+      this.activeLanguage = lang as 'fr' | 'ar' | 'en';
+    }
   }
 
-  addIntroParagraph(text?: string): void {
+  getActiveLanguageFormGroup(): FormGroup {
+    return this.form.get(`translations.${this.activeLanguage}`) as FormGroup;
+  }
+
+  getLanguageFormGroup(lang: string): FormGroup {
+    return this.form.get(`translations.${lang}`) as FormGroup;
+  }
+
+  hasTranslation(lang: string): boolean {
+    const langGroup = this.getLanguageFormGroup(lang);
+    return langGroup.get('heroTitle')?.value || langGroup.get('heroSubtitle')?.value || false;
+  }
+
+  isLanguageFormValid(lang: string): boolean {
+    const langGroup = this.getLanguageFormGroup(lang);
+    return langGroup.valid;
+  }
+
+  getActiveLanguageName(): string {
+    const lang = this.languages.find(l => l.code === this.activeLanguage);
+    return lang?.name || 'Français';
+  }
+
+  // Intro Paragraphs FormArray methods
+  get introParagraphs(): FormArray {
+    return this.getActiveLanguageFormGroup().get('introParagraphs') as FormArray;
+  }
+
+  addIntroParagraph(text?: string, lang?: string): void {
+    const langGroup = lang ? this.getLanguageFormGroup(lang) : this.getActiveLanguageFormGroup();
+    const paragraphs = langGroup.get('introParagraphs') as FormArray;
     const group = this.fb.group({
       text: [text || '', Validators.required]
     });
-    this.introParagraphs.push(group);
+    paragraphs.push(group);
   }
 
   removeIntroParagraph(index: number): void {
@@ -76,17 +138,19 @@ export class AdminPrioritesRecherche2026FormComponent implements OnInit {
 
   // Research Priorities FormArray methods
   get researchPriorities(): FormArray {
-    return this.form.get('researchPriorities') as FormArray;
+    return this.getActiveLanguageFormGroup().get('researchPriorities') as FormArray;
   }
 
-  addResearchPriority(priority?: ResearchPriority): void {
+  addResearchPriority(priority?: ResearchPriority, lang?: string): void {
+    const langGroup = lang ? this.getLanguageFormGroup(lang) : this.getActiveLanguageFormGroup();
+    const priorities = langGroup.get('researchPriorities') as FormArray;
     const group = this.fb.group({
-      id: [priority?.id || this.researchPriorities.length + 1, Validators.required],
+      id: [priority?.id || priorities.length + 1, Validators.required],
       title: [priority?.title || '', Validators.required],
       description: [priority?.description || '', Validators.required],
       icon: [priority?.icon || '', Validators.required]
     });
-    this.researchPriorities.push(group);
+    priorities.push(group);
   }
 
   removeResearchPriority(index: number): void {
@@ -108,8 +172,23 @@ export class AdminPrioritesRecherche2026FormComponent implements OnInit {
         this.pageId = page.id || null;
         if (page.content) {
           try {
-            const content: PrioritesRecherche2026Content = JSON.parse(page.content);
-            this.populateForm(content);
+            const parsedContent = JSON.parse(page.content);
+            // Check if it's the new format with translations
+            if (parsedContent.translations) {
+              const content: PrioritesRecherche2026Content = parsedContent;
+              this.populateForm(content);
+            } else {
+              // Old format - migrate to new format
+              const oldContent: PrioritesRecherche2026LanguageContent = parsedContent;
+              const content: PrioritesRecherche2026Content = {
+                translations: {
+                  fr: oldContent,
+                  ar: this.getEmptyLanguageContent(),
+                  en: this.getEmptyLanguageContent()
+                }
+              };
+              this.populateForm(content);
+            }
           } catch (e) {
             console.error('Error parsing content:', e);
             this.loadDefaultData();
@@ -123,158 +202,337 @@ export class AdminPrioritesRecherche2026FormComponent implements OnInit {
         if (error.status === 404) {
           this.loadDefaultData();
         } else {
-          this.errorMessage = 'Error loading page';
+          this.errorMessage = this.getLabel('errorLoadingPage');
         }
         this.isLoading = false;
       }
     });
   }
 
+  private getEmptyLanguageContent(): PrioritesRecherche2026LanguageContent {
+    return {
+      heroTitle: '',
+      heroSubtitle: '',
+      introParagraphs: [],
+      sectionTitle: '',
+      researchPriorities: [],
+      publicationDate: ''
+    };
+  }
+
   loadDefaultData(): void {
-    this.form.patchValue({
+    // Load default data for French
+    const frGroup = this.getLanguageFormGroup('fr');
+    frGroup.patchValue({
       heroTitle: 'LES PRIORITÉS DE LA RECHERCHE À L\'HORIZON 2026',
       heroSubtitle: 'L\'ANRSI définit les priorités de la recherche scientifique et de l\'innovation pour le développement national',
       sectionTitle: 'Les Sept Axes Stratégiques',
       publicationDate: '18 Janvier 2023'
     });
 
-    // Clear existing arrays
-    while (this.introParagraphs.length) this.introParagraphs.removeAt(0);
-    while (this.researchPriorities.length) this.researchPriorities.removeAt(0);
+    // Clear existing arrays for French
+    const frParagraphs = frGroup.get('introParagraphs') as FormArray;
+    const frPriorities = frGroup.get('researchPriorities') as FormArray;
+    while (frParagraphs.length) frParagraphs.removeAt(0);
+    while (frPriorities.length) frPriorities.removeAt(0);
 
-    // Add default intro paragraphs
-    this.addIntroParagraph('Se basant sur la stratégie nationale de la recherche scientifique et de l\'innovation adoptée par le Gouvernement, l\'Agence nationale de la recherche scientifique et de l\'innovation publie les détails des sept axes de ladite stratégie.');
-    this.addIntroParagraph('Ces axes sont répartis suivant les besoins de développement et en réponse aux défis actuels, pour couvrir des domaines variés allant de l\'autosuffisance alimentaire à la digitalisation et les défis émergents avec l\'explosion de l\'intelligence artificielle, en passant par la santé, les industries extractives.');
-    this.addIntroParagraph('Les recherches humaines et sociales occupent une place de choix dans ces axes, la stratégie leur ayant consacré deux axes à travers lesquels il est possible d\'œuvrer pour "la valorisation des savoirs autochtones ancestraux afin d\'affronter les enjeux sociétaux, de combattre la vulnérabilité, les disparités sociales et l\'exclusion et de consolider l\'unité nationale".');
+    // Add default intro paragraphs for French
+    this.addIntroParagraph('Se basant sur la stratégie nationale de la recherche scientifique et de l\'innovation adoptée par le Gouvernement, l\'Agence nationale de la recherche scientifique et de l\'innovation publie les détails des sept axes de ladite stratégie.', 'fr');
+    this.addIntroParagraph('Ces axes sont répartis suivant les besoins de développement et en réponse aux défis actuels, pour couvrir des domaines variés allant de l\'autosuffisance alimentaire à la digitalisation et les défis émergents avec l\'explosion de l\'intelligence artificielle, en passant par la santé, les industries extractives.', 'fr');
+    this.addIntroParagraph('Les recherches humaines et sociales occupent une place de choix dans ces axes, la stratégie leur ayant consacré deux axes à travers lesquels il est possible d\'œuvrer pour "la valorisation des savoirs autochtones ancestraux afin d\'affronter les enjeux sociétaux, de combattre la vulnérabilité, les disparités sociales et l\'exclusion et de consolider l\'unité nationale".', 'fr');
 
-    // Add default research priorities
+    // Add default research priorities for French
     this.addResearchPriority({
       id: 1,
       title: 'Autosuffisance Alimentaire',
       description: 'Développement de stratégies pour assurer la sécurité alimentaire nationale et réduire la dépendance aux importations.',
       icon: 'fas fa-seedling'
-    });
+    }, 'fr');
     this.addResearchPriority({
       id: 2,
       title: 'Digitalisation et Intelligence Artificielle',
       description: 'Intégration des technologies numériques et de l\'IA pour moderniser les secteurs économiques et améliorer l\'efficacité.',
       icon: 'fas fa-robot'
-    });
+    }, 'fr');
     this.addResearchPriority({
       id: 3,
       title: 'Santé et Bien-être',
       description: 'Amélioration des systèmes de santé, prévention des maladies et promotion du bien-être de la population.',
       icon: 'fas fa-heartbeat'
-    });
+    }, 'fr');
     this.addResearchPriority({
       id: 4,
       title: 'Industries Extractives',
       description: 'Optimisation de l\'exploitation des ressources naturelles de manière durable et responsable.',
       icon: 'fas fa-mountain'
-    });
+    }, 'fr');
     this.addResearchPriority({
       id: 5,
       title: 'Recherches Humaines et Sociales I',
       description: 'Valorisation des savoirs autochtones ancestraux pour affronter les enjeux sociétaux contemporains.',
       icon: 'fas fa-users'
-    });
+    }, 'fr');
     this.addResearchPriority({
       id: 6,
       title: 'Recherches Humaines et Sociales II',
       description: 'Combattre la vulnérabilité, les disparités sociales et l\'exclusion pour consolider l\'unité nationale.',
       icon: 'fas fa-hands-helping'
-    });
+    }, 'fr');
     this.addResearchPriority({
       id: 7,
       title: 'Développement Durable',
       description: 'Promotion de pratiques respectueuses de l\'environnement et du développement durable à long terme.',
       icon: 'fas fa-leaf'
-    });
+    }, 'fr');
   }
 
   populateForm(content: PrioritesRecherche2026Content): void {
-    this.form.patchValue({
-      heroTitle: content.heroTitle || 'LES PRIORITÉS DE LA RECHERCHE À L\'HORIZON 2026',
-      heroSubtitle: content.heroSubtitle || 'L\'ANRSI définit les priorités de la recherche scientifique et de l\'innovation pour le développement national',
-      sectionTitle: content.sectionTitle || 'Les Sept Axes Stratégiques',
-      publicationDate: content.publicationDate || ''
+    // Populate each language
+    ['fr', 'ar', 'en'].forEach(lang => {
+      const langContent = content.translations[lang as 'fr' | 'ar' | 'en'];
+      if (langContent) {
+        const langGroup = this.getLanguageFormGroup(lang);
+        langGroup.patchValue({
+          heroTitle: langContent.heroTitle || '',
+          heroSubtitle: langContent.heroSubtitle || '',
+          sectionTitle: langContent.sectionTitle || '',
+          publicationDate: langContent.publicationDate || ''
+        });
+
+        // Clear existing arrays
+        const paragraphs = langGroup.get('introParagraphs') as FormArray;
+        const priorities = langGroup.get('researchPriorities') as FormArray;
+        
+        while (paragraphs.length) paragraphs.removeAt(0);
+        while (priorities.length) priorities.removeAt(0);
+
+        // Populate arrays
+        langContent.introParagraphs?.forEach(paragraph => this.addIntroParagraph(paragraph, lang));
+        langContent.researchPriorities?.forEach(priority => this.addResearchPriority(priority, lang));
+      }
     });
-
-    // Clear existing arrays
-    while (this.introParagraphs.length) this.introParagraphs.removeAt(0);
-    while (this.researchPriorities.length) this.researchPriorities.removeAt(0);
-
-    // Populate arrays
-    content.introParagraphs?.forEach(paragraph => this.addIntroParagraph(paragraph));
-    content.researchPriorities?.forEach(priority => this.addResearchPriority(priority));
   }
 
   onSubmit(): void {
-    if (this.form.valid) {
-      this.isSaving = true;
-      this.errorMessage = '';
+    // Allow saving even if not all languages are complete
+    this.isSaving = true;
+    this.errorMessage = '';
 
-      const formValue = this.form.value;
-      const content: PrioritesRecherche2026Content = {
-        heroTitle: formValue.heroTitle,
-        heroSubtitle: formValue.heroSubtitle,
-        introParagraphs: formValue.introParagraphs.map((p: any) => p.text),
-        sectionTitle: formValue.sectionTitle,
-        researchPriorities: formValue.researchPriorities,
-        publicationDate: formValue.publicationDate
-      };
+    const formValue = this.form.value;
+    
+    // Build content with translations
+    const content: PrioritesRecherche2026Content = {
+      translations: {
+        fr: this.buildLanguageContent(formValue.translations.fr),
+        ar: this.buildLanguageContent(formValue.translations.ar),
+        en: this.buildLanguageContent(formValue.translations.en)
+      }
+    };
 
-      const updateData: PageUpdateDTO = {
+    // Use French content for hero title/subtitle in page metadata (fallback to first available)
+    const frContent = content.translations.fr;
+    const heroTitle = frContent.heroTitle || content.translations.ar.heroTitle || content.translations.en.heroTitle || 'Priorités de la Recherche 2026';
+    const heroSubtitle = frContent.heroSubtitle || content.translations.ar.heroSubtitle || content.translations.en.heroSubtitle || '';
+
+    const updateData: PageUpdateDTO = {
+      title: 'Priorités de la Recherche 2026',
+      heroTitle: heroTitle,
+      heroSubtitle: heroSubtitle,
+      content: JSON.stringify(content),
+      pageType: 'STRUCTURED',
+      isPublished: true,
+      isActive: true
+    };
+
+    if (this.pageId) {
+      this.pageService.updatePage(this.pageId, updateData).subscribe({
+        next: () => {
+          this.isSaving = false;
+          this.router.navigate(['/admin/pages']);
+        },
+        error: (error) => {
+          this.isSaving = false;
+          this.errorMessage = this.getLabel('errorSavingPage');
+          console.error('Error saving page:', error);
+        }
+      });
+    } else {
+      this.pageService.createPage({
+        slug: 'priorites-recherche-2026',
         title: 'Priorités de la Recherche 2026',
-        heroTitle: content.heroTitle,
-        heroSubtitle: content.heroSubtitle,
+        heroTitle: heroTitle,
+        heroSubtitle: heroSubtitle,
         content: JSON.stringify(content),
         pageType: 'STRUCTURED',
         isPublished: true,
         isActive: true
-      };
-
-      if (this.pageId) {
-        this.pageService.updatePage(this.pageId, updateData).subscribe({
-          next: () => {
-            this.isSaving = false;
-            this.router.navigate(['/admin/pages']);
-          },
-          error: (error) => {
-            this.isSaving = false;
-            this.errorMessage = 'Error saving page';
-            console.error('Error saving page:', error);
-          }
-        });
-      } else {
-        this.pageService.createPage({
-          slug: 'priorites-recherche-2026',
-          title: 'Priorités de la Recherche 2026',
-          heroTitle: content.heroTitle,
-          heroSubtitle: content.heroSubtitle,
-          content: JSON.stringify(content),
-          pageType: 'STRUCTURED',
-          isPublished: true,
-          isActive: true
-        }).subscribe({
-          next: () => {
-            this.isSaving = false;
-            this.router.navigate(['/admin/pages']);
-          },
-          error: (error) => {
-            this.isSaving = false;
-            this.errorMessage = 'Error creating page';
-            console.error('Error creating page:', error);
-          }
-        });
-      }
-    } else {
-      this.errorMessage = 'Please fill all required fields';
+      }).subscribe({
+        next: () => {
+          this.isSaving = false;
+          this.router.navigate(['/admin/pages']);
+        },
+        error: (error) => {
+          this.isSaving = false;
+          this.errorMessage = this.getLabel('errorCreatingPage');
+          console.error('Error creating page:', error);
+        }
+      });
     }
+  }
+
+  private buildLanguageContent(langData: any): PrioritesRecherche2026LanguageContent {
+    return {
+      heroTitle: langData.heroTitle || '',
+      heroSubtitle: langData.heroSubtitle || '',
+      introParagraphs: (langData.introParagraphs || []).map((p: any) => p.text || ''),
+      sectionTitle: langData.sectionTitle || '',
+      researchPriorities: langData.researchPriorities || [],
+      publicationDate: langData.publicationDate || ''
+    };
+  }
+
+  // Translation methods for form labels
+  getLabel(key: string): string {
+    const translations: { [key: string]: { fr: string; ar: string; en: string } } = {
+      'editPage': {
+        fr: 'Modifier la page Priorités de la Recherche 2026',
+        ar: 'تعديل صفحة أولويات البحث 2026',
+        en: 'Edit Research Priorities 2026 Page'
+      },
+      'cancel': {
+        fr: 'Annuler',
+        ar: 'إلغاء',
+        en: 'Cancel'
+      },
+      'heroSection': {
+        fr: 'Section Hero',
+        ar: 'قسم البطل',
+        en: 'Hero Section'
+      },
+      'heroTitle': {
+        fr: 'Titre Hero *',
+        ar: 'عنوان البطل *',
+        en: 'Hero Title *'
+      },
+      'heroSubtitle': {
+        fr: 'Sous-titre Hero *',
+        ar: 'العنوان الفرعي للبطل *',
+        en: 'Hero Subtitle *'
+      },
+      'introductionParagraphs': {
+        fr: 'Paragraphes d\'introduction',
+        ar: 'فقرات المقدمة',
+        en: 'Introduction Paragraphs'
+      },
+      'paragraph': {
+        fr: 'Paragraphe',
+        ar: 'فقرة',
+        en: 'Paragraph'
+      },
+      'addParagraph': {
+        fr: 'Ajouter un paragraphe',
+        ar: 'إضافة فقرة',
+        en: 'Add Paragraph'
+      },
+      'contentSection': {
+        fr: 'Section Contenu',
+        ar: 'قسم المحتوى',
+        en: 'Content Section'
+      },
+      'sectionTitle': {
+        fr: 'Titre de la section *',
+        ar: 'عنوان القسم *',
+        en: 'Section Title *'
+      },
+      'publicationDate': {
+        fr: 'Date de publication *',
+        ar: 'تاريخ النشر *',
+        en: 'Publication Date *'
+      },
+      'researchPriorities': {
+        fr: 'Priorités de recherche',
+        ar: 'أولويات البحث',
+        en: 'Research Priorities'
+      },
+      'id': {
+        fr: 'ID *',
+        ar: 'المعرف *',
+        en: 'ID *'
+      },
+      'title': {
+        fr: 'Titre *',
+        ar: 'العنوان *',
+        en: 'Title *'
+      },
+      'description': {
+        fr: 'Description *',
+        ar: 'الوصف *',
+        en: 'Description *'
+      },
+      'icon': {
+        fr: 'Icône (classe Font Awesome) *',
+        ar: 'أيقونة (فئة Font Awesome) *',
+        en: 'Icon (Font Awesome class) *'
+      },
+      'addResearchPriority': {
+        fr: 'Ajouter une priorité de recherche',
+        ar: 'إضافة أولوية بحث',
+        en: 'Add Research Priority'
+      },
+      'remove': {
+        fr: 'Supprimer',
+        ar: 'إزالة',
+        en: 'Remove'
+      },
+      'complete': {
+        fr: 'Complet',
+        ar: 'مكتمل',
+        en: 'Complete'
+      },
+      'incomplete': {
+        fr: 'Incomplet',
+        ar: 'غير مكتمل',
+        en: 'Incomplete'
+      },
+      'saveChanges': {
+        fr: 'Enregistrer les modifications',
+        ar: 'حفظ التغييرات',
+        en: 'Save Changes'
+      },
+      'saving': {
+        fr: 'Enregistrement...',
+        ar: 'جاري الحفظ...',
+        en: 'Saving...'
+      },
+      'loading': {
+        fr: 'Chargement...',
+        ar: 'جاري التحميل...',
+        en: 'Loading...'
+      },
+      'errorLoadingPage': {
+        fr: 'Erreur lors du chargement de la page',
+        ar: 'خطأ في تحميل الصفحة',
+        en: 'Error loading page'
+      },
+      'errorSavingPage': {
+        fr: 'Erreur lors de l\'enregistrement de la page',
+        ar: 'خطأ في حفظ الصفحة',
+        en: 'Error saving page'
+      },
+      'errorCreatingPage': {
+        fr: 'Erreur lors de la création de la page',
+        ar: 'خطأ في إنشاء الصفحة',
+        en: 'Error creating page'
+      }
+    };
+
+    return translations[key]?.[this.activeLanguage] || translations[key]?.fr || key;
   }
 
   onCancel(): void {
     this.router.navigate(['/admin/pages']);
   }
 }
+
+
 

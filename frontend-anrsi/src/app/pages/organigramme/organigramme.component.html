@@ -1,0 +1,45 @@
+<div class="organigramme-hero">
+  <div class="container">
+    <h1>{{ heroTitle || 'Organigramme' }}</h1>
+    <p>{{ heroSubtitle || "Structure organisationnelle de l'Agence Nationale de la Recherche Scientifique et de l'Innovation" }}</p>
+  </div>
+  <div class="hero-overlay"></div>
+</div>
+
+<div class="container" *ngIf="isLoading">
+  <div class="loading-container">
+    <div class="loading">Loading...</div>
+  </div>
+</div>
+
+<div class="container" *ngIf="!isLoading">
+  <section class="section organigramme-section">
+    <div class="organigramme-content">
+      <h2>{{ sectionTitle || 'Structure Organisationnelle' }}</h2>
+      <p class="intro-text" *ngIf="introText">
+        {{ introText }}
+      </p>
+      
+      <div class="organigramme-chart" *ngIf="levels && levels.length > 0">
+        <div class="level" [class]="'level-' + level.levelNumber" *ngFor="let level of levels">
+          <div class="position-card" [class.director]="position.isDirector" *ngFor="let position of level.positions">
+            <div class="position-icon">{{ position.icon }}</div>
+            <h3>{{ position.title }}</h3>
+            <p>{{ position.description }}</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="organigramme-info" *ngIf="responsibilities && responsibilities.length > 0">
+        <h3>{{ responsibilitiesTitle || 'Responsabilités Clés' }}</h3>
+        <div class="responsibilities-grid">
+          <div class="responsibility-item" *ngFor="let responsibility of responsibilities">
+            <h4>{{ responsibility.icon }} {{ responsibility.title }}</h4>
+            <p>{{ responsibility.description }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+

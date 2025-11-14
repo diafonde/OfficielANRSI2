@@ -1,8 +1,8 @@
 <div class="admin-priorites-recherche-2026-form">
   <div class="form-header">
-    <h1>Edit Priorités de la Recherche 2026 Page</h1>
+    <h1>{{ getLabel('editPage') }}</h1>
     <button (click)="onCancel()" class="btn btn-secondary">
-      <i class="fas fa-times"></i> Cancel
+      <i class="fas fa-times"></i> {{ getLabel('cancel') }}
     </button>
   </div>
 
@@ -11,91 +11,130 @@
   </div>
 
   <div *ngIf="isLoading" class="loading">
-    <i class="fas fa-spinner fa-spin"></i> Loading...
+    <i class="fas fa-spinner fa-spin"></i> {{ getLabel('loading') }}
   </div>
 
   <form [formGroup]="form" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+    <!-- Language Tabs -->
+    <div class="language-tabs">
+      <button
+        *ngFor="let lang of languages"
+        type="button"
+        class="lang-tab"
+        [class.active]="activeLanguage === lang.code"
+        [class.has-content]="hasTranslation(lang.code)"
+        [class.valid]="isLanguageFormValid(lang.code)"
+        (click)="switchLanguage(lang.code)">
+        <span class="lang-flag">{{ lang.flag }}</span>
+        <span class="lang-name">{{ lang.name }}</span>
+        <span class="lang-status">
+          <i *ngIf="isLanguageFormValid(lang.code)" class="fas fa-check-circle"></i>
+          <i *ngIf="!isLanguageFormValid(lang.code) && hasTranslation(lang.code)" class="fas fa-exclamation-circle"></i>
+        </span>
+      </button>
+    </div>
     <!-- Hero Section -->
     <div class="form-section">
-      <h2>Hero Section</h2>
-      <div class="form-group">
-        <label>Hero Title *</label>
-        <input type="text" formControlName="heroTitle" class="form-control" />
-      </div>
-      <div class="form-group">
-        <label>Hero Subtitle *</label>
-        <input type="text" formControlName="heroSubtitle" class="form-control" />
+      <h2>{{ getLabel('heroSection') }} - {{ getActiveLanguageName() }}</h2>
+      <div [formGroup]="getActiveLanguageFormGroup()">
+        <div class="form-group">
+          <label>{{ getLabel('heroTitle') }}</label>
+          <input type="text" formControlName="heroTitle" class="form-control" />
+        </div>
+        <div class="form-group">
+          <label>{{ getLabel('heroSubtitle') }}</label>
+          <input type="text" formControlName="heroSubtitle" class="form-control" />
+        </div>
       </div>
     </div>
 
     <!-- Intro Paragraphs Section -->
     <div class="form-section">
-      <h2>Introduction Paragraphs</h2>
-      <div formArrayName="introParagraphs" *ngFor="let paragraph of introParagraphs.controls; let i = index">
-        <div [formGroupName]="i" class="nested-form-group">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Paragraph {{ i + 1 }} *</label>
-              <textarea formControlName="text" class="form-control" rows="3"></textarea>
+      <h2>{{ getLabel('introductionParagraphs') }} - {{ getActiveLanguageName() }}</h2>
+      <div [formGroup]="getActiveLanguageFormGroup()">
+        <div formArrayName="introParagraphs" *ngFor="let paragraph of introParagraphs.controls; let i = index">
+          <div [formGroupName]="i" class="nested-form-group">
+            <div class="form-row">
+              <div class="form-group">
+                <label>{{ getLabel('paragraph') }} {{ i + 1 }} *</label>
+                <textarea formControlName="text" class="form-control" rows="3"></textarea>
+              </div>
+              <button type="button" (click)="removeIntroParagraph(i)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
             </div>
-            <button type="button" (click)="removeIntroParagraph(i)" class="btn btn-danger btn-sm">Remove</button>
           </div>
         </div>
+        <button type="button" (click)="addIntroParagraph()" class="btn btn-primary">{{ getLabel('addParagraph') }}</button>
       </div>
-      <button type="button" (click)="addIntroParagraph()" class="btn btn-primary">Add Paragraph</button>
     </div>
 
     <!-- Content Section -->
     <div class="form-section">
-      <h2>Content Section</h2>
-      <div class="form-group">
-        <label>Section Title *</label>
-        <input type="text" formControlName="sectionTitle" class="form-control" />
-      </div>
-      <div class="form-group">
-        <label>Publication Date *</label>
-        <input type="text" formControlName="publicationDate" class="form-control" placeholder="18 Janvier 2023" />
-        <small class="form-help">Date format: e.g., "18 Janvier 2023"</small>
+      <h2>{{ getLabel('contentSection') }} - {{ getActiveLanguageName() }}</h2>
+      <div [formGroup]="getActiveLanguageFormGroup()">
+        <div class="form-group">
+          <label>{{ getLabel('sectionTitle') }}</label>
+          <input type="text" formControlName="sectionTitle" class="form-control" />
+        </div>
+        <div class="form-group">
+          <label>{{ getLabel('publicationDate') }}</label>
+          <input type="text" formControlName="publicationDate" class="form-control" placeholder="18 Janvier 2023" />
+          <small class="form-help">Date format: e.g., "18 Janvier 2023"</small>
+        </div>
       </div>
     </div>
 
     <!-- Research Priorities Section -->
     <div class="form-section">
-      <h2>Research Priorities</h2>
-      <div formArrayName="researchPriorities" *ngFor="let priority of researchPriorities.controls; let i = index">
-        <div [formGroupName]="i" class="nested-form-group">
-          <div class="form-row">
-            <div class="form-group">
-              <label>ID *</label>
-              <input type="number" formControlName="id" class="form-control" min="1" readonly />
-              <small class="form-help">Auto-generated based on position</small>
+      <h2>{{ getLabel('researchPriorities') }} - {{ getActiveLanguageName() }}</h2>
+      <div [formGroup]="getActiveLanguageFormGroup()">
+        <div formArrayName="researchPriorities" *ngFor="let priority of researchPriorities.controls; let i = index">
+          <div [formGroupName]="i" class="nested-form-group">
+            <div class="form-row">
+              <div class="form-group">
+                <label>{{ getLabel('id') }}</label>
+                <input type="number" formControlName="id" class="form-control" min="1" readonly />
+                <small class="form-help">Auto-generated based on position</small>
+              </div>
+              <button type="button" (click)="removeResearchPriority(i)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
             </div>
-            <button type="button" (click)="removeResearchPriority(i)" class="btn btn-danger btn-sm">Remove</button>
-          </div>
-          <div class="form-group">
-            <label>Title *</label>
-            <input type="text" formControlName="title" class="form-control" />
-          </div>
-          <div class="form-group">
-            <label>Description *</label>
-            <textarea formControlName="description" class="form-control" rows="3"></textarea>
-          </div>
-          <div class="form-group">
-            <label>Icon (Font Awesome class) *</label>
-            <input type="text" formControlName="icon" class="form-control" placeholder="fas fa-seedling" />
-            <small class="form-help">Font Awesome icon class (e.g., "fas fa-seedling", "fas fa-robot")</small>
+            <div class="form-group">
+              <label>{{ getLabel('title') }}</label>
+              <input type="text" formControlName="title" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label>{{ getLabel('description') }}</label>
+              <textarea formControlName="description" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+              <label>{{ getLabel('icon') }}</label>
+              <input type="text" formControlName="icon" class="form-control" placeholder="fas fa-seedling" />
+              <small class="form-help">Font Awesome icon class (e.g., "fas fa-seedling", "fas fa-robot")</small>
+            </div>
           </div>
         </div>
+        <button type="button" (click)="addResearchPriority()" class="btn btn-primary">{{ getLabel('addResearchPriority') }}</button>
       </div>
-      <button type="button" (click)="addResearchPriority()" class="btn btn-primary">Add Research Priority</button>
     </div>
 
     <div class="form-actions">
-      <button type="button" (click)="onCancel()" class="btn btn-secondary">Cancel</button>
-      <button type="submit" class="btn btn-primary" [disabled]="form.invalid || isSaving">
-        <i class="fas fa-save"></i> {{ isSaving ? 'Saving...' : 'Save Changes' }}
-      </button>
+      <div class="translation-summary">
+        <div class="summary-item" *ngFor="let lang of languages">
+          <span class="lang-flag">{{ lang.flag }}</span>
+          <span class="lang-name">{{ lang.name }}:</span>
+          <span [class]="'status ' + (isLanguageFormValid(lang.code) ? 'complete' : 'incomplete')">
+            {{ isLanguageFormValid(lang.code) ? getLabel('complete') : getLabel('incomplete') }}
+          </span>
+        </div>
+      </div>
+      <div class="action-buttons">
+        <button type="button" (click)="onCancel()" class="btn btn-secondary">{{ getLabel('cancel') }}</button>
+        <button type="submit" class="btn btn-primary" [disabled]="isSaving">
+          <i class="fas fa-save"></i> {{ isSaving ? getLabel('saving') : getLabel('saveChanges') }}
+        </button>
+      </div>
     </div>
   </form>
 </div>
+
+
 

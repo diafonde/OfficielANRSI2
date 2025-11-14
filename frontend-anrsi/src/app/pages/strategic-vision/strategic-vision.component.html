@@ -1,0 +1,56 @@
+<div class="vision-hero">
+  <div class="container">
+    <h1>{{ heroTitle || 'Vision Stratégique' }}</h1>
+    <p>{{ heroSubtitle || "La vision et le message de l'Agence Nationale de la Recherche Scientifique et de l'Innovation" }}</p>
+  </div>
+  <div class="hero-overlay"></div>
+</div>
+
+<div class="container" *ngIf="isLoading">
+  <div class="loading-container">
+    <div class="loading">Loading...</div>
+  </div>
+</div>
+
+<div class="container" *ngIf="!isLoading">
+  <section class="section vision-section">
+    <div class="vision-content">
+      <div class="vision-card" *ngIf="visionTitle || visionText">
+        <div class="vision-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </div>
+        <h2>{{ visionTitle || 'Vision' }}</h2>
+        <p class="vision-text" *ngIf="visionText">
+          {{ visionText }}
+        </p>
+      </div>
+      
+      <div class="message-card" *ngIf="messageTitle || messageText">
+        <div class="message-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </div>
+        <h2>{{ messageTitle || 'Le Message' }}</h2>
+        <p class="message-text" *ngIf="messageText">
+          {{ messageText }}
+        </p>
+      </div>
+      
+      <div class="values-section" *ngIf="values && values.length > 0">
+        <h3>{{ valuesTitle || 'Nos Valeurs' }}</h3>
+        <div class="values-grid">
+          <div class="value-item" *ngFor="let value of values">
+            <div class="value-icon">{{ value.icon }}</div>
+            <h4>{{ value.title }}</h4>
+            <p>{{ value.description }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+

@@ -1,0 +1,181 @@
+.priorities-hero {
+  position: relative;
+  height: 300px;
+  background-image: url('../../../assets/images/anrsiback.png');
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  color: white;
+  margin-top: 0px;
+}
+
+.priorities-hero .container {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+}
+
+.priorities-hero h1 {
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  margin-bottom: var(--space-3);
+  color: white;
+  line-height: 1.2;
+}
+
+.priorities-hero p {
+  font-size: clamp(1rem, 2vw, 1.3rem);
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to right, rgba(10, 61, 98, 0.8), rgba(10, 61, 98, 0.6));
+  z-index: 1;
+}
+
+.priorities-section {
+  padding: var(--space-12) 0;
+}
+
+.intro-text {
+  max-width: 900px;
+  margin: 0 auto var(--space-8);
+  text-align: center;
+}
+
+.intro-text p {
+  color: var(--neutral-700);
+  font-size: var(--text-lg);
+  line-height: 1.6;
+  margin-bottom: var(--space-4);
+}
+
+.priorities-content h2 {
+  text-align: center;
+  color: var(--primary-600);
+  margin-bottom: var(--space-8);
+  font-size: var(--text-3xl);
+}
+
+.priorities-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: var(--space-6);
+  margin-bottom: var(--space-8);
+}
+
+.priority-card {
+  background: white;
+  border-radius: 12px;
+  padding: var(--space-6);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-left: 4px solid var(--primary-500);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.priority-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.priority-icon {
+  background: var(--primary-50);
+  color: var(--primary-600);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1.5rem;
+}
+
+.priority-content h3 {
+  color: var(--primary-600);
+  margin-bottom: var(--space-3);
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.priority-content p {
+  color: var(--neutral-700);
+  line-height: 1.5;
+  font-size: var(--text-sm);
+}
+
+.priorities-date {
+  text-align: center;
+  padding: var(--space-4);
+  background: var(--neutral-100);
+  border-radius: 8px;
+  color: var(--neutral-600);
+}
+
+@media (max-width: 768px) {
+  .priorities-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+  
+  .priority-card {
+    flex-direction: column;
+    text-align: center;
+    padding: var(--space-4);
+  }
+  
+  .priority-icon {
+    align-self: center;
+    width: 50px;
+    height: 50px;
+    font-size: 1.2rem;
+  }
+  
+  .priority-content h3 {
+    font-size: var(--text-base);
+  }
+  
+  .priority-content p {
+    font-size: var(--text-xs);
+  }
+  
+  .intro-text p {
+    font-size: var(--text-base);
+  }
+}
+
+@media (max-width: 480px) {
+  .priorities-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .priority-card {
+    padding: var(--space-3);
+  }
+  
+  .priority-icon {
+    width: 45px;
+    height: 45px;
+    font-size: 1rem;
+  }
+}
+
+.loading-container {
+  padding: var(--space-12);
+  text-align: center;
+}
+
+.loading {
+  color: var(--neutral-600);
+  font-size: var(--text-lg);
+}
+

@@ -17,3 +17,5 @@ public interface CategoriesRepository extends JpaRepository<Categories, Long> {
     boolean existsBySlug(String slug);
 }
 
+
+

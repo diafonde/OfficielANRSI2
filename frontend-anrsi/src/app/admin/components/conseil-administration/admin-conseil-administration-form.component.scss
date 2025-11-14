@@ -34,6 +34,78 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
 
+  .language-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--neutral-200);
+    padding-bottom: 0;
+
+    .lang-tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--neutral-600);
+      position: relative;
+
+      .lang-flag {
+        font-size: 18px;
+      }
+
+      .lang-name {
+        font-weight: 500;
+      }
+
+      .lang-status {
+        margin-left: 8px;
+        
+        .fa-check-circle {
+          color: #28a745;
+        }
+        
+        .fa-exclamation-circle {
+          color: #ffc107;
+        }
+      }
+
+      &:hover {
+        background-color: var(--neutral-50);
+        color: var(--neutral-800);
+      }
+
+      &.active {
+        color: var(--primary-500);
+        border-bottom-color: var(--primary-500);
+        background-color: var(--neutral-50);
+      }
+
+      &.has-content {
+        &::before {
+          content: '';
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background-color: #ffc107;
+        }
+      }
+
+      &.valid.has-content::before {
+        background-color: #28a745;
+      }
+    }
+  }
+
   .form-section {
     margin-bottom: var(--space-8);
     padding-bottom: var(--space-6);
@@ -164,11 +236,54 @@
 
   .form-actions {
     display: flex;
-    justify-content: flex-end;
-    gap: var(--space-3);
+    flex-direction: column;
+    gap: var(--space-4);
     margin-top: var(--space-6);
     padding-top: var(--space-6);
     border-top: 1px solid var(--neutral-200);
+
+    .translation-summary {
+      display: flex;
+      gap: 20px;
+      padding: 16px;
+      background-color: var(--neutral-50);
+      border-radius: 8px;
+      flex-wrap: wrap;
+
+      .summary-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+
+        .lang-flag {
+          font-size: 16px;
+        }
+
+        .status {
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 12px;
+          font-weight: 500;
+
+          &.complete {
+            background-color: #d4edda;
+            color: #155724;
+          }
+
+          &.incomplete {
+            background-color: #fff3cd;
+            color: #856404;
+          }
+        }
+      }
+    }
+
+    .action-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--space-3);
+    }
   }
 
   @media (max-width: 768px) {
@@ -182,4 +297,6 @@
     }
   }
 }
+
+
 

@@ -1,0 +1,92 @@
+<div class="expert-hero">
+  <div class="container">
+    <h1>{{ content?.heroTitle || 'Expert à l\'ANRSI' }}</h1>
+    <p>{{ content?.heroSubtitle || 'Rejoignez notre réseau d\'experts scientifiques et technologiques' }}</p>
+  </div>
+  <div class="hero-overlay"></div>
+</div>
+
+<div class="container" *ngIf="isLoading">
+  <div class="loading-container">
+    <div class="loading">Loading...</div>
+  </div>
+</div>
+
+<div class="container" *ngIf="!isLoading && content">
+  <section class="section expert-section">
+    <div class="expert-content">
+      <h2>Devenir Expert ANRSI</h2>
+      <p class="intro-text">{{ content.introText }}</p>
+      
+      <div class="expert-requirements" *ngIf="content.requirements && content.requirements.length > 0">
+        <h3>Profil Requis</h3>
+        <div class="requirements-grid">
+          <div class="requirement-item" *ngFor="let requirement of content.requirements">
+            <div class="requirement-icon">{{ requirement.icon }}</div>
+            <h4>{{ requirement.title }}</h4>
+            <ul>
+              <li *ngFor="let item of requirement.items">{{ item }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <div class="expert-domains" *ngIf="content.domains && content.domains.length > 0">
+        <h3>Domaines d'Expertise Recherchés</h3>
+        <div class="domains-grid">
+          <div class="domain-item" *ngFor="let domain of content.domains">
+            <h4>{{ domain.icon }} {{ domain.title }}</h4>
+            <p>{{ domain.description }}</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="expert-process" *ngIf="content.processSteps && content.processSteps.length > 0">
+        <h3>Processus de Recrutement</h3>
+        <div class="process-steps">
+          <div class="step-item" *ngFor="let step of content.processSteps">
+            <div class="step-number">{{ step.number }}</div>
+            <div class="step-content">
+              <h4>{{ step.title }}</h4>
+              <p>{{ step.description }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="expert-benefits" *ngIf="content.benefits && content.benefits.length > 0">
+        <h3>Avantages d'être Expert ANRSI</h3>
+        <div class="benefits-list">
+          <div class="benefit-item" *ngFor="let benefit of content.benefits">
+            <div class="benefit-icon">{{ benefit.icon }}</div>
+            <div class="benefit-content">
+              <h4>{{ benefit.title }}</h4>
+              <p>{{ benefit.description }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="application-section" *ngIf="content.applicationText">
+        <h3>Comment Postuler</h3>
+        <div class="application-info">
+          <p>{{ content.applicationText }}</p>
+          <div class="contact-info" *ngIf="content.contactInfo && content.contactInfo.length > 0">
+            <div class="contact-item" *ngFor="let contact of content.contactInfo">
+              <i [class]="contact.icon"></i>
+              <span>{{ contact.value }}</span>
+            </div>
+          </div>
+          
+          <div class="required-documents" *ngIf="content.requiredDocuments && content.requiredDocuments.length > 0">
+            <h4>Documents Requis :</h4>
+            <ul>
+              <li *ngFor="let doc of content.requiredDocuments">{{ doc }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
