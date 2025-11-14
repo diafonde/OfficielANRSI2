@@ -90,12 +90,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
   ];
 
-  partners = [
-    { name: 'Saudi Arabia', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Flag_of_Saudi_Arabia.svg/250px-Flag_of_Saudi_Arabia.svg.png' },
-    { name: 'Pakistan', logo: 'https://upload.wikimedia.org/wikipedia/commons/3/32/Flag_of_Pakistan.svg' },
-    { name: 'Japon', logo: 'https://upload.wikimedia.org/wikipedia/commons/9/9e/Flag_of_Japan.svg' },
-    { name: 'Sénégal', logo: 'https://upload.wikimedia.org/wikipedia/commons/f/fd/Flag_of_Senegal.svg' },
-  ];
+  partners: { name: string; logo: string }[] = [];
 
   constructor(
     private articleService: ArticleService,
@@ -159,6 +154,9 @@ export class HomeComponent implements OnInit, OnDestroy {
     
     // Load videos from database
     this.loadVideos();
+    
+    // Load partners from database
+    this.loadPartners();
     
     // Ensure no auto-slideshow is running - videos will only move when user clicks navigation buttons
     this.stopVideoSlideshow();
@@ -566,5 +564,41 @@ export class HomeComponent implements OnInit, OnDestroy {
     const totalSlides = this.getTotalSlides();
     if (totalSlides <= 1) return 0;
     return (totalSlides - 1) * this.getTransformPercentage();
+  }
+
+  loadPartners(): void {
+    this.pageService.getPageBySlug('partners').subscribe({
+      next: (page) => {
+        if (page?.content) {
+          try {
+            const content = JSON.parse(page.content);
+            if (content.partners && Array.isArray(content.partners)) {
+              this.partners = content.partners;
+            } else {
+              this.loadDefaultPartners();
+            }
+          } catch (e) {
+            console.error('Error parsing partners content:', e);
+            this.loadDefaultPartners();
+          }
+        } else {
+          this.loadDefaultPartners();
+        }
+      },
+      error: (error) => {
+        console.error('Error loading partners page:', error);
+        // Fallback to default partners if database fails
+        this.loadDefaultPartners();
+      }
+    });
+  }
+
+  loadDefaultPartners(): void {
+    this.partners = [
+      { name: 'Saudi Arabia', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Flag_of_Saudi_Arabia.svg/250px-Flag_of_Saudi_Arabia.svg.png' },
+      { name: 'Pakistan', logo: 'https://upload.wikimedia.org/wikipedia/commons/3/32/Flag_of_Pakistan.svg' },
+      { name: 'Japon', logo: 'https://upload.wikimedia.org/wikipedia/commons/9/9e/Flag_of_Japan.svg' },
+      { name: 'Sénégal', logo: 'https://upload.wikimedia.org/wikipedia/commons/f/fd/Flag_of_Senegal.svg' },
+    ];
   }
 }

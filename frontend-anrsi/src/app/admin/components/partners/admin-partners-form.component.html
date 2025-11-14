@@ -1,0 +1,53 @@
+<div class="admin-partners-form">
+  <div class="form-header">
+    <h1>{{ getLabel('editPage') }}</h1>
+    <button (click)="onCancel()" class="btn btn-secondary">
+      <i class="fas fa-times"></i> {{ getLabel('cancel') }}
+    </button>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <i class="fas fa-spinner fa-spin"></i> {{ getLabel('loading') }}
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+    <!-- Partners Section -->
+    <div class="form-section">
+      <h2>{{ getLabel('partners') }}</h2>
+      <div formArrayName="partners" *ngFor="let partner of partners.controls; let i = index">
+        <div [formGroupName]="i" class="nested-form-group">
+          <div class="form-row">
+            <div class="form-group">
+              <label>{{ getLabel('name') }}</label>
+              <input type="text" formControlName="name" class="form-control" />
+            </div>
+            <button type="button" (click)="removePartner(i)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
+          </div>
+          <div class="form-group">
+            <label>{{ getLabel('logo') }}</label>
+            <input type="text" formControlName="logo" class="form-control" placeholder="https://example.com/logo.svg" />
+            <small class="form-help">{{ getLabel('logoHelp') }}</small>
+            <div class="logo-preview" *ngIf="partner.get('logo')?.value">
+              <img [src]="partner.get('logo')?.value" [alt]="partner.get('name')?.value" onerror="this.style.display='none'" />
+            </div>
+          </div>
+        </div>
+      </div>
+      <button type="button" (click)="addPartner()" class="btn btn-primary">{{ getLabel('addPartner') }}</button>
+    </div>
+
+    <div class="form-actions">
+      <div class="action-buttons">
+        <button type="button" (click)="onCancel()" class="btn btn-secondary">{{ getLabel('cancel') }}</button>
+        <button type="submit" class="btn btn-primary" [disabled]="isSaving">
+          <i class="fas fa-save"></i> {{ isSaving ? getLabel('saving') : getLabel('saveChanges') }}
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+
