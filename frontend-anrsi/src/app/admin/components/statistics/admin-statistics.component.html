@@ -1,0 +1,106 @@
+<div class="admin-statistics">
+  <div class="form-header">
+    <h1>Edit Statistics</h1>
+    <p class="subtitle">Update the statistics displayed on the homepage</p>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+  </div>
+
+  <div *ngIf="successMessage" class="success-message">
+    <i class="fas fa-check-circle"></i> {{ successMessage }}
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <i class="fas fa-spinner fa-spin"></i> Loading statistics...
+  </div>
+
+  <form [formGroup]="statisticsForm" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="researchProjects">
+          <i class="fas fa-flask"></i> Research Projects
+        </label>
+        <input
+          type="number"
+          id="researchProjects"
+          formControlName="researchProjects"
+          class="form-control"
+          placeholder="500"
+          min="0"
+        />
+        <div class="help-text">Number of research projects</div>
+        <div *ngIf="statisticsForm.get('researchProjects')?.invalid && statisticsForm.get('researchProjects')?.touched" class="error-text">
+          Please enter a valid number (minimum 0)
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="partnerInstitutions">
+          <i class="fas fa-university"></i> Partner Institutions
+        </label>
+        <input
+          type="number"
+          id="partnerInstitutions"
+          formControlName="partnerInstitutions"
+          class="form-control"
+          placeholder="50"
+          min="0"
+        />
+        <div class="help-text">Number of partner institutions</div>
+        <div *ngIf="statisticsForm.get('partnerInstitutions')?.invalid && statisticsForm.get('partnerInstitutions')?.touched" class="error-text">
+          Please enter a valid number (minimum 0)
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="publishedArticles">
+          <i class="fas fa-newspaper"></i> Published Articles
+        </label>
+        <input
+          type="number"
+          id="publishedArticles"
+          formControlName="publishedArticles"
+          class="form-control"
+          placeholder="2000"
+          min="0"
+        />
+        <div class="help-text">Number of published articles</div>
+        <div *ngIf="statisticsForm.get('publishedArticles')?.invalid && statisticsForm.get('publishedArticles')?.touched" class="error-text">
+          Please enter a valid number (minimum 0)
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="researchFunding">
+          <i class="fas fa-money-bill-wave"></i> Research Funding (M MRU)
+        </label>
+        <input
+          type="number"
+          id="researchFunding"
+          formControlName="researchFunding"
+          class="form-control"
+          placeholder="250"
+          min="0"
+        />
+        <div class="help-text">Research funding amount in millions MRU</div>
+        <div *ngIf="statisticsForm.get('researchFunding')?.invalid && statisticsForm.get('researchFunding')?.touched" class="error-text">
+          Please enter a valid number (minimum 0)
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" [disabled]="isSaving || statisticsForm.invalid">
+        <i class="fas fa-save" *ngIf="!isSaving"></i>
+        <i class="fas fa-spinner fa-spin" *ngIf="isSaving"></i>
+        {{ isSaving ? 'Saving...' : 'Save Statistics' }}
+      </button>
+      <button type="button" class="btn btn-secondary" (click)="loadStatistics()" [disabled]="isSaving">
+        <i class="fas fa-undo"></i> Reset
+      </button>
+    </div>
+  </form>
+</div>
+

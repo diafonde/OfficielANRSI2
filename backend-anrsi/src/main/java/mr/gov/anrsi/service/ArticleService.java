@@ -140,6 +140,7 @@ public class ArticleService {
         article.setAuthor(dto.getAuthor());
         article.setPublishDate(dto.getPublishDate());
         article.setImageUrl(dto.getImageUrl());
+        article.setAttachmentUrl(dto.getAttachmentUrl());
         if (dto.getImages() != null) {
             article.setImages(dto.getImages());
         }
@@ -192,6 +193,7 @@ public class ArticleService {
         dto.setAuthor(article.getAuthor());
         dto.setPublishDate(article.getPublishDate());
         dto.setImageUrl(article.getImageUrl());
+        dto.setAttachmentUrl(article.getAttachmentUrl());
         dto.setImages(article.getImages());
         // Convert Categories entity to String (category name)
         dto.setCategory(article.getCategory() != null ? article.getCategory().getName() : null);
@@ -239,6 +241,7 @@ public class ArticleService {
         article.setAuthor(dto.getAuthor());
         article.setPublishDate(dto.getPublishDate());
         article.setImageUrl(dto.getImageUrl());
+        article.setAttachmentUrl(dto.getAttachmentUrl());
         if (dto.getImages() != null) {
             article.setImages(dto.getImages());
         }

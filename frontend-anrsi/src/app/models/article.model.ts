@@ -12,6 +12,7 @@ export interface Article {
   author: string;
   publishDate: Date;
   imageUrl: string;
+  attachmentUrl?: string;
   images?: string[];
   category: string;
   tags: string[];

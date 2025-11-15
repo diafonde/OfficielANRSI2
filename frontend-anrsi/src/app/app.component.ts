@@ -11,6 +11,8 @@ import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { TranslateModule, TranslateService, TranslateLoader } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { filter } from 'rxjs/operators';
+import { StatisticsService } from './services/statistics.service';
+import { Statistics } from './models/statistics.model';
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
 }
@@ -35,10 +37,12 @@ export function HttpLoaderFactory(http: HttpClient) {
 })
 export class App implements OnInit {
   isAdminRoute: boolean = false;
+  statistics: Statistics | null = null;
 
   constructor(
     public translate: TranslateService,
-    private router: Router
+    private router: Router,
+    private statisticsService: StatisticsService
   ) {
     translate.addLangs(['fr', 'ar', 'en']);
     translate.setDefaultLang('fr');
@@ -74,5 +78,26 @@ export class App implements OnInit {
     } catch (error) {
       console.warn('AOS library could not be loaded:', error);
     }
+    
+    // Load statistics
+    this.loadStatistics();
+  }
+  
+  loadStatistics(): void {
+    this.statisticsService.getStatistics().subscribe({
+      next: (stats) => {
+        this.statistics = stats;
+      },
+      error: (error) => {
+        console.error('Error loading statistics:', error);
+        // Use default values if API fails
+        this.statistics = {
+          researchProjects: 500,
+          partnerInstitutions: 50,
+          publishedArticles: 2000,
+          researchFunding: 250
+        };
+      }
+    });
   }
 }

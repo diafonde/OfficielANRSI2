@@ -22,6 +22,7 @@ public class ArticleDTO {
     private String author;
     private LocalDateTime publishDate;
     private String imageUrl;
+    private String attachmentUrl;
     private List<String> images = new ArrayList<>();
     private String category;
     private List<String> tags = new ArrayList<>();

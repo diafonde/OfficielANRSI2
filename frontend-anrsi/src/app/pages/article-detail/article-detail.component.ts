@@ -138,4 +138,26 @@ export class ArticleDetailComponent implements OnInit, OnDestroy {
     // Fallback to a default image if the original fails to load
     event.target.src = 'assets/images/article1.jpeg';
   }
+
+  /**
+   * Get file name from URL
+   */
+  getFileNameFromUrl(url: string | null | undefined): string {
+    if (!url) return '';
+    const parts = url.split('/');
+    return parts[parts.length - 1] || url;
+  }
+
+  /**
+   * Get file type icon class based on file extension
+   */
+  getFileIconClass(url: string | null | undefined): string {
+    if (!url) return 'fa-file';
+    const fileName = this.getFileNameFromUrl(url).toLowerCase();
+    if (fileName.endsWith('.pdf')) return 'fa-file-pdf';
+    if (fileName.endsWith('.doc') || fileName.endsWith('.docx')) return 'fa-file-word';
+    if (fileName.endsWith('.xls') || fileName.endsWith('.xlsx')) return 'fa-file-excel';
+    if (fileName.endsWith('.txt')) return 'fa-file-alt';
+    return 'fa-file';
+  }
 }

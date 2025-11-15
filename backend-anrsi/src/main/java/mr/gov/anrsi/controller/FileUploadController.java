@@ -155,7 +155,7 @@ public class FileUploadController {
                 return ResponseEntity.badRequest().body(response);
             }
             
-            // Validate file type (PDF, DOC, DOCX, etc.)
+            // Validate file type (PDF, DOC, DOCX, TXT, XLS, XLSX)
             String contentType = file.getContentType();
             String originalFilename = file.getOriginalFilename();
             boolean isValidType = false;
@@ -163,7 +163,10 @@ public class FileUploadController {
             if (contentType != null) {
                 isValidType = contentType.equals("application/pdf") ||
                              contentType.equals("application/msword") ||
-                             contentType.equals("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+                             contentType.equals("application/vnd.openxmlformats-officedocument.wordprocessingml.document") ||
+                             contentType.equals("text/plain") ||
+                             contentType.equals("application/vnd.ms-excel") ||
+                             contentType.equals("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
             }
             
             // Also check by extension as fallback
@@ -171,11 +174,14 @@ public class FileUploadController {
                 String lowerFilename = originalFilename.toLowerCase();
                 isValidType = lowerFilename.endsWith(".pdf") ||
                              lowerFilename.endsWith(".doc") ||
-                             lowerFilename.endsWith(".docx");
+                             lowerFilename.endsWith(".docx") ||
+                             lowerFilename.endsWith(".txt") ||
+                             lowerFilename.endsWith(".xls") ||
+                             lowerFilename.endsWith(".xlsx");
             }
             
             if (!isValidType) {
-                response.put("error", "File must be a PDF or Word document");
+                response.put("error", "File must be a PDF, Word document, text file, or Excel spreadsheet");
                 return ResponseEntity.badRequest().body(response);
             }
             

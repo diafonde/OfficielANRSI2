@@ -4,6 +4,8 @@ import mr.gov.anrsi.dto.PageCreateDTO;
 import mr.gov.anrsi.dto.PageDTO;
 import mr.gov.anrsi.dto.PageUpdateDTO;
 import mr.gov.anrsi.entity.Page;
+import mr.gov.anrsi.entity.PagePhoto;
+import mr.gov.anrsi.entity.PageVideo;
 import mr.gov.anrsi.exception.PageNotFoundException;
 import mr.gov.anrsi.repository.PageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,21 +27,41 @@ public class PageService {
     @Autowired
     private PageRepository pageRepository;
     
+    private Page loadPageWithRelations(Page page) {
+        if (page == null) return null;
+        // Force load of lazy relationships
+        page.getTranslations().size();
+        page.getVideos().size();
+        page.getPhotos().size();
+        // Load video translations
+        for (PageVideo video : page.getVideos()) {
+            video.getTranslations().size();
+        }
+        // Load photo translations
+        for (PagePhoto photo : page.getPhotos()) {
+            photo.getTranslations().size();
+        }
+        return page;
+    }
+    
     public PageDTO getPageBySlug(String slug) {
         Page page = pageRepository.findBySlugAndIsPublishedTrue(slug)
             .orElseThrow(() -> new PageNotFoundException("Page not found with slug: " + slug));
+        loadPageWithRelations(page);
         return PageDTO.fromEntity(page);
     }
     
     public PageDTO getPageById(Long id) {
         Page page = pageRepository.findById(id)
             .orElseThrow(() -> new PageNotFoundException("Page not found with id: " + id));
+        loadPageWithRelations(page);
         return PageDTO.fromEntity(page);
     }
     
     public PageDTO getPageBySlugForAdmin(String slug) {
         Page page = pageRepository.findBySlug(slug)
             .orElseThrow(() -> new PageNotFoundException("Page not found with slug: " + slug));
+        loadPageWithRelations(page);
         return PageDTO.fromEntity(page);
     }
     

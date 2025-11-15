@@ -18,6 +18,7 @@ interface ArticleDTO {
   author: string;
   publishDate: string; // ISO string from backend
   imageUrl: string;
+  attachmentUrl?: string;
   images?: string[];
   category: string;
   tags: string[];
@@ -52,6 +53,7 @@ export class ArticleService {
       author: dto.author,
       publishDate: new Date(dto.publishDate),
       imageUrl: this.normalizeImageUrl(dto.imageUrl),
+      attachmentUrl: dto.attachmentUrl ? this.normalizeAttachmentUrl(dto.attachmentUrl) : undefined,
       images: dto.images || [],
       category: dto.category || '',
       tags: dto.tags || [],
@@ -91,6 +93,34 @@ export class ArticleService {
     }
     
     return imageUrl;
+  }
+
+  /**
+   * Normalize attachment URL to handle different formats from backend
+   */
+  private normalizeAttachmentUrl(attachmentUrl: string | null | undefined): string | undefined {
+    if (!attachmentUrl) {
+      return undefined;
+    }
+
+    // If it's already a full URL (http/https), use it as-is
+    if (attachmentUrl.startsWith('http://') || attachmentUrl.startsWith('https://')) {
+      return attachmentUrl;
+    }
+    // If it starts with /uploads/, it's already a valid backend URL
+    if (attachmentUrl.startsWith('/uploads/')) {
+      return attachmentUrl;
+    }
+    // If it starts with uploads/ (no leading slash), add the slash
+    if (attachmentUrl.startsWith('uploads/')) {
+      return '/' + attachmentUrl;
+    }
+    // For any other relative path, ensure it starts with /
+    if (!attachmentUrl.startsWith('/')) {
+      return '/' + attachmentUrl;
+    }
+    
+    return attachmentUrl;
   }
 
   getAllArticles(): Observable<Article[]> {

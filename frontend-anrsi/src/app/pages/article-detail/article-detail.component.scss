@@ -108,6 +108,90 @@
   font-size: var(--text-sm);
 }
 
+.article-attachment {
+  margin: var(--space-8) 0;
+  padding: var(--space-4);
+  background-color: var(--neutral-50);
+  border: 1px solid var(--neutral-200);
+  border-radius: 8px;
+  border-left: 4px solid var(--primary-500);
+}
+
+.attachment-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  font-weight: 600;
+  color: var(--neutral-700);
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  i {
+    color: var(--primary-500);
+  }
+}
+
+.attachment-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background-color: white;
+  border: 1px solid var(--neutral-200);
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--neutral-800);
+  transition: all 0.3s ease;
+  font-size: var(--text-base);
+
+  &:hover {
+    background-color: var(--primary-50);
+    border-color: var(--primary-500);
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  i {
+    font-size: 20px;
+    
+    &.fa-file-pdf {
+      color: #e74c3c;
+    }
+    
+    &.fa-file-word {
+      color: #2b579a;
+    }
+    
+    &.fa-file-excel {
+      color: #1d6f42;
+    }
+    
+    &.fa-file-alt {
+      color: var(--neutral-600);
+    }
+    
+    &.fa-file {
+      color: var(--neutral-500);
+    }
+    
+    &.attachment-download-icon {
+      margin-left: auto;
+      color: var(--primary-500);
+      font-size: 16px;
+    }
+  }
+
+  .attachment-name {
+    flex: 1;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
 .article-share {
   display: flex;
   align-items: center;

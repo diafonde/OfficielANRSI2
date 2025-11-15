@@ -29,6 +29,8 @@ public class ArticleCreateDTO {
     
     private String imageUrl;
     
+    private String attachmentUrl;
+    
     private List<String> images = new ArrayList<>();
     
     @NotBlank(message = "Category is required")

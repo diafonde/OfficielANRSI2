@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../models/user.model';
 
@@ -15,7 +15,10 @@ export class AdminLayoutComponent implements OnInit {
   currentUser: User | null = null;
   sidebarOpen = true;
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.authService.currentUser$.subscribe(user => {
@@ -29,6 +32,7 @@ export class AdminLayoutComponent implements OnInit {
 
   logout(): void {
     this.authService.logout();
+    this.router.navigate(['/admin/login']);
   }
 
   getUserDisplayName(): string {

@@ -56,6 +56,22 @@
       <span *ngFor="let tag of article.tags" class="article-tag">{{ tag }}</span>
     </div>
     
+    <div class="article-attachment" *ngIf="article.attachmentUrl">
+      <div class="attachment-header">
+        <i class="fas fa-paperclip"></i>
+        <span>Download Attachment</span>
+      </div>
+      <a [href]="article.attachmentUrl" 
+         [download]="getFileNameFromUrl(article.attachmentUrl)"
+         target="_blank"
+         rel="noopener noreferrer"
+         class="attachment-link">
+        <i class="fas" [ngClass]="getFileIconClass(article.attachmentUrl)"></i>
+        <span class="attachment-name">{{ getFileNameFromUrl(article.attachmentUrl) }}</span>
+        <i class="fas fa-download attachment-download-icon"></i>
+      </a>
+    </div>
+    
     <div class="article-share">
       <span>Share this article:</span>
       <div class="share-buttons">

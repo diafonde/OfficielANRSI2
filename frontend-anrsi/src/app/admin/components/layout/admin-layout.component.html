@@ -44,6 +44,12 @@
             <span>Partners</span>
           </a>
         </li>
+        <li>
+          <a routerLink="/admin/statistics" routerLinkActive="active">
+            <i class="fas fa-chart-bar"></i>
+            <span>Statistics</span>
+          </a>
+        </li>
         <li *ngIf="isAdmin()">
           <a routerLink="/admin/users" routerLinkActive="active">
             <i class="fas fa-users"></i>
@@ -53,21 +59,7 @@
       </ul>
     </nav>
 
-    <div class="sidebar-footer">
-      <div class="user-info">
-        <div class="user-avatar">
-          <i class="fas fa-user"></i>
-        </div>
-        <div class="user-details">
-          <div class="user-name">{{ getUserDisplayName() }}</div>
-          <div class="user-role">{{ getUserRole() }}</div>
-        </div>
-      </div>
-      <button class="logout-btn" (click)="logout()">
-        <i class="fas fa-sign-out-alt"></i>
-        <span>Logout</span>
-      </button>
-    </div>
+   
   </aside>
 
   <!-- Main Content -->
@@ -81,9 +73,19 @@
         <h1 class="page-title">Admin Panel</h1>
       </div>
       <div class="top-bar-right">
-        <div class="user-menu">
-          <span class="welcome-text">Welcome, {{ getUserDisplayName() }}</span>
+        <div class="user-info">
+          <div class="user-avatar">
+            <i class="fas fa-user"></i>
+          </div>
+          <div class="user-details">
+            <div class="user-name">{{ getUserDisplayName() }}</div>
+            <div class="user-role">{{ getUserRole() }}</div>
+          </div>
         </div>
+        <button class="logout-btn" (click)="logout()">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Logout</span>
+        </button>
       </div>
     </header>
 

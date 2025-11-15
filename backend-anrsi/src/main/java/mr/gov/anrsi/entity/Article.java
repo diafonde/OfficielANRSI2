@@ -42,6 +42,9 @@ public class Article {
     @Column(name = "image_url", length = 1000)
     private String imageUrl;
     
+    @Column(name = "attachment_url", length = 1000)
+    private String attachmentUrl;
+    
     @ElementCollection
     @CollectionTable(name = "article_images", joinColumns = @JoinColumn(name = "article_id"))
     @Column(name = "image_url")
