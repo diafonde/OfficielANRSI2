@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { Subscription } from 'rxjs';
 import { PageService, PageDTO } from '../../services/page.service';
 
 interface Partnership {
@@ -30,7 +31,7 @@ interface CooperationInfo {
   templateUrl: './cooperation.component.html',
   styleUrls: ['./cooperation.component.scss']
 })
-export class CooperationComponent implements OnInit {
+export class CooperationComponent implements OnInit, OnDestroy {
   page: PageDTO | null = null;
   partnerships: Partnership[] = [];
   cooperationInfo: CooperationInfo = {
@@ -39,93 +40,14 @@ export class CooperationComponent implements OnInit {
     benefits: []
   };
   isLoading = true;
+  currentLang: string = 'fr';
+  private langSubscription?: Subscription;
 
-  constructor(private pageService: PageService) {}
+  constructor(
+    private pageService: PageService,
+    private translate: TranslateService
+  ) {}
   
-  defaultPartnerships = [
-    {
-      id: 'anrsa-senegal',
-      title: 'Convention de partenariat avec l\'ANRSA Sénégal',
-      description: 'Partenariat stratégique avec l\'Agence Nationale de la Recherche Scientifique Appliquée du Sénégal',
-      type: 'Partenariat',
-      country: 'Sénégal',
-      flag: '🇸🇳',
-      objectives: [
-        'Échange d\'expertise en recherche scientifique',
-        'Collaboration sur des projets communs',
-        'Renforcement des capacités de recherche',
-        'Partage des ressources et infrastructures'
-      ],
-      status: 'Actif',
-      icon: 'fas fa-handshake',
-      color: '#0a3d62'
-    },
-    {
-      id: 'cnrst-maroc',
-      title: 'Convention de coopération avec le CNRST Maroc',
-      description: 'Coopération avec le Centre National de la Recherche Scientifique et Technique du Maroc',
-      type: 'Coopération',
-      country: 'Maroc',
-      flag: '🇲🇦',
-      objectives: [
-        'Développement de projets de recherche conjoints',
-        'Formation et échange de chercheurs',
-        'Valorisation des résultats de recherche',
-        'Innovation technologique'
-      ],
-      status: 'Actif',
-      icon: 'fas fa-microscope',
-      color: '#20a39e'
-    },
-    {
-      id: 'tunisie-dri',
-      title: 'Partenariat avec le DRI Tunisie',
-      description: 'Collaboration avec le Département de la Recherche Scientifique et de l\'Innovation en Tunisie',
-      type: 'Partenariat',
-      country: 'Tunisie',
-      flag: '🇹🇳',
-      objectives: [
-        'Recherche appliquée et innovation',
-        'Transfert de technologie',
-        'Formation spécialisée',
-        'Développement de solutions innovantes'
-      ],
-      status: 'Actif',
-      icon: 'fas fa-lightbulb',
-      color: '#ff6b6b'
-    },
-    {
-      id: 'iset-rosso',
-      title: 'Partenariat avec l\'ISET Rosso',
-      description: 'Collaboration avec l\'Institut Supérieur d\'Enseignement Technologique de Rosso pour la production de légumes protégés',
-      type: 'Partenariat Local',
-      country: 'Mauritanie',
-      flag: '🇲🇷',
-      objectives: [
-        'Production de légumes protégés',
-        'Techniques agricoles innovantes',
-        'Formation technique spécialisée',
-        'Développement agricole local'
-      ],
-      details: 'Ce partenariat local vise à développer des techniques innovantes pour la production de légumes protégés, contribuant ainsi au développement agricole et à la sécurité alimentaire en Mauritanie.',
-      status: 'Actif',
-      icon: 'fas fa-seedling',
-      color: '#126564'
-    }
-  ];
-
-  defaultCooperationInfo: CooperationInfo = {
-    title: 'Coopération & Partenariats',
-    description: 'L\'Agence est liée à des institutions d\'intérêt commun par le biais d\'accords de coopération et de partenariat pour atteindre des objectifs communs.',
-    benefits: [
-      'Renforcement des capacités de recherche',
-      'Échange d\'expertise et de connaissances',
-      'Développement de projets innovants',
-      'Mise en réseau des chercheurs',
-      'Valorisation des résultats de recherche',
-      'Transfert de technologie'
-    ]
-  };
 
   async ngOnInit(): Promise<void> {
     try {
@@ -135,44 +57,91 @@ export class CooperationComponent implements OnInit {
       console.warn('AOS library could not be loaded:', error);
     }
     
+    this.currentLang = this.translate.currentLang || this.translate.defaultLang || 'fr';
+    this.langSubscription = this.translate.onLangChange.subscribe(event => {
+      this.currentLang = event.lang;
+      this.updateTranslatedContent();
+    });
+    
     this.loadPage();
+  }
+
+  ngOnDestroy(): void {
+    if (this.langSubscription) {
+      this.langSubscription.unsubscribe();
+    }
   }
 
   loadPage(): void {
     this.pageService.getPageBySlug('cooperation').subscribe({
       next: (page) => {
         this.page = page;
-        this.parseContent();
+        this.updateTranslatedContent();
         this.isLoading = false;
       },
       error: (error) => {
         console.error('Error loading page:', error);
-        this.partnerships = this.defaultPartnerships;
-        this.cooperationInfo = this.defaultCooperationInfo;
+        // Show empty state - data should come from database via DataInitializer
+        this.partnerships = [];
+        this.cooperationInfo = {
+          title: '',
+          description: '',
+          benefits: []
+        };
         this.isLoading = false;
       }
     });
   }
 
-  parseContent(): void {
-    if (!this.page?.content) {
-      this.partnerships = this.defaultPartnerships;
-      this.cooperationInfo = this.defaultCooperationInfo;
-      return;
+  updateTranslatedContent(): void {
+    if (!this.page) return;
+    const translation = this.page.translations?.[this.currentLang];
+    if (translation && translation.content) {
+      try {
+        this.parseContent(translation.content);
+        if (translation.heroTitle) this.page.heroTitle = translation.heroTitle;
+        if (translation.heroSubtitle) this.page.heroSubtitle = translation.heroSubtitle;
+        if (translation.title) this.page.title = translation.title;
+      } catch (e) {
+        console.error('Error parsing translated content:', e);
+        this.loadContentFromPage();
+      }
+    } else {
+      this.loadContentFromPage();
     }
+  }
 
+  loadContentFromPage(): void {
+    if (this.page?.content) {
+      this.parseContent(this.page.content);
+    } else {
+      // Show empty state - data should come from database via DataInitializer
+      this.partnerships = [];
+      this.cooperationInfo = {
+        title: '',
+        description: '',
+        benefits: []
+      };
+    }
+  }
+
+  parseContent(contentString: string): void {
     try {
-      const content = JSON.parse(this.page.content);
+      const content = JSON.parse(contentString);
       
       // Handle new structured format
       if (content.cooperationInfo) {
         this.cooperationInfo = {
-          title: content.cooperationInfo.title || this.defaultCooperationInfo.title,
-          description: content.cooperationInfo.description || this.defaultCooperationInfo.description,
-          benefits: content.cooperationInfo.benefits || this.defaultCooperationInfo.benefits
+          title: content.cooperationInfo.title || '',
+          description: content.cooperationInfo.description || '',
+          benefits: content.cooperationInfo.benefits || []
         };
       } else {
-        this.cooperationInfo = this.defaultCooperationInfo;
+        this.cooperationInfo = {
+          title: '',
+          description: '',
+          benefits: []
+        };
       }
       
       if (content.partnerships && Array.isArray(content.partnerships)) {
@@ -181,12 +150,17 @@ export class CooperationComponent implements OnInit {
         // Legacy format - content is directly an array of partnerships
         this.partnerships = content;
       } else {
-        this.partnerships = this.defaultPartnerships;
+        this.partnerships = [];
       }
     } catch (e) {
       console.error('Error parsing content:', e);
-      this.partnerships = this.defaultPartnerships;
-      this.cooperationInfo = this.defaultCooperationInfo;
+      // Show empty state - data should come from database via DataInitializer
+      this.partnerships = [];
+      this.cooperationInfo = {
+        title: '',
+        description: '',
+        benefits: []
+      };
     }
   }
 }

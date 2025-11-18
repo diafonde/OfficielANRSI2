@@ -353,6 +353,22 @@ export class AdminAppelsCandidaturesFormComponent implements OnInit {
             if (parsedContent.translations) {
               const content: AppelsCandidaturesContent = parsedContent;
               this.populateForm(content);
+              // Check if Arabic data is empty in the form and load defaults if needed
+              const arGroup = this.getLanguageFormGroup('ar');
+              const arHeroTitle = arGroup.get('heroTitle')?.value;
+              const arAppels = arGroup.get('appels') as FormArray;
+              const arCategories = arGroup.get('categories') as FormArray;
+              if ((!arHeroTitle || arHeroTitle.trim() === '') && arAppels.length === 0 && arCategories.length === 0) {
+                this.loadDefaultArabicData();
+              }
+              // Check if English data is empty in the form and load defaults if needed
+              const enGroup = this.getLanguageFormGroup('en');
+              const enHeroTitle = enGroup.get('heroTitle')?.value;
+              const enAppels = enGroup.get('appels') as FormArray;
+              const enCategories = enGroup.get('categories') as FormArray;
+              if ((!enHeroTitle || enHeroTitle.trim() === '') && enAppels.length === 0 && enCategories.length === 0) {
+                this.loadDefaultEnglishData();
+              }
             } else {
               // Old format - migrate to new format
               const oldContent: AppelsCandidaturesLanguageContent = parsedContent;
@@ -364,6 +380,9 @@ export class AdminAppelsCandidaturesFormComponent implements OnInit {
                 }
               };
               this.populateForm(content);
+              // Load default Arabic and English data since they're empty
+              this.loadDefaultArabicData();
+              this.loadDefaultEnglishData();
             }
           } catch (e) {
             console.error('Error parsing content:', e);
@@ -509,6 +528,248 @@ export class AdminAppelsCandidaturesFormComponent implements OnInit {
     this.addContactItem({ icon: 'fas fa-phone', label: 'Téléphone', value: '+222 45 25 44 21' }, 'fr');
     this.addContactItem({ icon: 'fas fa-map-marker-alt', label: 'Adresse', value: 'ANRSI, Nouakchott, Mauritanie' }, 'fr');
     this.addContactItem({ icon: 'fas fa-clock', label: 'Horaires', value: 'Lundi - Vendredi : 8h00 - 16h00' }, 'fr');
+
+    // Load default Arabic and English data
+    this.loadDefaultArabicData();
+    this.loadDefaultEnglishData();
+  }
+
+  private loadDefaultArabicData(): void {
+    // Check if Arabic data already exists to avoid duplicates
+    const arGroup = this.getLanguageFormGroup('ar');
+    const heroTitle = arGroup.get('heroTitle')?.value;
+    const existingAppels = arGroup.get('appels') as FormArray;
+    const existingCategories = arGroup.get('categories') as FormArray;
+
+    // Only load if Arabic data is empty (no hero title and no appels/categories items)
+    if ((!heroTitle || heroTitle.trim() === '') && existingAppels.length === 0 && existingCategories.length === 0) {
+      arGroup.patchValue({
+        heroTitle: 'دعوات التقديم',
+        heroSubtitle: 'فرص البحث والابتكار في موريتانيا',
+        introText: 'تطلق الوكالة الوطنية للبحث العلمي والابتكار بانتظام دعوات للتقديم لتمويل مشاريع البحث والابتكار التي تساهم في التنمية العلمية والتكنولوجية لموريتانيا.'
+      });
+
+      // Add default appels for Arabic
+      this.addAppel({
+        status: 'active',
+        title: 'دعوة لمشاريع البحث 2024',
+        description: 'تمويل مشاريع البحث في المجالات ذات الأولوية: الزراعة المستدامة، الطاقات المتجددة، تكنولوجيا المعلومات، وعلوم البيئة.',
+        details: [
+          { label: 'الميزانية :', value: 'حتى 50 مليون أوقية لكل مشروع' },
+          { label: 'المدة :', value: '12-36 شهراً' },
+          { label: 'الموعد النهائي :', value: '31 مارس 2024' },
+          { label: 'الأهلية :', value: 'مؤسسات البحث، الجامعات، الشركات' }
+        ],
+        actions: [
+          { text: 'استشارة الدعوة', url: '#', type: 'primary' },
+          { text: 'تحميل الملف', url: '#', type: 'outline' }
+        ]
+      }, 'ar');
+      this.addAppel({
+        status: 'upcoming',
+        title: 'برنامج الابتكار التكنولوجي',
+        description: 'دعم مشاريع الابتكار التكنولوجي ونقل التكنولوجيا إلى الصناعة الموريتانية.',
+        details: [
+          { label: 'الميزانية :', value: 'حتى 30 مليون أوقية لكل مشروع' },
+          { label: 'المدة :', value: '6-24 شهراً' },
+          { label: 'الفتح :', value: 'أبريل 2024' },
+          { label: 'الأهلية :', value: 'الشركات الناشئة، المؤسسات الصغيرة والمتوسطة، مراكز البحث' }
+        ],
+        actions: [
+          { text: 'التسجيل للتنبيهات', url: '#', type: 'outline' }
+        ]
+      }, 'ar');
+      this.addAppel({
+        status: 'closed',
+        title: 'منح الدكتوراه 2023',
+        description: 'برنامج منح لدعم الطلاب الموريتانيين في دراساتهم للدكتوراه في العلوم والتكنولوجيا.',
+        details: [
+          { label: 'المبلغ :', value: '500,000 أوقية/سنة لمدة 3 سنوات' },
+          { label: 'المدة :', value: '3 سنوات' },
+          { label: 'الموعد النهائي :', value: '15 ديسمبر 2023' },
+          { label: 'الأهلية :', value: 'الطلاب الموريتانيون في الماجستير' }
+        ],
+        actions: [
+          { text: 'عرض النتائج', url: '#', type: 'outline' }
+        ]
+      }, 'ar');
+
+      // Add default categories for Arabic
+      this.addCategory({
+        icon: '🌱',
+        title: 'الزراعة والأمن الغذائي',
+        items: ['التقنيات الزراعية المستدامة', 'تحسين المحاصيل', 'إدارة الموارد المائية', 'البيوتكنولوجيات الزراعية']
+      }, 'ar');
+      this.addCategory({
+        icon: '⚡',
+        title: 'الطاقات المتجددة',
+        items: ['الطاقة الشمسية والريحية', 'تخزين الطاقة', 'كفاءة الطاقة', 'التكهين الريفي']
+      }, 'ar');
+      this.addCategory({
+        icon: '💻',
+        title: 'تكنولوجيا المعلومات',
+        items: ['الذكاء الاصطناعي', 'إنترنت الأشياء', 'الأمن السيبراني', 'التطبيقات المحمولة']
+      }, 'ar');
+      this.addCategory({
+        icon: '🌍',
+        title: 'البيئة والمناخ',
+        items: ['التغير المناخي', 'التنوع البيولوجي', 'إدارة النفايات', 'التلوث والصرف الصحي']
+      }, 'ar');
+      this.addCategory({
+        icon: '🏥',
+        title: 'الصحة والطب',
+        items: ['الطب الوقائي', 'الطب عن بُعد', 'علم الأدوية', 'الصحة العامة']
+      }, 'ar');
+      this.addCategory({
+        icon: '🏭',
+        title: 'الصناعة والابتكار',
+        items: ['العمليات الصناعية', 'المواد المتقدمة', 'الروبوتات', 'نقل التكنولوجيا']
+      }, 'ar');
+
+      // Add default process steps for Arabic
+      this.addProcessStep({ number: 1, title: 'إعداد الملف', description: 'كتابة مشروع البحث، الميزانية التفصيلية، فريق البحث، ورسائل التوصية.' }, 'ar');
+      this.addProcessStep({ number: 2, title: 'التقديم عبر الإنترنت', description: 'إيداع الملف الكامل عبر منصة التقديم الإلكترونية للوكالة الوطنية للبحث العلمي والابتكار.' }, 'ar');
+      this.addProcessStep({ number: 3, title: 'التقييم العلمي', description: 'فحص المشروع من قبل لجنة خبراء مستقلين وفق معايير علمية صارمة.' }, 'ar');
+      this.addProcessStep({ number: 4, title: 'المقابلة', description: 'عرض شفهي للمشروع أمام لجنة التقييم للمشاريع المختارة مسبقاً.' }, 'ar');
+      this.addProcessStep({ number: 5, title: 'القرار والتمويل', description: 'إشعار النتائج وتوقيع اتفاقية التمويل للمشاريع المقبولة.' }, 'ar');
+
+      // Add default criteria for Arabic
+      this.addCriteria({ icon: '🔬', title: 'التميز العلمي', description: 'الجودة العلمية للمشروع، الابتكار، المنهجية الصارمة، والجدوى التقنية.' }, 'ar');
+      this.addCriteria({ icon: '👥', title: 'فريق البحث', description: 'كفاءات وخبرة الفريق، تكامل الملفات الشخصية، وقيادة المشروع.' }, 'ar');
+      this.addCriteria({ icon: '💡', title: 'التأثير والابتكار', description: 'إمكانات الابتكار، التأثير المتوقع على التنمية الوطنية، ونقل المعرفة.' }, 'ar');
+      this.addCriteria({ icon: '💰', title: 'الإدارة المالية', description: 'ميزانية واقعية ومبررة، فعالية التكلفة، وقدرة الحامل على الإدارة المالية.' }, 'ar');
+
+      // Add default support services for Arabic
+      this.addSupportService({ icon: '📋', title: 'تدريب إدارة المشاريع', description: 'تدريب على أدوات إدارة المشاريع والإجراءات الإدارية.' }, 'ar');
+      this.addSupportService({ icon: '🔍', title: 'المتابعة والتقييم', description: 'مرافقة في متابعة المشروع وتقييم النتائج.' }, 'ar');
+      this.addSupportService({ icon: '🌐', title: 'الشبكة والشراكات', description: 'تسهيل الشراكات مع المؤسسات الوطنية والدولية.' }, 'ar');
+      this.addSupportService({ icon: '📢', title: 'تعزيز النتائج', description: 'الدعم في نشر وتعزيز نتائج البحث.' }, 'ar');
+
+      // Add default contact info for Arabic
+      this.addContactItem({ icon: 'fas fa-envelope', label: 'البريد الإلكتروني', value: 'appels@anrsi.mr' }, 'ar');
+      this.addContactItem({ icon: 'fas fa-phone', label: 'الهاتف', value: '+222 45 25 44 21' }, 'ar');
+      this.addContactItem({ icon: 'fas fa-map-marker-alt', label: 'العنوان', value: 'الوكالة الوطنية للبحث العلمي والابتكار، نواكشوط، موريتانيا' }, 'ar');
+      this.addContactItem({ icon: 'fas fa-clock', label: 'ساعات العمل', value: 'الاثنين - الجمعة: 8:00 - 16:00' }, 'ar');
+    }
+  }
+
+  private loadDefaultEnglishData(): void {
+    // Check if English data already exists to avoid duplicates
+    const enGroup = this.getLanguageFormGroup('en');
+    const heroTitle = enGroup.get('heroTitle')?.value;
+    const existingAppels = enGroup.get('appels') as FormArray;
+    const existingCategories = enGroup.get('categories') as FormArray;
+
+    // Only load if English data is empty (no hero title and no appels/categories items)
+    if ((!heroTitle || heroTitle.trim() === '') && existingAppels.length === 0 && existingCategories.length === 0) {
+      enGroup.patchValue({
+        heroTitle: 'Calls for Applications',
+        heroSubtitle: 'Research and innovation opportunities in Mauritania',
+        introText: 'ANRSI regularly launches calls for applications to fund research and innovation projects that contribute to the scientific and technological development of Mauritania.'
+      });
+
+      // Add default appels for English
+      this.addAppel({
+        status: 'active',
+        title: 'Research Projects Call 2024',
+        description: 'Funding for research projects in priority areas: sustainable agriculture, renewable energy, information technology, and environmental sciences.',
+        details: [
+          { label: 'Budget:', value: 'Up to 50 million MRO per project' },
+          { label: 'Duration:', value: '12-36 months' },
+          { label: 'Deadline:', value: 'March 31, 2024' },
+          { label: 'Eligibility:', value: 'Research institutions, universities, companies' }
+        ],
+        actions: [
+          { text: 'View Call', url: '#', type: 'primary' },
+          { text: 'Download File', url: '#', type: 'outline' }
+        ]
+      }, 'en');
+      this.addAppel({
+        status: 'upcoming',
+        title: 'Technological Innovation Program',
+        description: 'Support for technological innovation projects and technology transfer to Mauritanian industry.',
+        details: [
+          { label: 'Budget:', value: 'Up to 30 million MRO per project' },
+          { label: 'Duration:', value: '6-24 months' },
+          { label: 'Opening:', value: 'April 2024' },
+          { label: 'Eligibility:', value: 'Startups, SMEs, research centers' }
+        ],
+        actions: [
+          { text: 'Subscribe to Alerts', url: '#', type: 'outline' }
+        ]
+      }, 'en');
+      this.addAppel({
+        status: 'closed',
+        title: 'Doctoral Scholarships 2023',
+        description: 'Scholarship program to support Mauritanian students in their doctoral studies in science and technology.',
+        details: [
+          { label: 'Amount:', value: '500,000 MRO/year for 3 years' },
+          { label: 'Duration:', value: '3 years' },
+          { label: 'Deadline:', value: 'December 15, 2023' },
+          { label: 'Eligibility:', value: 'Mauritanian master\'s students' }
+        ],
+        actions: [
+          { text: 'View Results', url: '#', type: 'outline' }
+        ]
+      }, 'en');
+
+      // Add default categories for English
+      this.addCategory({
+        icon: '🌱',
+        title: 'Agriculture & Food Security',
+        items: ['Sustainable farming techniques', 'Yield improvement', 'Water resource management', 'Agricultural biotechnologies']
+      }, 'en');
+      this.addCategory({
+        icon: '⚡',
+        title: 'Renewable Energy',
+        items: ['Solar and wind energy', 'Energy storage', 'Energy efficiency', 'Rural electrification']
+      }, 'en');
+      this.addCategory({
+        icon: '💻',
+        title: 'Information Technology',
+        items: ['Artificial intelligence', 'Internet of Things (IoT)', 'Cybersecurity', 'Mobile applications']
+      }, 'en');
+      this.addCategory({
+        icon: '🌍',
+        title: 'Environment & Climate',
+        items: ['Climate change', 'Biodiversity', 'Waste management', 'Pollution and sanitation']
+      }, 'en');
+      this.addCategory({
+        icon: '🏥',
+        title: 'Health & Medicine',
+        items: ['Preventive medicine', 'Telemedicine', 'Pharmacology', 'Public health']
+      }, 'en');
+      this.addCategory({
+        icon: '🏭',
+        title: 'Industry & Innovation',
+        items: ['Industrial processes', 'Advanced materials', 'Robotics', 'Technology transfer']
+      }, 'en');
+
+      // Add default process steps for English
+      this.addProcessStep({ number: 1, title: 'Application Preparation', description: 'Writing the research project, detailed budget, research team, and recommendation letters.' }, 'en');
+      this.addProcessStep({ number: 2, title: 'Online Submission', description: 'Submission of the complete file via ANRSI\'s electronic submission platform.' }, 'en');
+      this.addProcessStep({ number: 3, title: 'Scientific Evaluation', description: 'Review of the project by a committee of independent experts according to rigorous scientific criteria.' }, 'en');
+      this.addProcessStep({ number: 4, title: 'Interview', description: 'Oral presentation of the project before the evaluation committee for pre-selected projects.' }, 'en');
+      this.addProcessStep({ number: 5, title: 'Decision and Funding', description: 'Notification of results and signing of the funding agreement for selected projects.' }, 'en');
+
+      // Add default criteria for English
+      this.addCriteria({ icon: '🔬', title: 'Scientific Excellence', description: 'Scientific quality of the project, innovation, rigorous methodology, and technical feasibility.' }, 'en');
+      this.addCriteria({ icon: '👥', title: 'Research Team', description: 'Team skills and experience, profile complementarity, and project leadership.' }, 'en');
+      this.addCriteria({ icon: '💡', title: 'Impact and Innovation', description: 'Innovation potential, expected impact on national development, and knowledge transfer.' }, 'en');
+      this.addCriteria({ icon: '💰', title: 'Financial Management', description: 'Realistic and justified budget, cost-effectiveness, and financial management capacity of the applicant.' }, 'en');
+
+      // Add default support services for English
+      this.addSupportService({ icon: '📋', title: 'Project Management Training', description: 'Training on project management tools and administrative procedures.' }, 'en');
+      this.addSupportService({ icon: '🔍', title: 'Monitoring and Evaluation', description: 'Support in project monitoring and results evaluation.' }, 'en');
+      this.addSupportService({ icon: '🌐', title: 'Network and Partnerships', description: 'Facilitation of partnerships with national and international institutions.' }, 'en');
+      this.addSupportService({ icon: '📢', title: 'Results Valorization', description: 'Support in publishing and valorizing research results.' }, 'en');
+
+      // Add default contact info for English
+      this.addContactItem({ icon: 'fas fa-envelope', label: 'Email', value: 'appels@anrsi.mr' }, 'en');
+      this.addContactItem({ icon: 'fas fa-phone', label: 'Phone', value: '+222 45 25 44 21' }, 'en');
+      this.addContactItem({ icon: 'fas fa-map-marker-alt', label: 'Address', value: 'ANRSI, Nouakchott, Mauritania' }, 'en');
+      this.addContactItem({ icon: 'fas fa-clock', label: 'Hours', value: 'Monday - Friday: 8:00 AM - 4:00 PM' }, 'en');
+    }
   }
 
   populateForm(content: AppelsCandidaturesContent): void {

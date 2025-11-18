@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { Subscription } from 'rxjs';
 import { PageService, PageDTO } from '../../services/page.service';
 
 interface ProcessStep {
@@ -27,7 +28,7 @@ interface FinancementContent {
   templateUrl: './financement.component.html',
   styleUrls: ['./financement.component.scss']
 })
-export class FinancementComponent implements OnInit {
+export class FinancementComponent implements OnInit, OnDestroy {
   page: PageDTO | null = null;
   fundingInfo = {
     title: 'Financement',
@@ -39,47 +40,14 @@ export class FinancementComponent implements OnInit {
   ctaTitle: string = '';
   ctaDescription: string = '';
   isLoading = true;
+  currentLang: string = 'fr';
+  private langSubscription?: Subscription;
 
-  constructor(private pageService: PageService) {}
+  constructor(
+    private pageService: PageService,
+    private translate: TranslateService
+  ) {}
   
-  defaultFundingInfo = {
-    title: 'Financement',
-    description: 'L\'Agence finance de nombreuses activités liées à la recherche scientifique. Ces activités s\'inscrivent dans le cadre des programmes de l\'Agence qui sont annoncés annuellement.',
-    process: [
-      {
-        step: 1,
-        title: 'Identifier le programme',
-        description: 'Le candidat doit identifier le programme adapté à son activité',
-        icon: 'fas fa-search'
-      },
-      {
-        step: 2,
-        title: 'Respecter les délais',
-        description: 'Respecter les délais et conditions de candidature publiés sur le site internet de l\'Agence',
-        icon: 'fas fa-clock'
-      },
-      {
-        step: 3,
-        title: 'Consulter la réglementation',
-        description: 'Consulter l\'arrêté ministériel réglementant le financement pour plus de détails',
-        icon: 'fas fa-file-alt'
-      }
-    ],
-    requirements: [
-      'Être une structure de recherche reconnue',
-      'Avoir un projet conforme aux programmes de l\'ANRSI',
-      'Respecter les délais de candidature',
-      'Fournir tous les documents requis',
-      'Justifier de la pertinence scientifique du projet'
-    ],
-    benefits: [
-      'Financement des activités de recherche scientifique',
-      'Soutien aux projets innovants',
-      'Accompagnement dans la réalisation des projets',
-      'Mise en réseau avec d\'autres chercheurs',
-      'Valorisation des résultats de recherche'
-    ]
-  };
 
   async ngOnInit(): Promise<void> {
     try {
@@ -89,52 +57,106 @@ export class FinancementComponent implements OnInit {
       console.warn('AOS library could not be loaded:', error);
     }
     
+    this.currentLang = this.translate.currentLang || this.translate.defaultLang || 'fr';
+    this.langSubscription = this.translate.onLangChange.subscribe(event => {
+      this.currentLang = event.lang;
+      this.updateTranslatedContent();
+    });
+    
     this.loadPage();
+  }
+
+  ngOnDestroy(): void {
+    if (this.langSubscription) {
+      this.langSubscription.unsubscribe();
+    }
   }
 
   loadPage(): void {
     this.pageService.getPageBySlug('financement').subscribe({
       next: (page) => {
         this.page = page;
-        this.parseContent();
+        this.updateTranslatedContent();
         this.isLoading = false;
       },
       error: (error) => {
         console.error('Error loading page:', error);
-        this.loadDefaultContent();
+        // Show empty state - data should come from database via DataInitializer
+        this.fundingInfo = {
+          title: '',
+          description: '',
+          process: [],
+          requirements: [],
+          benefits: []
+        };
+        this.ctaTitle = '';
+        this.ctaDescription = '';
         this.isLoading = false;
       }
     });
   }
 
-  parseContent(): void {
-    if (!this.page?.content) {
-      this.loadDefaultContent();
-      return;
-    }
-
-    try {
-      const content: FinancementContent = JSON.parse(this.page.content);
-      
-      this.fundingInfo = {
-        title: content.heroTitle || this.defaultFundingInfo.title,
-        description: content.heroSubtitle || this.defaultFundingInfo.description,
-        process: content.process || this.defaultFundingInfo.process,
-        requirements: content.requirements || this.defaultFundingInfo.requirements,
-        benefits: content.benefits || this.defaultFundingInfo.benefits
-      };
-      
-      this.ctaTitle = content.ctaTitle || 'Prêt à candidater ?';
-      this.ctaDescription = content.ctaDescription || 'Consultez nos appels à candidatures et soumettez votre projet';
-    } catch (e) {
-      console.error('Error parsing content:', e);
-      this.loadDefaultContent();
+  updateTranslatedContent(): void {
+    if (!this.page) return;
+    const translation = this.page.translations?.[this.currentLang];
+    if (translation && translation.content) {
+      try {
+        this.parseContent(translation.content);
+        if (translation.heroTitle) this.page.heroTitle = translation.heroTitle;
+        if (translation.heroSubtitle) this.page.heroSubtitle = translation.heroSubtitle;
+        if (translation.title) this.page.title = translation.title;
+      } catch (e) {
+        console.error('Error parsing translated content:', e);
+        this.loadContentFromPage();
+      }
+    } else {
+      this.loadContentFromPage();
     }
   }
 
-  loadDefaultContent(): void {
-    this.fundingInfo = this.defaultFundingInfo;
-    this.ctaTitle = 'Prêt à candidater ?';
-    this.ctaDescription = 'Consultez nos appels à candidatures et soumettez votre projet';
+  loadContentFromPage(): void {
+    if (this.page?.content) {
+      this.parseContent(this.page.content);
+    } else {
+      // Show empty state - data should come from database via DataInitializer
+      this.fundingInfo = {
+        title: '',
+        description: '',
+        process: [],
+        requirements: [],
+        benefits: []
+      };
+      this.ctaTitle = '';
+      this.ctaDescription = '';
+    }
+  }
+
+  parseContent(contentString: string): void {
+    try {
+      const content: FinancementContent = JSON.parse(contentString);
+      
+      this.fundingInfo = {
+        title: content.heroTitle || '',
+        description: content.heroSubtitle || '',
+        process: content.process || [],
+        requirements: content.requirements || [],
+        benefits: content.benefits || []
+      };
+      
+      this.ctaTitle = content.ctaTitle || '';
+      this.ctaDescription = content.ctaDescription || '';
+    } catch (e) {
+      console.error('Error parsing content:', e);
+      // Show empty state - data should come from database via DataInitializer
+      this.fundingInfo = {
+        title: '',
+        description: '',
+        process: [],
+        requirements: [],
+        benefits: []
+      };
+      this.ctaTitle = '';
+      this.ctaDescription = '';
+    }
   }
 }

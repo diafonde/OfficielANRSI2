@@ -16,7 +16,7 @@
 </div>
 
 <!-- Article Content -->
-<div class="article-detail-hero" *ngIf="article && !loading" [ngStyle]="{'background-image': 'url(' + article.imageUrl + ')'}">
+<div class="article-detail-hero" *ngIf="article && !loading" [ngStyle]="{'background-image': 'url(' + (getAllImages()[0] || article.imageUrl) + ')'}">
   <div class="container">
     <div class="article-category">{{ article.category }}</div>
     <h1>{{ displayTitle || article.title }}</h1>
@@ -44,13 +44,18 @@
       {{ displayExcerpt || article.excerpt }}
     </div>
     
-    <div class="article-featured-image">
-      <img [src]="article.imageUrl" [alt]="article.title" class="img-fluid" (error)="onImageError($event)">
+    <div class="article-images-gallery" *ngIf="getAllImages().length > 0">
+      <div class="article-featured-image" *ngIf="getAllImages().length === 1">
+        <img [src]="getAllImages()[0]" [alt]="displayTitle || article.title" class="img-fluid" (error)="onImageError($event)">
+      </div>
+      <div class="article-images-grid" *ngIf="getAllImages().length > 1">
+        <div class="article-image-item" *ngFor="let imageUrl of getAllImages(); let i = index">
+          <img [src]="imageUrl" [alt]="(displayTitle || article.title) + ' - Image ' + (i + 1)" class="img-fluid" (error)="onImageError($event)">
+        </div>
+      </div>
     </div>
     
-    <div class="article-text">
-      <p *ngFor="let paragraph of articleParagraphs">{{ paragraph }}</p>
-    </div>
+    <div class="article-text" [innerHTML]="safeContent || displayContent || article.content"></div>
     
     <div class="article-tags">
       <span *ngFor="let tag of article.tags" class="article-tag">{{ tag }}</span>

@@ -1,6 +1,6 @@
 <div class="app-container">
     <div class="independent-banner" *ngIf="!isAdminRoute">
-    <marquee>RÉPUBLIQUE ISLAMIQUE DE MAURITANIE - MINISTRE DE L'ENSEIGNEMENT SUPÉRIEUR -  AGENCE NATIONALE DE LA RECHERCHE SCIENTIFIQUE ET DE L'INNOVATION (ANRSI)</marquee>
+    <marquee>{{ 'MARQUEE_BANNER_TEXT' | translate }}</marquee>
   </div>
   <app-header *ngIf="!isAdminRoute"></app-header>
   <app-top-bar *ngIf="!isAdminRoute"></app-top-bar>

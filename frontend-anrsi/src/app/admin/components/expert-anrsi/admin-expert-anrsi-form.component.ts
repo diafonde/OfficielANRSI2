@@ -291,6 +291,22 @@ export class AdminExpertAnrsiFormComponent implements OnInit {
             if (parsedContent.translations) {
               const content: ExpertAnrsiContent = parsedContent;
               this.populateForm(content);
+              // Check if Arabic data is empty and load defaults
+              const arGroup = this.getLanguageFormGroup('ar');
+              const arHeroTitle = arGroup.get('heroTitle')?.value;
+              const arRequirements = arGroup.get('requirements') as FormArray;
+              const arDomains = arGroup.get('domains') as FormArray;
+              if ((!arHeroTitle || arHeroTitle.trim() === '') && arRequirements.length === 0 && arDomains.length === 0) {
+                this.loadDefaultArabicData();
+              }
+              // Check if English data is empty and load defaults
+              const enGroup = this.getLanguageFormGroup('en');
+              const enHeroTitle = enGroup.get('heroTitle')?.value;
+              const enRequirements = enGroup.get('requirements') as FormArray;
+              const enDomains = enGroup.get('domains') as FormArray;
+              if ((!enHeroTitle || enHeroTitle.trim() === '') && enRequirements.length === 0 && enDomains.length === 0) {
+                this.loadDefaultEnglishData();
+              }
             } else {
               // Old format - migrate to new format
               const oldContent: ExpertAnrsiLanguageContent = parsedContent;
@@ -302,6 +318,9 @@ export class AdminExpertAnrsiFormComponent implements OnInit {
                 }
               };
               this.populateForm(content);
+              // Load default Arabic and English data for old format
+              this.loadDefaultArabicData();
+              this.loadDefaultEnglishData();
             }
           } catch (e) {
             console.error('Error parsing content:', e);
@@ -411,6 +430,174 @@ export class AdminExpertAnrsiFormComponent implements OnInit {
     this.addRequiredDocument('Copies des diplômes et certifications', 'fr');
     this.addRequiredDocument('Lettres de recommandation (optionnel)', 'fr');
     this.addRequiredDocument('Liste des projets de recherche dirigés', 'fr');
+
+    // Load default Arabic and English data
+    this.loadDefaultArabicData();
+    this.loadDefaultEnglishData();
+  }
+
+  private loadDefaultArabicData(): void {
+    // Check if Arabic data already exists to avoid duplicates
+    const arGroup = this.getLanguageFormGroup('ar');
+    const heroTitle = arGroup.get('heroTitle')?.value;
+    const existingRequirements = arGroup.get('requirements') as FormArray;
+    const existingDomains = arGroup.get('domains') as FormArray;
+
+    // Only load if Arabic data is empty (no hero title and no requirements/domains items)
+    if ((!heroTitle || heroTitle.trim() === '') && existingRequirements.length === 0 && existingDomains.length === 0) {
+      arGroup.patchValue({
+        heroTitle: 'خبير ANRSI',
+        heroSubtitle: 'انضم إلى شبكة الخبراء العلمية والتكنولوجية لدينا',
+        introText: 'تقوم الوكالة الوطنية للبحث العلمي والابتكار (ANRSI) بتجنيد خبراء مؤهلين لتقييم المشاريع البحثية والمساهمة في التنمية العلمية في موريتانيا.',
+        applicationText: 'للتقديم كخبير ANRSI، يرجى إرسال طلبكم إلى:'
+      });
+
+      // Add default requirements for Arabic
+      this.addRequirement({
+        icon: '🎓',
+        title: 'الخلفية الأكاديمية',
+        items: [
+          'دكتوراه في مجال علمي أو تكنولوجي',
+          'خبرة بحثية كبيرة',
+          'منشورات علمية معترف بها',
+          'إجادة الفرنسية و/أو الإنجليزية'
+        ]
+      }, 'ar');
+      this.addRequirement({
+        icon: '🔬',
+        title: 'الخبرة التقنية',
+        items: [
+          'معرفة متعمقة بمجال الخبرة',
+          'خبرة في تقييم المشاريع',
+          'مهارات تحليلية وقدرة على التلخيص',
+          'دقة علمية وأخلاقية'
+        ]
+      }, 'ar');
+      this.addRequirement({
+        icon: '🌍',
+        title: 'الالتزام',
+        items: [
+          'التفرغ للتقييمات',
+          'الالتزام بالتنمية العلمية',
+          'الالتزام بالمواعيد والإجراءات',
+          'السرية والحيادية'
+        ]
+      }, 'ar');
+
+      // Add default domains for Arabic
+      this.addDomain({ icon: '🔬', title: 'العلوم الدقيقة', description: 'الرياضيات، الفيزياء، الكيمياء، علوم الأرض' }, 'ar');
+      this.addDomain({ icon: '🌱', title: 'علوم الحياة', description: 'البيولوجيا، الزراعة، الطب، العلوم البيطرية' }, 'ar');
+      this.addDomain({ icon: '💻', title: 'تقنيات المعلومات', description: 'علوم الحاسوب، الذكاء الاصطناعي، الاتصالات' }, 'ar');
+      this.addDomain({ icon: '⚡', title: 'علوم الهندسة', description: 'الهندسة المدنية، الميكانيكية، الكهربائية، الطاقات المتجددة' }, 'ar');
+      this.addDomain({ icon: '🌍', title: 'العلوم الاجتماعية', description: 'الاقتصاد، علم الاجتماع، القانون، العلوم السياسية' }, 'ar');
+      this.addDomain({ icon: '🌿', title: 'علوم البيئة', description: 'علم البيئة، علم المناخ، إدارة الموارد الطبيعية' }, 'ar');
+
+      // Add default process steps for Arabic
+      this.addProcessStep({ number: 1, title: 'التقديم', description: 'تقديم طلب مع سيرة ذاتية مفصلة، قائمة المنشورات، ورسالة الدافع.' }, 'ar');
+      this.addProcessStep({ number: 2, title: 'التقييم', description: 'يتم مراجعة الطلب من قبل لجنة خبراء ANRSI وفق معايير موضوعية.' }, 'ar');
+      this.addProcessStep({ number: 3, title: 'المقابلة', description: 'إجراء مقابلة مع المرشحين المختارين لتقييم المهارات والدافعية.' }, 'ar');
+      this.addProcessStep({ number: 4, title: 'التدريب', description: 'تدريب على إجراءات تقييم ANRSI والأدوات المستخدمة.' }, 'ar');
+      this.addProcessStep({ number: 5, title: 'الانضمام', description: 'الانضمام إلى شبكة الخبراء وتكليف أول مهام التقييم.' }, 'ar');
+
+      // Add default benefits for Arabic
+      this.addBenefit({ icon: '💼', title: 'التعويض المالي', description: 'تعويض جذاب لكل مهمة تقييم وفق الخبرة والتعقيد.' }, 'ar');
+      this.addBenefit({ icon: '🌐', title: 'شبكة دولية', description: 'الانضمام إلى شبكة دولية من الخبراء وفرص التعاون.' }, 'ar');
+      this.addBenefit({ icon: '📚', title: 'التدريب المستمر', description: 'الوصول إلى تدريبات وندوات للحفاظ على المهارات وتطويرها.' }, 'ar');
+      this.addBenefit({ icon: '🏆', title: 'الاعتراف', description: 'الاعتراف الرسمي كخبير علمي والمساهمة في التنمية الوطنية.' }, 'ar');
+
+      // Add default contact info for Arabic
+      this.addContactItem({ icon: 'fas fa-envelope', label: 'البريد الإلكتروني', value: 'expert@anrsi.mr' }, 'ar');
+      this.addContactItem({ icon: 'fas fa-phone', label: 'الهاتف', value: '+222 45 25 44 21' }, 'ar');
+
+      // Add default required documents for Arabic
+      this.addRequiredDocument('سيرة ذاتية مفصلة مع قائمة المنشورات', 'ar');
+      this.addRequiredDocument('رسالة الدافع', 'ar');
+      this.addRequiredDocument('نسخ الشهادات والدبلومات', 'ar');
+      this.addRequiredDocument('خطابات التوصية (اختياري)', 'ar');
+      this.addRequiredDocument('قائمة المشاريع البحثية التي تم إدارتها', 'ar');
+    }
+  }
+
+  private loadDefaultEnglishData(): void {
+    // Check if English data already exists to avoid duplicates
+    const enGroup = this.getLanguageFormGroup('en');
+    const heroTitle = enGroup.get('heroTitle')?.value;
+    const existingRequirements = enGroup.get('requirements') as FormArray;
+    const existingDomains = enGroup.get('domains') as FormArray;
+
+    // Only load if English data is empty (no hero title and no requirements/domains items)
+    if ((!heroTitle || heroTitle.trim() === '') && existingRequirements.length === 0 && existingDomains.length === 0) {
+      enGroup.patchValue({
+        heroTitle: 'ANRSI Expert',
+        heroSubtitle: 'Join our network of scientific and technological experts',
+        introText: 'The National Agency for Scientific Research and Innovation (ANRSI) recruits qualified experts to evaluate research projects and contribute to the scientific development of Mauritania.',
+        applicationText: 'To apply as an ANRSI expert, please send your application to:'
+      });
+
+      // Add default requirements for English
+      this.addRequirement({
+        icon: '🎓',
+        title: 'Academic Background',
+        items: [
+          'PhD in a scientific or technological field',
+          'Significant research experience',
+          'Recognized scientific publications',
+          'Fluency in French and/or English'
+        ]
+      }, 'en');
+      this.addRequirement({
+        icon: '🔬',
+        title: 'Technical Expertise',
+        items: [
+          'In-depth knowledge of the field of expertise',
+          'Experience in project evaluation',
+          'Analytical and synthesis skills',
+          'Scientific rigor and ethics'
+        ]
+      }, 'en');
+      this.addRequirement({
+        icon: '🌍',
+        title: 'Commitment',
+        items: [
+          'Availability for evaluations',
+          'Commitment to scientific development',
+          'Respect for deadlines and procedures',
+          'Confidentiality and impartiality'
+        ]
+      }, 'en');
+
+      // Add default domains for English
+      this.addDomain({ icon: '🔬', title: 'Exact Sciences', description: 'Mathematics, Physics, Chemistry, Earth Sciences' }, 'en');
+      this.addDomain({ icon: '🌱', title: 'Life Sciences', description: 'Biology, Agriculture, Medicine, Veterinary Sciences' }, 'en');
+      this.addDomain({ icon: '💻', title: 'Information Technologies', description: 'Computer Science, Artificial Intelligence, Telecommunications' }, 'en');
+      this.addDomain({ icon: '⚡', title: 'Engineering Sciences', description: 'Civil, Mechanical, Electrical Engineering, Renewable Energies' }, 'en');
+      this.addDomain({ icon: '🌍', title: 'Social Sciences', description: 'Economics, Sociology, Law, Political Science' }, 'en');
+      this.addDomain({ icon: '🌿', title: 'Environmental Sciences', description: 'Ecology, Climatology, Natural Resource Management' }, 'en');
+
+      // Add default process steps for English
+      this.addProcessStep({ number: 1, title: 'Application', description: 'Submit application with detailed CV, list of publications, and motivation letter.' }, 'en');
+      this.addProcessStep({ number: 2, title: 'Evaluation', description: 'The application is reviewed by an ANRSI expert committee based on objective criteria.' }, 'en');
+      this.addProcessStep({ number: 3, title: 'Interview', description: 'Interview with selected candidates to assess skills and motivation.' }, 'en');
+      this.addProcessStep({ number: 4, title: 'Training', description: 'Training on ANRSI evaluation procedures and tools.' }, 'en');
+      this.addProcessStep({ number: 5, title: 'Integration', description: 'Integration into the expert network and assignment of initial evaluation tasks.' }, 'en');
+
+      // Add default benefits for English
+      this.addBenefit({ icon: '💼', title: 'Compensation', description: 'Attractive remuneration for each evaluation mission according to expertise and complexity.' }, 'en');
+      this.addBenefit({ icon: '🌐', title: 'International Network', description: 'Integration into an international network of experts and collaboration opportunities.' }, 'en');
+      this.addBenefit({ icon: '📚', title: 'Continuous Training', description: 'Access to training and seminars to maintain and develop skills.' }, 'en');
+      this.addBenefit({ icon: '🏆', title: 'Recognition', description: 'Official recognition as a scientific expert and contribution to national development.' }, 'en');
+
+      // Add default contact info for English
+      this.addContactItem({ icon: 'fas fa-envelope', label: 'Email', value: 'expert@anrsi.mr' }, 'en');
+      this.addContactItem({ icon: 'fas fa-phone', label: 'Phone', value: '+222 45 25 44 21' }, 'en');
+
+      // Add default required documents for English
+      this.addRequiredDocument('Detailed CV with list of publications', 'en');
+      this.addRequiredDocument('Motivation letter', 'en');
+      this.addRequiredDocument('Copies of diplomas and certificates', 'en');
+      this.addRequiredDocument('Recommendation letters (optional)', 'en');
+      this.addRequiredDocument('List of research projects led', 'en');
+    }
   }
 
   populateForm(content: ExpertAnrsiContent): void {

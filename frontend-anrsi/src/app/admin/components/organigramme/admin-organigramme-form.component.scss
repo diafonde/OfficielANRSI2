@@ -13,6 +13,78 @@
     }
   }
 
+  .language-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--neutral-200);
+    padding-bottom: 0;
+
+    .lang-tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--neutral-600);
+      position: relative;
+
+      .lang-flag {
+        font-size: 18px;
+      }
+
+      .lang-name {
+        font-weight: 500;
+      }
+
+      .lang-status {
+        margin-left: 8px;
+        
+        .fa-check-circle {
+          color: #28a745;
+        }
+        
+        .fa-exclamation-circle {
+          color: #ffc107;
+        }
+      }
+
+      &:hover {
+        background-color: var(--neutral-50);
+        color: var(--neutral-800);
+      }
+
+      &.active {
+        color: var(--primary-500);
+        border-bottom-color: var(--primary-500);
+        background-color: var(--neutral-50);
+      }
+
+      &.has-content {
+        &::before {
+          content: '';
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background-color: #ffc107;
+        }
+      }
+
+      &.valid.has-content::before {
+        background-color: #28a745;
+      }
+    }
+  }
+
   .error-message {
     background: #fee;
     color: #c33;

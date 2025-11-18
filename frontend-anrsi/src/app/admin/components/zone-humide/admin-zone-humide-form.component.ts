@@ -392,6 +392,22 @@ export class AdminZoneHumideFormComponent implements OnInit {
             if (parsedContent.translations) {
               const content: ZoneHumideContent = parsedContent;
               this.populateForm(content);
+              // Check if Arabic data is empty in the form and load defaults if needed
+              const arGroup = this.getLanguageFormGroup('ar');
+              const arHeroTitle = arGroup.get('heroTitle')?.value;
+              const arOverview = arGroup.get('overview') as FormArray;
+              const arThemes = arGroup.get('themes') as FormArray;
+              if ((!arHeroTitle || arHeroTitle.trim() === '') && arOverview.length === 0 && arThemes.length === 0) {
+                this.loadDefaultArabicData();
+              }
+              // Check if English data is empty in the form and load defaults if needed
+              const enGroup = this.getLanguageFormGroup('en');
+              const enHeroTitle = enGroup.get('heroTitle')?.value;
+              const enOverview = enGroup.get('overview') as FormArray;
+              const enThemes = enGroup.get('themes') as FormArray;
+              if ((!enHeroTitle || enHeroTitle.trim() === '') && enOverview.length === 0 && enThemes.length === 0) {
+                this.loadDefaultEnglishData();
+              }
             } else {
               // Old format - migrate to new format
               const oldContent: ZoneHumideLanguageContent = parsedContent;
@@ -403,6 +419,9 @@ export class AdminZoneHumideFormComponent implements OnInit {
                 }
               };
               this.populateForm(content);
+              // Load default Arabic and English data since they're empty
+              this.loadDefaultArabicData();
+              this.loadDefaultEnglishData();
             }
           } catch (e) {
             console.error('Error parsing content:', e);
@@ -422,6 +441,18 @@ export class AdminZoneHumideFormComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  private isLanguageContentEmpty(content: ZoneHumideLanguageContent): boolean {
+    return !content ||
+           (!content.heroTitle && !content.heroSubtitle && !content.introText &&
+            (!content.overview || content.overview.length === 0) &&
+            (!content.themes || content.themes.length === 0) &&
+            (!content.programme || content.programme.length === 0) &&
+            (!content.speakers || content.speakers.length === 0) &&
+            (!content.registrationModes || content.registrationModes.length === 0) &&
+            (!content.processSteps || content.processSteps.length === 0) &&
+            (!content.contactInfo || content.contactInfo.length === 0));
   }
 
   private getEmptyLanguageContent(): ZoneHumideLanguageContent {
@@ -516,6 +547,182 @@ export class AdminZoneHumideFormComponent implements OnInit {
     this.addContactItem({ icon: 'fas fa-phone', label: 'Téléphone', value: '+222 45 25 44 21' }, 'fr');
     this.addContactItem({ icon: 'fas fa-map-marker-alt', label: 'Lieu', value: 'Centre International de Conférences, Nouakchott' }, 'fr');
     this.addContactItem({ icon: 'fas fa-calendar', label: 'Date Limite', value: '28 Février 2024' }, 'fr');
+
+    // Load default Arabic and English data
+    this.loadDefaultArabicData();
+    this.loadDefaultEnglishData();
+  }
+
+  private loadDefaultArabicData(): void {
+    // Check if Arabic data already exists to avoid duplicates
+    const arGroup = this.getLanguageFormGroup('ar');
+    const heroTitle = arGroup.get('heroTitle')?.value;
+    const existingOverview = arGroup.get('overview') as FormArray;
+    const existingThemes = arGroup.get('themes') as FormArray;
+
+    // Only load if Arabic data is empty (no hero title and no overview/themes items)
+    if ((!heroTitle || heroTitle.trim() === '') && existingOverview.length === 0 && existingThemes.length === 0) {
+      arGroup.patchValue({
+        heroTitle: 'المناطق الرطبة',
+        heroSubtitle: 'المؤتمر الدولي حول المناطق الرطبة في الساحل',
+        introText: 'تنظم الوكالة الوطنية للبحث العلمي والابتكار مؤتمراً دولياً رئيسياً حول الحفاظ والإدارة المستدامة للمناطق الرطبة في الساحل، يجمع الخبراء والباحثين وصناع القرار لتبادل الآراء حول القضايا البيئية والمناخية.'
+      });
+
+      // Add default overview for Arabic
+      this.addOverview({
+        icon: '📅',
+        title: 'التواريخ والمكان',
+        content: [
+          { label: 'التاريخ :', value: '15-17 مارس 2024' },
+          { label: 'المكان :', value: 'المركز الدولي للمؤتمرات، نواكشوط' },
+          { label: 'الشكل :', value: 'حضوري وعبر الإنترنت' }
+        ]
+      }, 'ar');
+      this.addOverview({
+        icon: '👥',
+        title: 'المشاركون المتوقعون',
+        content: [
+          { label: 'الخبراء الدوليون :', value: 'أكثر من 50 متخصص' },
+          { label: 'الباحثون :', value: 'أكثر من 100 عالم' },
+          { label: 'صناع القرار :', value: 'الوزراء والمسؤولون' },
+          { label: 'المنظمات غير الحكومية ومنظمات المجتمع المدني :', value: 'منظمات المجتمع المدني' }
+        ]
+      }, 'ar');
+      this.addOverview({
+        icon: '🌍',
+        title: 'الدول المشاركة',
+        content: [
+          { label: 'غرب أفريقيا :', value: 'السنغال، مالي، النيجر، بوركينا فاسو' },
+          { label: 'شمال أفريقيا :', value: 'المغرب، الجزائر، تونس' },
+          { label: 'أوروبا :', value: 'فرنسا، بلجيكا، إسبانيا' },
+          { label: 'المنظمات :', value: 'الاتحاد الدولي لحفظ الطبيعة، رامسار، برنامج الأمم المتحدة للبيئة' }
+        ]
+      }, 'ar');
+
+      // Add default themes for Arabic
+      this.addTheme({
+        icon: '💧',
+        title: 'إدارة الموارد المائية',
+        items: ['الحفاظ على المناطق الرطبة', 'الإدارة المتكاملة لأحواض الأنهار', 'تقنيات معالجة المياه', 'اقتصاد المياه']
+      }, 'ar');
+      this.addTheme({
+        icon: '🌱',
+        title: 'التنوع البيولوجي والنظم الإيكولوجية',
+        items: ['حماية الحيوانات والنباتات', 'الاستعادة البيئية', 'الخدمات الإيكولوجية', 'الممرات البيئية']
+      }, 'ar');
+      this.addTheme({
+        icon: '🌡️',
+        title: 'التغير المناخي',
+        items: ['التكيف مع التغيرات المناخية', 'التخفيف من الآثار', 'النمذجة المناخية', 'استراتيجيات المرونة']
+      }, 'ar');
+      this.addTheme({
+        icon: '👨‍🌾',
+        title: 'التنمية المستدامة',
+        items: ['الزراعة المستدامة', 'الصيد المسؤول', 'السياحة البيئية', 'الاقتصاد الأخضر']
+      }, 'ar');
+      this.addTheme({
+        icon: '🏛️',
+        title: 'الحوكمة والسياسات',
+        items: ['الأطر القانونية', 'السياسات العامة', 'المشاركة المجتمعية', 'التعاون الدولي']
+      }, 'ar');
+      this.addTheme({
+        icon: '🔬',
+        title: 'البحث والابتكار',
+        items: ['تقنيات المراقبة', 'الابتكار البيئي', 'نقل المعرفة', 'التدريب والتعليم']
+      }, 'ar');
+
+      // Add default contact info for Arabic
+      this.addContactItem({ icon: 'fas fa-envelope', label: 'البريد الإلكتروني', value: 'zonehumide@anrsi.mr' }, 'ar');
+      this.addContactItem({ icon: 'fas fa-phone', label: 'الهاتف', value: '+222 45 25 44 21' }, 'ar');
+      this.addContactItem({ icon: 'fas fa-map-marker-alt', label: 'المكان', value: 'المركز الدولي للمؤتمرات، نواكشوط' }, 'ar');
+      this.addContactItem({ icon: 'fas fa-calendar', label: 'الموعد النهائي', value: '28 فبراير 2024' }, 'ar');
+    }
+  }
+
+  private loadDefaultEnglishData(): void {
+    // Check if English data already exists to avoid duplicates
+    const enGroup = this.getLanguageFormGroup('en');
+    const heroTitle = enGroup.get('heroTitle')?.value;
+    const existingOverview = enGroup.get('overview') as FormArray;
+    const existingThemes = enGroup.get('themes') as FormArray;
+
+    // Only load if English data is empty (no hero title and no overview/themes items)
+    if ((!heroTitle || heroTitle.trim() === '') && existingOverview.length === 0 && existingThemes.length === 0) {
+      enGroup.patchValue({
+        heroTitle: 'Wetlands',
+        heroSubtitle: 'International Colloquium on Sahel Wetlands',
+        introText: 'ANRSI organizes a major international colloquium on the preservation and sustainable management of Sahel wetlands, bringing together experts, researchers and decision-makers to exchange views on environmental and climate issues.'
+      });
+
+      // Add default overview for English
+      this.addOverview({
+        icon: '📅',
+        title: 'Dates and Venue',
+        content: [
+          { label: 'Date:', value: 'March 15-17, 2024' },
+          { label: 'Venue:', value: 'International Conference Center, Nouakchott' },
+          { label: 'Format:', value: 'In-person and online' }
+        ]
+      }, 'en');
+      this.addOverview({
+        icon: '👥',
+        title: 'Expected Participants',
+        content: [
+          { label: 'International experts:', value: '50+ specialists' },
+          { label: 'Researchers:', value: '100+ scientists' },
+          { label: 'Decision-makers:', value: 'Ministers and officials' },
+          { label: 'NGOs and CSOs:', value: 'Civil society organizations' }
+        ]
+      }, 'en');
+      this.addOverview({
+        icon: '🌍',
+        title: 'Participating Countries',
+        content: [
+          { label: 'West Africa:', value: 'Senegal, Mali, Niger, Burkina Faso' },
+          { label: 'North Africa:', value: 'Morocco, Algeria, Tunisia' },
+          { label: 'Europe:', value: 'France, Belgium, Spain' },
+          { label: 'Organizations:', value: 'IUCN, Ramsar, UNEP' }
+        ]
+      }, 'en');
+
+      // Add default themes for English
+      this.addTheme({
+        icon: '💧',
+        title: 'Water Resources Management',
+        items: ['Wetland conservation', 'Integrated watershed management', 'Water treatment technologies', 'Water economics']
+      }, 'en');
+      this.addTheme({
+        icon: '🌱',
+        title: 'Biodiversity and Ecosystems',
+        items: ['Wildlife and flora protection', 'Ecological restoration', 'Ecosystem services', 'Ecological corridors']
+      }, 'en');
+      this.addTheme({
+        icon: '🌡️',
+        title: 'Climate Change',
+        items: ['Adaptation to climate change', 'Mitigation of effects', 'Climate modeling', 'Resilience strategies']
+      }, 'en');
+      this.addTheme({
+        icon: '👨‍🌾',
+        title: 'Sustainable Development',
+        items: ['Sustainable agriculture', 'Responsible fishing', 'Ecotourism', 'Green economy']
+      }, 'en');
+      this.addTheme({
+        icon: '🏛️',
+        title: 'Governance and Policies',
+        items: ['Legal frameworks', 'Public policies', 'Community participation', 'International cooperation']
+      }, 'en');
+      this.addTheme({
+        icon: '🔬',
+        title: 'Research and Innovation',
+        items: ['Monitoring technologies', 'Environmental innovation', 'Knowledge transfer', 'Training and education']
+      }, 'en');
+
+      // Add default contact info for English
+      this.addContactItem({ icon: 'fas fa-envelope', label: 'Email', value: 'zonehumide@anrsi.mr' }, 'en');
+      this.addContactItem({ icon: 'fas fa-phone', label: 'Phone', value: '+222 45 25 44 21' }, 'en');
+      this.addContactItem({ icon: 'fas fa-map-marker-alt', label: 'Location', value: 'International Conference Center, Nouakchott' }, 'en');
+      this.addContactItem({ icon: 'fas fa-calendar', label: 'Deadline', value: 'February 28, 2024' }, 'en');
+    }
   }
 
   populateForm(content: ZoneHumideContent): void {

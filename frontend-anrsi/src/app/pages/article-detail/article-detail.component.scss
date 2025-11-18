@@ -81,16 +81,96 @@
   margin-bottom: var(--space-6);
   border-radius: 8px;
   overflow: hidden;
+  
+  img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+}
+
+.article-images-gallery {
+  margin-bottom: var(--space-6);
+}
+
+.article-images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.article-image-item {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+  }
+}
+
+@media (max-width: 768px) {
+  .article-images-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
 }
 
 .article-text {
   font-size: var(--text-lg);
   line-height: 1.7;
   color: var(--neutral-800);
-}
-
-.article-text p {
-  margin-bottom: var(--space-6);
+  
+  p {
+    margin-bottom: var(--space-6);
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  
+  // Ensure proper spacing for formatted content
+  br {
+    line-height: 1.7;
+  }
+  
+  // Style any headings that might be in the content
+  h1, h2, h3, h4, h5, h6 {
+    margin-top: var(--space-8);
+    margin-bottom: var(--space-4);
+    color: var(--neutral-900);
+    font-weight: 600;
+  }
+  
+  // Style lists if present
+  ul, ol {
+    margin: var(--space-4) 0;
+    padding-left: var(--space-6);
+    
+    li {
+      margin-bottom: var(--space-2);
+    }
+  }
+  
+  // Style links if present
+  a {
+    color: var(--primary-500);
+    text-decoration: underline;
+    
+    &:hover {
+      color: var(--primary-600);
+    }
+  }
 }
 
 .article-tags {

@@ -1,5 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { Subscription } from 'rxjs';
 import { PageService, PageDTO } from '../../services/page.service';
 
 interface Position {
@@ -33,11 +35,11 @@ interface OrganigrammeContent {
 @Component({
   selector: 'app-organigramme',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './organigramme.component.html',
   styleUrls: ['./organigramme.component.scss']
 })
-export class OrganigrammeComponent implements OnInit {
+export class OrganigrammeComponent implements OnInit, OnDestroy {
   page: PageDTO | null = null;
   heroTitle: string = '';
   heroSubtitle: string = '';
@@ -47,153 +49,99 @@ export class OrganigrammeComponent implements OnInit {
   responsibilitiesTitle: string = '';
   responsibilities: Responsibility[] = [];
   isLoading = true;
+  currentLang: string = 'fr';
+  private langSubscription?: Subscription;
 
-  constructor(private pageService: PageService) {}
-  
-  defaultLevels: Level[] = [
-    {
-      levelNumber: 1,
-      positions: [{
-        icon: '👑',
-        title: 'Haut Conseil de la Recherche Scientifique et de l\'Innovation',
-        description: 'Présidé par Son Excellence le Premier Ministre',
-        isDirector: true
-      }]
-    },
-    {
-      levelNumber: 2,
-      positions: [{
-        icon: '👔',
-        title: 'Direction Générale',
-        description: 'Directeur Général de l\'ANRSI',
-        isDirector: true
-      }]
-    },
-    {
-      levelNumber: 3,
-      positions: [
-        {
-          icon: '🔬',
-          title: 'Direction de la Recherche',
-          description: 'Gestion des programmes de recherche',
-          isDirector: false
-        },
-        {
-          icon: '💡',
-          title: 'Direction de l\'Innovation',
-          description: 'Promotion de l\'innovation technologique',
-          isDirector: false
-        },
-        {
-          icon: '💰',
-          title: 'Direction Financière',
-          description: 'Gestion des fonds et budgets',
-          isDirector: false
-        }
-      ]
-    },
-    {
-      levelNumber: 4,
-      positions: [
-        {
-          icon: '📊',
-          title: 'Service d\'Évaluation',
-          description: 'Suivi et évaluation des projets',
-          isDirector: false
-        },
-        {
-          icon: '🤝',
-          title: 'Service de Coopération',
-          description: 'Partenariats internationaux',
-          isDirector: false
-        },
-        {
-          icon: '📋',
-          title: 'Service Administratif',
-          description: 'Gestion administrative',
-          isDirector: false
-        },
-        {
-          icon: '💻',
-          title: 'Service Informatique',
-          description: 'Support technique et numérique',
-          isDirector: false
-        }
-      ]
-    }
-  ];
-  
-  defaultResponsibilities: Responsibility[] = [
-    {
-      icon: '🎯',
-      title: 'Définition des Priorités',
-      description: 'Le Haut Conseil définit les priorités nationales de recherche et d\'innovation'
-    },
-    {
-      icon: '📝',
-      title: 'Appels à Projets',
-      description: 'L\'ANRSI lance des appels à projets selon les priorités définies'
-    },
-    {
-      icon: '💼',
-      title: 'Gestion des Fonds',
-      description: 'Allocation transparente et efficace des fonds de recherche'
-    },
-    {
-      icon: '📈',
-      title: 'Suivi et Évaluation',
-      description: 'Monitoring continu des projets financés et évaluation de leur impact'
-    }
-  ];
+  constructor(
+    private pageService: PageService,
+    private translate: TranslateService
+  ) {}
 
   ngOnInit(): void {
+    this.currentLang = this.translate.currentLang || this.translate.defaultLang || 'fr';
+    this.langSubscription = this.translate.onLangChange.subscribe(event => {
+      this.currentLang = event.lang;
+      this.updateTranslatedContent();
+    });
     this.loadPage();
+  }
+
+  ngOnDestroy(): void {
+    if (this.langSubscription) {
+      this.langSubscription.unsubscribe();
+    }
   }
 
   loadPage(): void {
     this.pageService.getPageBySlug('organigramme').subscribe({
       next: (page) => {
         this.page = page;
-        this.parseContent();
+        this.updateTranslatedContent();
         this.isLoading = false;
       },
       error: (error) => {
         console.error('Error loading page:', error);
-        this.loadDefaultContent();
+        // Show empty state - data should come from database via DataInitializer
         this.isLoading = false;
       }
     });
   }
 
-  parseContent(): void {
-    if (!this.page?.content) {
-      this.loadDefaultContent();
-      return;
+  updateTranslatedContent(): void {
+    if (!this.page) return;
+    const translation = this.page.translations?.[this.currentLang];
+    if (translation && translation.content) {
+      try {
+        this.parseContent(translation.content);
+        if (translation.heroTitle) this.page.heroTitle = translation.heroTitle;
+        if (translation.heroSubtitle) this.page.heroSubtitle = translation.heroSubtitle;
+        if (translation.title) this.page.title = translation.title;
+      } catch (e) {
+        console.error('Error parsing translated content:', e);
+        this.loadContentFromPage();
+      }
+    } else {
+      this.loadContentFromPage();
     }
+  }
 
+  loadContentFromPage(): void {
+    if (this.page?.content) {
+      this.parseContent(this.page.content);
+    } else {
+      // Show empty state - data should come from database via DataInitializer
+      this.heroTitle = '';
+      this.heroSubtitle = '';
+      this.sectionTitle = '';
+      this.introText = '';
+      this.levels = [];
+      this.responsibilitiesTitle = '';
+      this.responsibilities = [];
+    }
+  }
+
+  parseContent(contentString: string): void {
     try {
-      const content: OrganigrammeContent = JSON.parse(this.page.content);
+      const content: OrganigrammeContent = JSON.parse(contentString);
       
-      this.heroTitle = content.heroTitle || 'Organigramme';
-      this.heroSubtitle = content.heroSubtitle || 'Structure organisationnelle de l\'Agence Nationale de la Recherche Scientifique et de l\'Innovation';
-      this.sectionTitle = content.sectionTitle || 'Structure Organisationnelle';
+      this.heroTitle = content.heroTitle || '';
+      this.heroSubtitle = content.heroSubtitle || '';
+      this.sectionTitle = content.sectionTitle || '';
       this.introText = content.introText || '';
-      this.levels = content.levels || this.defaultLevels;
-      this.responsibilitiesTitle = content.responsibilitiesTitle || 'Responsabilités Clés';
-      this.responsibilities = content.responsibilities || this.defaultResponsibilities;
+      this.levels = content.levels || [];
+      this.responsibilitiesTitle = content.responsibilitiesTitle || '';
+      this.responsibilities = content.responsibilities || [];
     } catch (e) {
       console.error('Error parsing content:', e);
-      this.loadDefaultContent();
+      // Show empty state instead of loading defaults
+      this.heroTitle = '';
+      this.heroSubtitle = '';
+      this.sectionTitle = '';
+      this.introText = '';
+      this.levels = [];
+      this.responsibilitiesTitle = '';
+      this.responsibilities = [];
     }
   }
 
-  loadDefaultContent(): void {
-    this.heroTitle = 'Organigramme';
-    this.heroSubtitle = 'Structure organisationnelle de l\'Agence Nationale de la Recherche Scientifique et de l\'Innovation';
-    this.sectionTitle = 'Structure Organisationnelle';
-    this.introText = 'L\'ANRSI est structurée de manière hiérarchique pour assurer une gestion efficace de la recherche scientifique et de l\'innovation en Mauritanie.';
-    this.levels = this.defaultLevels;
-    this.responsibilitiesTitle = 'Responsabilités Clés';
-    this.responsibilities = this.defaultResponsibilities;
-  }
 }

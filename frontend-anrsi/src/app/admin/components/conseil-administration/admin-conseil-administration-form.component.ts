@@ -147,6 +147,16 @@ export class AdminConseilAdministrationFormComponent implements OnInit {
             if (parsedContent.translations) {
               const content: ConseilAdministrationContent = parsedContent;
               this.populateForm(content);
+              // Check if Arabic data is empty and load defaults
+              const arGroup = this.getLanguageFormGroup('ar');
+              if (!arGroup.get('heroTitle')?.value || (arGroup.get('boardMembers') as FormArray).length === 0) {
+                this.loadDefaultArabicData();
+              }
+              // Check if English data is empty and load defaults
+              const enGroup = this.getLanguageFormGroup('en');
+              if (!enGroup.get('heroTitle')?.value || (enGroup.get('boardMembers') as FormArray).length === 0) {
+                this.loadDefaultEnglishData();
+              }
             } else {
               // Old format - migrate to new format
               const oldContent: ConseilAdministrationLanguageContent = parsedContent;
@@ -158,6 +168,8 @@ export class AdminConseilAdministrationFormComponent implements OnInit {
                 }
               };
               this.populateForm(content);
+              this.loadDefaultArabicData();
+              this.loadDefaultEnglishData();
             }
           } catch (e) {
             console.error('Error parsing content:', e);
@@ -218,6 +230,80 @@ export class AdminConseilAdministrationFormComponent implements OnInit {
     this.addBoardMember({ name: 'WANE ABDOUL AZIZ', position: 'Représentant de la Chambre de Commerce, d\'Industrie et d\'Agriculture de Mauritanie' }, 'fr');
     this.addBoardMember({ name: 'AHMEDOU HAOUBA', position: 'Enseignant-chercheur' }, 'fr');
     this.addBoardMember({ name: 'Mohamedou Mbaba', position: 'Représentant du Ministère des Affaires Economiques et de la Promotion des secteurs Productifs' }, 'fr');
+
+    // Load Arabic and English defaults
+    this.loadDefaultArabicData();
+    this.loadDefaultEnglishData();
+  }
+
+  loadDefaultArabicData(): void {
+    const arGroup = this.getLanguageFormGroup('ar');
+    
+    // Check if Arabic data already exists
+    if (arGroup.get('heroTitle')?.value && (arGroup.get('boardMembers') as FormArray).length > 0) {
+      return; // Don't overwrite existing data
+    }
+
+    arGroup.patchValue({
+      heroTitle: 'مجلس الإدارة',
+      heroSubtitle: 'تشكيل مجلس إدارة الوكالة الوطنية للبحث العلمي والابتكار',
+      sectionTitle: 'أعضاء مجلس الإدارة',
+      introText: 'يتكون مجلس إدارة الوكالة الوطنية للبحث العلمي والابتكار من ممثلين عن مؤسسات وقطاعات مختلفة، لضمان حوكمة متوازنة وتمثيلية.',
+      updateDate: '11 نوفمبر 2021'
+    });
+
+    // Clear existing array for Arabic
+    const arMembers = arGroup.get('boardMembers') as FormArray;
+    while (arMembers.length) arMembers.removeAt(0);
+
+    // Add default board members for Arabic
+    this.addBoardMember({ name: 'محمد سيديا خباز', position: 'رئيس مجلس الإدارة' }, 'ar');
+    this.addBoardMember({ name: 'أحمد سالم ولد محمد فادل', position: 'ممثل رئاسة الجمهورية' }, 'ar');
+    this.addBoardMember({ name: 'هدى باباه', position: 'ممثلة رئاسة الوزراء' }, 'ar');
+    this.addBoardMember({ name: 'سعد بوه ولد صيداتي', position: 'ممثل وزارة المالية' }, 'ar');
+    this.addBoardMember({ name: 'محمد يحيى داه', position: 'ممثل وزارة التعليم العالي والبحث العلمي والابتكار' }, 'ar');
+    this.addBoardMember({ name: 'واج أوسمان', position: 'أستاذ باحث' }, 'ar');
+    this.addBoardMember({ name: 'سالم محمد المختار أبيضنا', position: 'أستاذ باحث' }, 'ar');
+    this.addBoardMember({ name: 'هانشي محمد صالح', position: 'ممثل الاتحاد الوطني لأصحاب العمل الموريتانيين' }, 'ar');
+    this.addBoardMember({ name: 'محمد المختار يحيى محمدين', position: 'ممثل الاتحاد الوطني لأصحاب العمل الموريتانيين' }, 'ar');
+    this.addBoardMember({ name: 'وان عبد العزيز', position: 'ممثل غرفة التجارة والصناعة والزراعة في موريتانيا' }, 'ar');
+    this.addBoardMember({ name: 'أحمدو حوبا', position: 'أستاذ باحث' }, 'ar');
+    this.addBoardMember({ name: 'محمدو مبابا', position: 'ممثل وزارة الشؤون الاقتصادية وتشجيع القطاعات الإنتاجية' }, 'ar');
+  }
+
+  loadDefaultEnglishData(): void {
+    const enGroup = this.getLanguageFormGroup('en');
+    
+    // Check if English data already exists
+    if (enGroup.get('heroTitle')?.value && (enGroup.get('boardMembers') as FormArray).length > 0) {
+      return; // Don't overwrite existing data
+    }
+
+    enGroup.patchValue({
+      heroTitle: 'Board of Directors',
+      heroSubtitle: 'Composition of the Board of Directors of the National Agency for Scientific Research and Innovation',
+      sectionTitle: 'Board Members',
+      introText: 'The Board of Directors of ANRSI is composed of representatives from various institutions and sectors, ensuring balanced and representative governance.',
+      updateDate: '11 November 2021'
+    });
+
+    // Clear existing array for English
+    const enMembers = enGroup.get('boardMembers') as FormArray;
+    while (enMembers.length) enMembers.removeAt(0);
+
+    // Add default board members for English
+    this.addBoardMember({ name: 'Mohamed Sidiya Khabaz', position: 'Chairman of the Board' }, 'en');
+    this.addBoardMember({ name: 'AHMED SALEM OULD MOHAMED VADEL', position: 'Representative of the Presidency of the Republic' }, 'en');
+    this.addBoardMember({ name: 'HOUDA BABAH', position: 'Representative of the Prime Minister\'s Office' }, 'en');
+    this.addBoardMember({ name: 'SAAD BOUH OULD SIDATY', position: 'Representative of the Ministry of Finance' }, 'en');
+    this.addBoardMember({ name: 'Mohamed Yahya Dah', position: 'Representative of the Ministry of Higher Education, Scientific Research and Innovation' }, 'en');
+    this.addBoardMember({ name: 'WAGUE OUSMANE', position: 'Teacher-Researcher' }, 'en');
+    this.addBoardMember({ name: 'SALEM MOHAMED EL MOCTAR ABEIDNA', position: 'Teacher-Researcher' }, 'en');
+    this.addBoardMember({ name: 'HANCHI MOHAMED SALEH', position: 'Representative of the National Union of Mauritanian Employers' }, 'en');
+    this.addBoardMember({ name: 'MOHAMED EL MOCTAR YAHYA MOHAMEDINE', position: 'Representative of the National Union of Mauritanian Employers' }, 'en');
+    this.addBoardMember({ name: 'WANE ABDOUL AZIZ', position: 'Representative of the Chamber of Commerce, Industry and Agriculture of Mauritania' }, 'en');
+    this.addBoardMember({ name: 'AHMEDOU HAOUBA', position: 'Teacher-Researcher' }, 'en');
+    this.addBoardMember({ name: 'Mohamedou Mbaba', position: 'Representative of the Ministry of Economic Affairs and Promotion of Productive Sectors' }, 'en');
   }
 
   populateForm(content: ConseilAdministrationContent): void {

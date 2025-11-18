@@ -22,7 +22,7 @@ interface Responsibility {
   description: string;
 }
 
-interface OrganigrammeContent {
+interface OrganigrammeLanguageContent {
   heroTitle: string;
   heroSubtitle: string;
   sectionTitle: string;
@@ -30,6 +30,22 @@ interface OrganigrammeContent {
   levels: Level[];
   responsibilitiesTitle: string;
   responsibilities: Responsibility[];
+}
+
+interface OrganigrammeContent {
+  translations?: {
+    fr: OrganigrammeLanguageContent;
+    ar: OrganigrammeLanguageContent;
+    en: OrganigrammeLanguageContent;
+  };
+  // Support old format for backward compatibility
+  heroTitle?: string;
+  heroSubtitle?: string;
+  sectionTitle?: string;
+  introText?: string;
+  levels?: Level[];
+  responsibilitiesTitle?: string;
+  responsibilities?: Responsibility[];
 }
 
 @Component({
@@ -45,6 +61,13 @@ export class AdminOrganigrammeFormComponent implements OnInit {
   isLoading = false;
   errorMessage = '';
   isSaving = false;
+  activeLanguage: 'fr' | 'ar' | 'en' = 'fr';
+
+  languages = [
+    { code: 'fr', name: 'Français', flag: '🇫🇷' },
+    { code: 'ar', name: 'العربية', flag: '🇲🇷' },
+    { code: 'en', name: 'English', flag: '🇺🇸' }
+  ];
 
   constructor(
     private fb: FormBuilder,
@@ -56,29 +79,92 @@ export class AdminOrganigrammeFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Check for language query parameter
+    this.route.queryParams.subscribe(params => {
+      if (params['lang'] && ['fr', 'ar', 'en'].includes(params['lang'])) {
+        this.activeLanguage = params['lang'] as 'fr' | 'ar' | 'en';
+      }
+    });
     this.loadPage();
+  }
+
+  switchLanguage(lang: string): void {
+    if (lang === 'fr' || lang === 'ar' || lang === 'en') {
+      this.activeLanguage = lang as 'fr' | 'ar' | 'en';
+    }
+  }
+
+  hasTranslation(lang: string): boolean {
+    const langGroup = this.getLanguageFormGroup(lang);
+    return langGroup.get('heroTitle')?.value || langGroup.get('heroSubtitle')?.value || false;
+  }
+
+  isLanguageFormValid(lang: string): boolean {
+    const langGroup = this.getLanguageFormGroup(lang);
+    return langGroup.valid;
+  }
+
+  getActiveLanguageName(): string {
+    const lang = this.languages.find(l => l.code === this.activeLanguage);
+    return lang?.name || 'Français';
   }
 
   createForm(): FormGroup {
     return this.fb.group({
-      heroTitle: ['Organigramme', Validators.required],
-      heroSubtitle: ['Structure organisationnelle de l\'Agence Nationale de la Recherche Scientifique et de l\'Innovation', Validators.required],
-      sectionTitle: ['Structure Organisationnelle', Validators.required],
+      translations: this.fb.group({
+        fr: this.createLanguageFormGroup(),
+        ar: this.createLanguageFormGroup(),
+        en: this.createLanguageFormGroup()
+      })
+    });
+  }
+
+  private createLanguageFormGroup(): FormGroup {
+    return this.fb.group({
+      heroTitle: ['', Validators.required],
+      heroSubtitle: ['', Validators.required],
+      sectionTitle: ['', Validators.required],
       introText: ['', Validators.required],
       levels: this.fb.array([]),
-      responsibilitiesTitle: ['Responsabilités Clés', Validators.required],
+      responsibilitiesTitle: ['', Validators.required],
       responsibilities: this.fb.array([])
     });
   }
 
-  // Levels FormArray methods
-  get levels(): FormArray {
-    return this.form.get('levels') as FormArray;
+  getActiveLanguageFormGroup(): FormGroup {
+    return this.getLanguageFormGroup(this.activeLanguage);
   }
 
-  addLevel(level?: Level): void {
+  getLanguageFormGroup(lang: string): FormGroup {
+    if (!this.form) {
+      throw new Error('Form not initialized');
+    }
+    const translationsGroup = this.form.get('translations') as FormGroup;
+    if (!translationsGroup) {
+      throw new Error('Translations form group not found');
+    }
+    const langGroup = translationsGroup.get(lang) as FormGroup;
+    if (!langGroup) {
+      throw new Error(`Language form group '${lang}' not found`);
+    }
+    // Verify the form group has the expected structure
+    if (!langGroup.get('heroTitle')) {
+      console.error(`Form group '${lang}' is missing 'heroTitle' control. Form structure:`, langGroup);
+      throw new Error(`Language form group '${lang}' is missing required controls`);
+    }
+    return langGroup;
+  }
+
+  // Levels FormArray methods
+  get levels(): FormArray {
+    return this.getActiveLanguageFormGroup().get('levels') as FormArray;
+  }
+
+  addLevel(level?: Level, lang?: string): void {
+    const langGroup = lang ? this.getLanguageFormGroup(lang) : this.getActiveLanguageFormGroup();
+    const levels = langGroup.get('levels') as FormArray;
     const levelGroup = this.fb.group({
-      levelNumber: [level?.levelNumber || this.levels.length + 1, Validators.required],
+      levelNumber: [level?.levelNumber || levels.length + 1, Validators.required],
       positions: this.fb.array([])
     });
     
@@ -88,7 +174,7 @@ export class AdminOrganigrammeFormComponent implements OnInit {
       });
     }
     
-    this.levels.push(levelGroup);
+    levels.push(levelGroup);
   }
 
   getLevelPositions(levelIndex: number): FormArray {
@@ -125,16 +211,18 @@ export class AdminOrganigrammeFormComponent implements OnInit {
 
   // Responsibilities FormArray methods
   get responsibilities(): FormArray {
-    return this.form.get('responsibilities') as FormArray;
+    return this.getActiveLanguageFormGroup().get('responsibilities') as FormArray;
   }
 
-  addResponsibility(item?: Responsibility): void {
+  addResponsibility(item?: Responsibility, lang?: string): void {
+    const langGroup = lang ? this.getLanguageFormGroup(lang) : this.getActiveLanguageFormGroup();
+    const responsibilities = langGroup.get('responsibilities') as FormArray;
     const group = this.fb.group({
       icon: [item?.icon || '', Validators.required],
       title: [item?.title || '', Validators.required],
       description: [item?.description || '', Validators.required]
     });
-    this.responsibilities.push(group);
+    responsibilities.push(group);
   }
 
   removeResponsibility(index: number): void {
@@ -148,8 +236,51 @@ export class AdminOrganigrammeFormComponent implements OnInit {
         this.pageId = page.id || null;
         if (page.content) {
           try {
-            const content: OrganigrammeContent = JSON.parse(page.content);
-            this.populateForm(content);
+            const parsedContent = JSON.parse(page.content);
+            // Check if it's the new format with translations
+            if (parsedContent.translations) {
+              const content: OrganigrammeContent = parsedContent;
+              this.populateForm(content);
+              
+              // Check if Arabic data is empty and load defaults
+              try {
+                const arGroup = this.getLanguageFormGroup('ar');
+                const arHeroTitle = arGroup.get('heroTitle')?.value;
+                const arLevels = arGroup.get('levels') as FormArray;
+                if (!arHeroTitle || !arLevels || arLevels.length === 0) {
+                  this.loadDefaultArabicData();
+                }
+              } catch (e) {
+                console.error('Error checking Arabic data:', e);
+                this.loadDefaultArabicData();
+              }
+              
+              // Check if English data is empty and load defaults
+              try {
+                const enGroup = this.getLanguageFormGroup('en');
+                const enHeroTitle = enGroup.get('heroTitle')?.value;
+                const enLevels = enGroup.get('levels') as FormArray;
+                if (!enHeroTitle || !enLevels || enLevels.length === 0) {
+                  this.loadDefaultEnglishData();
+                }
+              } catch (e) {
+                console.error('Error checking English data:', e);
+                this.loadDefaultEnglishData();
+              }
+            } else {
+              // Old format - migrate to new format
+              const oldContent: OrganigrammeLanguageContent = parsedContent as any;
+              const content: OrganigrammeContent = {
+                translations: {
+                  fr: oldContent,
+                  ar: this.getEmptyLanguageContent(),
+                  en: this.getEmptyLanguageContent()
+                }
+              };
+              this.populateForm(content);
+              this.loadDefaultArabicData();
+              this.loadDefaultEnglishData();
+            }
           } catch (e) {
             console.error('Error parsing content:', e);
             this.loadDefaultData();
@@ -170,8 +301,22 @@ export class AdminOrganigrammeFormComponent implements OnInit {
     });
   }
 
+  private getEmptyLanguageContent(): OrganigrammeLanguageContent {
+    return {
+      heroTitle: '',
+      heroSubtitle: '',
+      sectionTitle: '',
+      introText: '',
+      levels: [],
+      responsibilitiesTitle: '',
+      responsibilities: []
+    };
+  }
+
   loadDefaultData(): void {
-    this.form.patchValue({
+    // Load default data for French
+    const frGroup = this.getLanguageFormGroup('fr');
+    frGroup.patchValue({
       heroTitle: 'Organigramme',
       heroSubtitle: 'Structure organisationnelle de l\'Agence Nationale de la Recherche Scientifique et de l\'Innovation',
       sectionTitle: 'Structure Organisationnelle',
@@ -179,139 +324,424 @@ export class AdminOrganigrammeFormComponent implements OnInit {
       responsibilitiesTitle: 'Responsabilités Clés'
     });
 
-    // Clear existing arrays
-    while (this.levels.length) this.levels.removeAt(0);
-    while (this.responsibilities.length) this.responsibilities.removeAt(0);
+    // Clear existing arrays for French
+    const frLevels = frGroup.get('levels') as FormArray;
+    const frResponsibilities = frGroup.get('responsibilities') as FormArray;
+    while (frLevels.length) frLevels.removeAt(0);
+    while (frResponsibilities.length) frResponsibilities.removeAt(0);
 
-    // Add default levels
-    const level1 = this.fb.group({
-      levelNumber: [1, Validators.required],
-      positions: this.fb.array([])
-    });
-    this.addPositionToLevel(level1, {
-      icon: '👑',
-      title: 'Haut Conseil de la Recherche Scientifique et de l\'Innovation',
-      description: 'Présidé par Son Excellence le Premier Ministre',
-      isDirector: true
-    });
-    this.levels.push(level1);
+    // Add default levels for French
+    this.addLevel({
+      levelNumber: 1,
+      positions: [{
+        icon: '👑',
+        title: 'Haut Conseil de la Recherche Scientifique et de l\'Innovation',
+        description: 'Présidé par Son Excellence le Premier Ministre',
+        isDirector: true
+      }]
+    }, 'fr');
 
-    const level2 = this.fb.group({
-      levelNumber: [2, Validators.required],
-      positions: this.fb.array([])
-    });
-    this.addPositionToLevel(level2, {
-      icon: '👔',
-      title: 'Direction Générale',
-      description: 'Directeur Général de l\'ANRSI',
-      isDirector: true
-    });
-    this.levels.push(level2);
+    this.addLevel({
+      levelNumber: 2,
+      positions: [{
+        icon: '👔',
+        title: 'Direction Générale',
+        description: 'Directeur Général de l\'ANRSI',
+        isDirector: true
+      }]
+    }, 'fr');
 
-    const level3 = this.fb.group({
-      levelNumber: [3, Validators.required],
-      positions: this.fb.array([])
-    });
-    this.addPositionToLevel(level3, {
-      icon: '🔬',
-      title: 'Direction de la Recherche',
-      description: 'Gestion des programmes de recherche',
-      isDirector: false
-    });
-    this.addPositionToLevel(level3, {
-      icon: '💡',
-      title: 'Direction de l\'Innovation',
-      description: 'Promotion de l\'innovation technologique',
-      isDirector: false
-    });
-    this.addPositionToLevel(level3, {
-      icon: '💰',
-      title: 'Direction Financière',
-      description: 'Gestion des fonds et budgets',
-      isDirector: false
-    });
-    this.levels.push(level3);
+    this.addLevel({
+      levelNumber: 3,
+      positions: [
+        {
+          icon: '🔬',
+          title: 'Direction de la Recherche',
+          description: 'Gestion des programmes de recherche',
+          isDirector: false
+        },
+        {
+          icon: '💡',
+          title: 'Direction de l\'Innovation',
+          description: 'Promotion de l\'innovation technologique',
+          isDirector: false
+        },
+        {
+          icon: '💰',
+          title: 'Direction Financière',
+          description: 'Gestion des fonds et budgets',
+          isDirector: false
+        }
+      ]
+    }, 'fr');
 
-    const level4 = this.fb.group({
-      levelNumber: [4, Validators.required],
-      positions: this.fb.array([])
-    });
-    this.addPositionToLevel(level4, {
-      icon: '📊',
-      title: 'Service d\'Évaluation',
-      description: 'Suivi et évaluation des projets',
-      isDirector: false
-    });
-    this.addPositionToLevel(level4, {
-      icon: '🤝',
-      title: 'Service de Coopération',
-      description: 'Partenariats internationaux',
-      isDirector: false
-    });
-    this.addPositionToLevel(level4, {
-      icon: '📋',
-      title: 'Service Administratif',
-      description: 'Gestion administrative',
-      isDirector: false
-    });
-    this.addPositionToLevel(level4, {
-      icon: '💻',
-      title: 'Service Informatique',
-      description: 'Support technique et numérique',
-      isDirector: false
-    });
-    this.levels.push(level4);
+    this.addLevel({
+      levelNumber: 4,
+      positions: [
+        {
+          icon: '📊',
+          title: 'Service d\'Évaluation',
+          description: 'Suivi et évaluation des projets',
+          isDirector: false
+        },
+        {
+          icon: '🤝',
+          title: 'Service de Coopération',
+          description: 'Partenariats internationaux',
+          isDirector: false
+        },
+        {
+          icon: '📋',
+          title: 'Service Administratif',
+          description: 'Gestion administrative',
+          isDirector: false
+        },
+        {
+          icon: '💻',
+          title: 'Service Informatique',
+          description: 'Support technique et numérique',
+          isDirector: false
+        }
+      ]
+    }, 'fr');
 
-    // Add default responsibilities
+    // Add default responsibilities for French
     this.addResponsibility({
       icon: '🎯',
       title: 'Définition des Priorités',
       description: 'Le Haut Conseil définit les priorités nationales de recherche et d\'innovation'
-    });
+    }, 'fr');
     this.addResponsibility({
       icon: '📝',
       title: 'Appels à Projets',
       description: 'L\'ANRSI lance des appels à projets selon les priorités définies'
-    });
+    }, 'fr');
     this.addResponsibility({
       icon: '💼',
       title: 'Gestion des Fonds',
       description: 'Allocation transparente et efficace des fonds de recherche'
-    });
+    }, 'fr');
     this.addResponsibility({
       icon: '📈',
       title: 'Suivi et Évaluation',
       description: 'Monitoring continu des projets financés et évaluation de leur impact'
+    }, 'fr');
+
+    // Load Arabic and English defaults
+    this.loadDefaultArabicData();
+    this.loadDefaultEnglishData();
+  }
+
+  loadDefaultArabicData(): void {
+    const arGroup = this.getLanguageFormGroup('ar');
+    
+    // Check if Arabic data already exists
+    if (arGroup.get('heroTitle')?.value && (arGroup.get('levels') as FormArray).length > 0) {
+      return; // Don't overwrite existing data
+    }
+
+    arGroup.patchValue({
+      heroTitle: 'الهيكل التنظيمي',
+      heroSubtitle: 'الهيكل التنظيمي للوكالة الوطنية للبحث العلمي والابتكار',
+      sectionTitle: 'الهيكل التنظيمي',
+      introText: 'تتبع الوكالة الوطنية للبحث العلمي والابتكار هيكلًا هرميًا لضمان إدارة فعالة للبحث العلمي والابتكار في موريتانيا.',
+      responsibilitiesTitle: 'المسؤوليات الرئيسية'
     });
+
+    // Clear existing arrays for Arabic
+    const arLevels = arGroup.get('levels') as FormArray;
+    const arResponsibilities = arGroup.get('responsibilities') as FormArray;
+    while (arLevels.length) arLevels.removeAt(0);
+    while (arResponsibilities.length) arResponsibilities.removeAt(0);
+
+    // Add default levels for Arabic
+    this.addLevel({
+      levelNumber: 1,
+      positions: [{
+        icon: '👑',
+        title: 'المجلس الأعلى للبحث العلمي والابتكار',
+        description: 'برئاسة معالي رئيس الوزراء',
+        isDirector: true
+      }]
+    }, 'ar');
+
+    this.addLevel({
+      levelNumber: 2,
+      positions: [{
+        icon: '👔',
+        title: 'الإدارة العامة',
+        description: 'المدير العام للوكالة الوطنية للبحث العلمي والابتكار',
+        isDirector: true
+      }]
+    }, 'ar');
+
+    this.addLevel({
+      levelNumber: 3,
+      positions: [
+        {
+          icon: '🔬',
+          title: 'إدارة البحث العلمي',
+          description: 'إدارة برامج البحث العلمي',
+          isDirector: false
+        },
+        {
+          icon: '💡',
+          title: 'إدارة الابتكار',
+          description: 'تعزيز الابتكار التكنولوجي',
+          isDirector: false
+        },
+        {
+          icon: '💰',
+          title: 'الإدارة المالية',
+          description: 'إدارة الأموال والميزانيات',
+          isDirector: false
+        }
+      ]
+    }, 'ar');
+
+    this.addLevel({
+      levelNumber: 4,
+      positions: [
+        {
+          icon: '📊',
+          title: 'قسم التقييم',
+          description: 'متابعة وتقييم المشاريع',
+          isDirector: false
+        },
+        {
+          icon: '🤝',
+          title: 'قسم التعاون',
+          description: 'الشراكات الدولية',
+          isDirector: false
+        },
+        {
+          icon: '📋',
+          title: 'القسم الإداري',
+          description: 'الإدارة الإدارية',
+          isDirector: false
+        },
+        {
+          icon: '💻',
+          title: 'قسم تكنولوجيا المعلومات',
+          description: 'الدعم الفني والرقمي',
+          isDirector: false
+        }
+      ]
+    }, 'ar');
+
+    // Add default responsibilities for Arabic
+    this.addResponsibility({
+      icon: '🎯',
+      title: 'تحديد الأولويات',
+      description: 'يحدد المجلس الأعلى أولويات البحث والابتكار الوطنية'
+    }, 'ar');
+    this.addResponsibility({
+      icon: '📝',
+      title: 'دعوات للمشاريع',
+      description: 'تطلق الوكالة دعوات للمشاريع وفق الأولويات المحددة'
+    }, 'ar');
+    this.addResponsibility({
+      icon: '💼',
+      title: 'إدارة الأموال',
+      description: 'تخصيص شفاف وفعال لأموال البحث العلمي'
+    }, 'ar');
+    this.addResponsibility({
+      icon: '📈',
+      title: 'المتابعة والتقييم',
+      description: 'المتابعة المستمرة للمشاريع الممولة وتقييم أثرها'
+    }, 'ar');
+  }
+
+  loadDefaultEnglishData(): void {
+    const enGroup = this.getLanguageFormGroup('en');
+    
+    // Check if English data already exists
+    if (enGroup.get('heroTitle')?.value && (enGroup.get('levels') as FormArray).length > 0) {
+      return; // Don't overwrite existing data
+    }
+
+    enGroup.patchValue({
+      heroTitle: 'Organizational Chart',
+      heroSubtitle: 'Organizational structure of the National Agency for Scientific Research and Innovation',
+      sectionTitle: 'Organizational Structure',
+      introText: 'ANRSI is structured hierarchically to ensure effective management of scientific research and innovation in Mauritania.',
+      responsibilitiesTitle: 'Key Responsibilities'
+    });
+
+    // Clear existing arrays for English
+    const enLevels = enGroup.get('levels') as FormArray;
+    const enResponsibilities = enGroup.get('responsibilities') as FormArray;
+    while (enLevels.length) enLevels.removeAt(0);
+    while (enResponsibilities.length) enResponsibilities.removeAt(0);
+
+    // Add default levels for English
+    this.addLevel({
+      levelNumber: 1,
+      positions: [{
+        icon: '👑',
+        title: 'High Council for Scientific Research and Innovation',
+        description: 'Chaired by His Excellency the Prime Minister',
+        isDirector: true
+      }]
+    }, 'en');
+
+    this.addLevel({
+      levelNumber: 2,
+      positions: [{
+        icon: '👔',
+        title: 'General Directorate',
+        description: 'Director General of ANRSI',
+        isDirector: true
+      }]
+    }, 'en');
+
+    this.addLevel({
+      levelNumber: 3,
+      positions: [
+        {
+          icon: '🔬',
+          title: 'Research Directorate',
+          description: 'Management of research programs',
+          isDirector: false
+        },
+        {
+          icon: '💡',
+          title: 'Innovation Directorate',
+          description: 'Promotion of technological innovation',
+          isDirector: false
+        },
+        {
+          icon: '💰',
+          title: 'Financial Directorate',
+          description: 'Management of funds and budgets',
+          isDirector: false
+        }
+      ]
+    }, 'en');
+
+    this.addLevel({
+      levelNumber: 4,
+      positions: [
+        {
+          icon: '📊',
+          title: 'Evaluation Department',
+          description: 'Monitoring and evaluation of projects',
+          isDirector: false
+        },
+        {
+          icon: '🤝',
+          title: 'Cooperation Department',
+          description: 'International partnerships',
+          isDirector: false
+        },
+        {
+          icon: '📋',
+          title: 'Administrative Department',
+          description: 'Administrative management',
+          isDirector: false
+        },
+        {
+          icon: '💻',
+          title: 'IT Department',
+          description: 'Technical and digital support',
+          isDirector: false
+        }
+      ]
+    }, 'en');
+
+    // Add default responsibilities for English
+    this.addResponsibility({
+      icon: '🎯',
+      title: 'Setting Priorities',
+      description: 'The High Council defines national research and innovation priorities'
+    }, 'en');
+    this.addResponsibility({
+      icon: '📝',
+      title: 'Calls for Projects',
+      description: 'ANRSI launches project calls according to defined priorities'
+    }, 'en');
+    this.addResponsibility({
+      icon: '💼',
+      title: 'Fund Management',
+      description: 'Transparent and efficient allocation of research funds'
+    }, 'en');
+    this.addResponsibility({
+      icon: '📈',
+      title: 'Monitoring and Evaluation',
+      description: 'Continuous monitoring of funded projects and evaluation of their impact'
+    }, 'en');
   }
 
   populateForm(content: OrganigrammeContent): void {
-    this.form.patchValue({
-      heroTitle: content.heroTitle || 'Organigramme',
-      heroSubtitle: content.heroSubtitle || 'Structure organisationnelle de l\'Agence Nationale de la Recherche Scientifique et de l\'Innovation',
-      sectionTitle: content.sectionTitle || 'Structure Organisationnelle',
-      introText: content.introText || '',
-      responsibilitiesTitle: content.responsibilitiesTitle || 'Responsabilités Clés'
-    });
+    if (content.translations) {
+      // New format with translations
+      ['fr', 'ar', 'en'].forEach(lang => {
+        const langContent = content.translations![lang as 'fr' | 'ar' | 'en'];
+        const langGroup = this.getLanguageFormGroup(lang);
+        
+        if (langContent) {
+          langGroup.patchValue({
+            heroTitle: langContent.heroTitle || '',
+            heroSubtitle: langContent.heroSubtitle || '',
+            sectionTitle: langContent.sectionTitle || '',
+            introText: langContent.introText || '',
+            responsibilitiesTitle: langContent.responsibilitiesTitle || ''
+          });
 
-    // Clear existing arrays
-    while (this.levels.length) this.levels.removeAt(0);
-    while (this.responsibilities.length) this.responsibilities.removeAt(0);
+          // Clear existing arrays
+          const levels = langGroup.get('levels') as FormArray;
+          const responsibilities = langGroup.get('responsibilities') as FormArray;
+          while (levels.length) levels.removeAt(0);
+          while (responsibilities.length) responsibilities.removeAt(0);
 
-    // Populate levels
-    content.levels?.forEach(level => {
-      const levelGroup = this.fb.group({
-        levelNumber: [level.levelNumber, Validators.required],
-        positions: this.fb.array([])
+          // Populate levels
+          langContent.levels?.forEach(level => {
+            this.addLevel(level, lang);
+          });
+
+          // Populate responsibilities
+          langContent.responsibilities?.forEach(responsibility => this.addResponsibility(responsibility, lang));
+        } else {
+          // If translation doesn't exist, ensure form group is initialized with empty values
+          langGroup.patchValue({
+            heroTitle: '',
+            heroSubtitle: '',
+            sectionTitle: '',
+            introText: '',
+            responsibilitiesTitle: ''
+          });
+          // Clear arrays
+          const levels = langGroup.get('levels') as FormArray;
+          const responsibilities = langGroup.get('responsibilities') as FormArray;
+          while (levels.length) levels.removeAt(0);
+          while (responsibilities.length) responsibilities.removeAt(0);
+        }
       });
-      level.positions?.forEach(position => {
-        this.addPositionToLevel(levelGroup, position);
+    } else {
+      // Old format - populate French only
+      const frGroup = this.getLanguageFormGroup('fr');
+      frGroup.patchValue({
+        heroTitle: content.heroTitle || 'Organigramme',
+        heroSubtitle: content.heroSubtitle || 'Structure organisationnelle de l\'Agence Nationale de la Recherche Scientifique et de l\'Innovation',
+        sectionTitle: content.sectionTitle || 'Structure Organisationnelle',
+        introText: content.introText || '',
+        responsibilitiesTitle: content.responsibilitiesTitle || 'Responsabilités Clés'
       });
-      this.levels.push(levelGroup);
-    });
 
-    // Populate responsibilities
-    content.responsibilities?.forEach(responsibility => this.addResponsibility(responsibility));
+      // Clear existing arrays
+      const levels = frGroup.get('levels') as FormArray;
+      const responsibilities = frGroup.get('responsibilities') as FormArray;
+      while (levels.length) levels.removeAt(0);
+      while (responsibilities.length) responsibilities.removeAt(0);
+
+      // Populate levels
+      content.levels?.forEach(level => {
+        this.addLevel(level, 'fr');
+      });
+
+      // Populate responsibilities
+      content.responsibilities?.forEach(responsibility => this.addResponsibility(responsibility, 'fr'));
+    }
   }
 
   onSubmit(): void {
@@ -320,23 +750,25 @@ export class AdminOrganigrammeFormComponent implements OnInit {
       this.errorMessage = '';
 
       const formValue = this.form.value;
+      
+      // Build content with translations
       const content: OrganigrammeContent = {
-        heroTitle: formValue.heroTitle,
-        heroSubtitle: formValue.heroSubtitle,
-        sectionTitle: formValue.sectionTitle,
-        introText: formValue.introText,
-        levels: formValue.levels.map((level: any) => ({
-          levelNumber: level.levelNumber,
-          positions: level.positions
-        })),
-        responsibilitiesTitle: formValue.responsibilitiesTitle,
-        responsibilities: formValue.responsibilities
+        translations: {
+          fr: this.buildLanguageContent(formValue.translations.fr),
+          ar: this.buildLanguageContent(formValue.translations.ar),
+          en: this.buildLanguageContent(formValue.translations.en)
+        }
       };
+
+      // Use French content for hero title/subtitle in page metadata
+      const frContent = content.translations!.fr;
+      const heroTitle = frContent.heroTitle || content.translations!.ar.heroTitle || content.translations!.en.heroTitle || 'Organigramme';
+      const heroSubtitle = frContent.heroSubtitle || content.translations!.ar.heroSubtitle || content.translations!.en.heroSubtitle || '';
 
       const updateData: PageUpdateDTO = {
         title: 'Organigramme',
-        heroTitle: content.heroTitle,
-        heroSubtitle: content.heroSubtitle,
+        heroTitle: heroTitle,
+        heroSubtitle: heroSubtitle,
         content: JSON.stringify(content),
         pageType: 'STRUCTURED',
         isPublished: true,
@@ -359,8 +791,8 @@ export class AdminOrganigrammeFormComponent implements OnInit {
         this.pageService.createPage({
           slug: 'organigramme',
           title: 'Organigramme',
-          heroTitle: content.heroTitle,
-          heroSubtitle: content.heroSubtitle,
+          heroTitle: heroTitle,
+          heroSubtitle: heroSubtitle,
           content: JSON.stringify(content),
           pageType: 'STRUCTURED',
           isPublished: true,
@@ -380,6 +812,18 @@ export class AdminOrganigrammeFormComponent implements OnInit {
     } else {
       this.errorMessage = 'Please fill all required fields';
     }
+  }
+
+  private buildLanguageContent(langData: any): OrganigrammeLanguageContent {
+    return {
+      heroTitle: langData.heroTitle || '',
+      heroSubtitle: langData.heroSubtitle || '',
+      sectionTitle: langData.sectionTitle || '',
+      introText: langData.introText || '',
+      levels: langData.levels || [],
+      responsibilitiesTitle: langData.responsibilitiesTitle || '',
+      responsibilities: langData.responsibilities || []
+    };
   }
 
   onCancel(): void {

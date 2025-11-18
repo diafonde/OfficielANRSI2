@@ -3,6 +3,7 @@ package mr.gov.anrsi.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import mr.gov.anrsi.entity.Language;
 import mr.gov.anrsi.entity.Page;
 import mr.gov.anrsi.entity.PagePhotoTranslation;
 import mr.gov.anrsi.entity.PageTranslation;
@@ -71,6 +72,32 @@ public class PageDTO {
                 translationsMap.put(translation.getLanguage().name().toLowerCase(), transDTO);
             }
             dto.setTranslations(translationsMap);
+            
+            // Set backward compatibility fields from French translation (prefer fr, then ar, then en)
+            PageTranslation firstTranslation = page.getTranslations().stream()
+                    .filter(t -> t.getLanguage() == Language.FR)
+                    .findFirst()
+                    .orElse(page.getTranslations().stream()
+                            .filter(t -> t.getLanguage() == Language.AR)
+                            .findFirst()
+                            .orElse(page.getTranslations().stream()
+                                    .filter(t -> t.getLanguage() == Language.EN)
+                                    .findFirst()
+                                    .orElse(page.getTranslations().get(0))));
+            
+            // Update main fields from translation if they exist
+            if (firstTranslation.getTitle() != null) {
+                dto.setTitle(firstTranslation.getTitle());
+            }
+            if (firstTranslation.getHeroTitle() != null) {
+                dto.setHeroTitle(firstTranslation.getHeroTitle());
+            }
+            if (firstTranslation.getHeroSubtitle() != null) {
+                dto.setHeroSubtitle(firstTranslation.getHeroSubtitle());
+            }
+            if (firstTranslation.getContent() != null) {
+                dto.setContent(firstTranslation.getContent());
+            }
         }
         
         // Map videos

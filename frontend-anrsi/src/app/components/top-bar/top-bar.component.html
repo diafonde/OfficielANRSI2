@@ -85,49 +85,61 @@
               class="lang-dropdown-btn mobile" 
               (click)="toggleLangDropdown()"
               [class.active]="isLangDropdownOpen"
-              id="mobile-lang-dropdown-btn">
+              id="mobile-lang-dropdown-btn"
+              type="button"
+              [attr.aria-label]="'Select language' | translate"
+              [attr.aria-expanded]="isLangDropdownOpen">
               <span class="lang-flag">{{ getLanguageFlag(currentLang) }}</span>
-              <span class="lang-text">{{ getLanguageName(currentLang) }}</span>
-              <i class="fas fa-chevron-down" [class.rotated]="isLangDropdownOpen"></i>
+              <span class="lang-code">{{ getLanguageName(currentLang) }}</span>
+              <i class="fas fa-chevron-down" [class.rotated]="isLangDropdownOpen" aria-hidden="true"></i>
             </button>
-            <div class="lang-dropdown-menu mobile" [class.show]="isLangDropdownOpen">
+            <div 
+              class="lang-dropdown-menu mobile" 
+              [class.show]="isLangDropdownOpen"
+              role="menu"
+              [attr.aria-hidden]="!isLangDropdownOpen">
               <button 
                 class="lang-option"
                 [class.active]="currentLang === 'fr'"
                 (click)="switchLanguage('fr')"
-                id="lang-option-fr">
-                <span class="lang-flag">🇫🇷</span>
+                id="lang-option-fr"
+                type="button"
+                role="menuitem">
+                <span class="lang-flag" aria-hidden="true">🇫🇷</span>
                 <span class="lang-code">FR</span>
-                
               </button>
               <button 
                 class="lang-option"
                 [class.active]="currentLang === 'ar'"
                 (click)="switchLanguage('ar')"
-                id="lang-option-ar">
-                <span class="lang-flag">🇲🇷</span>
+                id="lang-option-ar"
+                type="button"
+                role="menuitem">
+                <span class="lang-flag" aria-hidden="true">🇲🇷</span>
                 <span class="lang-code">AR</span>
-                
               </button>
               <button 
                 class="lang-option"
                 [class.active]="currentLang === 'en'"
                 (click)="switchLanguage('en')"
-                id="lang-option-en">
-                <span class="lang-flag">🇺🇸</span>
+                id="lang-option-en"
+                type="button"
+                role="menuitem">
+                <span class="lang-flag" aria-hidden="true">🇺🇸</span>
                 <span class="lang-code">EN</span>
-                
               </button>
             </div>
           </div>
 
           <!-- Mobile Menu Toggle -->
-          <button class="mobile-menu-toggle" 
-                  (click)="toggleMobileMenu($event)" 
-                  [class.active]="isMobileMenuOpen" 
-                  type="button"
-                  id="mobile-menu-toggle-btn"
-                  [attr.aria-label]="'Toggle menu' | translate">
+          <button 
+            class="mobile-menu-toggle" 
+            (click)="toggleMobileMenu($event)" 
+            [class.active]="isMobileMenuOpen" 
+            type="button"
+            id="mobile-menu-toggle-btn"
+            [attr.aria-label]="'Toggle menu' | translate"
+            [attr.aria-expanded]="isMobileMenuOpen">
             <span class="hamburger-line"></span>
             <span class="hamburger-line"></span>
             <span class="hamburger-line"></span>

@@ -82,25 +82,46 @@ export class Ai4agriComponent implements OnInit, OnDestroy {
   }
 
   private updateTranslatedContent(): void {
-    if (!this.content) return;
+    if (!this.page) return;
     
-    // Get content for current language, fallback to French if not available
-    const langContent = this.content.translations[this.currentLang as 'fr' | 'ar' | 'en'];
-    this.displayContent = langContent || this.content.translations.fr;
+    // Try to get translation from page.translations (new system)
+    const translation = this.page.translations?.[this.currentLang];
+    if (translation && translation.content) {
+      try {
+        const parsedContent = JSON.parse(translation.content);
+        this.displayContent = parsedContent;
+        if (translation.heroTitle) this.page.heroTitle = translation.heroTitle;
+        if (translation.heroSubtitle) this.page.heroSubtitle = translation.heroSubtitle;
+        if (translation.title) this.page.title = translation.title;
+        return;
+      } catch (e) {
+        console.error('Error parsing translated content:', e);
+      }
+    }
+    
+    // Fallback to old format if available
+    if (this.content) {
+      const langContent = this.content.translations[this.currentLang as 'fr' | 'ar' | 'en'];
+      this.displayContent = langContent || this.content.translations.fr;
+    } else {
+      this.loadContentFromPage();
+    }
   }
 
   loadPage(): void {
     this.pageService.getPageBySlug('ai4agri').subscribe({
       next: (page) => {
         this.page = page;
-        if (page.content) {
+        // Try new translation system first
+        if (page.translations && Object.keys(page.translations).length > 0) {
+          this.updateTranslatedContent();
+        } else if (page.content) {
+          // Fallback to old format
           try {
             const parsedContent = JSON.parse(page.content);
-            // Check if it's the new format with translations
             if (parsedContent.translations) {
               this.content = parsedContent;
             } else {
-              // Old format - migrate to new format
               const oldContent: Ai4agriLanguageContent = parsedContent;
               this.content = {
                 translations: {
@@ -113,19 +134,49 @@ export class Ai4agriComponent implements OnInit, OnDestroy {
             this.updateTranslatedContent();
           } catch (e) {
             console.error('Error parsing content:', e);
-            this.loadDefaultContent();
+            // Show empty state - data should come from database via DataInitializer
+            this.content = null;
+            this.displayContent = null;
           }
         } else {
-          this.loadDefaultContent();
+          // Show empty state - data should come from database via DataInitializer
+          this.content = null;
+          this.displayContent = null;
         }
         this.isLoading = false;
       },
       error: (error) => {
         console.error('Error loading page:', error);
-        this.loadDefaultContent();
+        // Show empty state - data should come from database via DataInitializer
+        this.content = null;
+        this.displayContent = null;
         this.isLoading = false;
       }
     });
+  }
+
+  loadContentFromPage(): void {
+    if (this.page?.content) {
+      try {
+        const parsedContent = JSON.parse(this.page.content);
+        if (parsedContent.translations) {
+          this.content = parsedContent;
+          this.updateTranslatedContent();
+        } else {
+          const oldContent: Ai4agriLanguageContent = parsedContent;
+          this.displayContent = oldContent;
+        }
+      } catch (e) {
+        console.error('Error parsing content:', e);
+        // Show empty state - data should come from database via DataInitializer
+        this.content = null;
+        this.displayContent = null;
+      }
+    } else {
+      // Show empty state - data should come from database via DataInitializer
+      this.content = null;
+      this.displayContent = null;
+    }
   }
 
   private getEmptyLanguageContent(): Ai4agriLanguageContent {
@@ -140,56 +191,4 @@ export class Ai4agriComponent implements OnInit, OnDestroy {
     };
   }
 
-  loadDefaultContent(): void {
-    this.content = {
-      translations: {
-        fr: {
-          heroTitle: 'AI 4 AGRI',
-          heroSubtitle: 'Intelligence Artificielle pour l\'Agriculture de Précision',
-          introText: 'L\'ANRSI organise des ateliers internationaux sur l\'application de l\'Intelligence Artificielle dans l\'agriculture de précision pour la sécurité alimentaire.',
-          workshops: [
-            {
-              date: '13-15 Février 2024',
-              title: 'Ouverture de l\'atelier international sur les applications de l\'IA dans l\'agriculture',
-              description: 'Atelier International sur "L\'application de l\'Intelligence Artificielle dans l\'agriculture de précision pour la sécurité alimentaire"',
-              detailsTitle: 'Programme AI 4 AGRI 13-15 Février 2024',
-              detailsItems: [
-                'Présentations sur l\'IA agricole',
-                'Échantillons de présentations',
-                'Démonstrations pratiques',
-                'Réseautage et collaboration'
-              ]
-            },
-            {
-              date: 'Février 2024',
-              title: 'AI 4 Agri - Initiative Continue',
-              description: 'Programme continu de développement et d\'application de l\'IA dans le secteur agricole mauritanien.',
-              detailsTitle: 'Objectifs du Programme',
-              detailsItems: [
-                'Moderniser l\'agriculture grâce à l\'IA',
-                'Améliorer la productivité agricole',
-                'Renforcer la sécurité alimentaire',
-                'Former les agriculteurs aux nouvelles technologies'
-              ]
-            }
-          ],
-          benefits: [
-            { icon: '🌱', title: 'Agriculture de Précision', description: 'Optimisation des ressources et augmentation des rendements grâce à l\'analyse de données précises.' },
-            { icon: '📊', title: 'Analyse Prédictive', description: 'Prédiction des conditions météorologiques et des maladies pour une meilleure planification.' },
-            { icon: '🤖', title: 'Automatisation', description: 'Robotisation des tâches agricoles pour améliorer l\'efficacité et réduire les coûts.' },
-            { icon: '🌍', title: 'Développement Durable', description: 'Promotion d\'une agriculture respectueuse de l\'environnement et durable.' }
-          ],
-          partnershipText: 'L\'ANRSI collabore avec des institutions internationales et des experts en IA pour développer des solutions innovantes pour l\'agriculture mauritanienne.',
-          partnershipHighlights: [
-            { icon: '🔬', title: 'Recherche et Développement', description: 'Collaboration avec des centres de recherche internationaux spécialisés en IA agricole.' },
-            { icon: '🎓', title: 'Formation et Éducation', description: 'Programmes de formation pour les agriculteurs et les professionnels du secteur.' },
-            { icon: '🤝', title: 'Coopération Internationale', description: 'Échange d\'expertise et de technologies avec des partenaires internationaux.' }
-          ]
-        },
-        ar: this.getEmptyLanguageContent(),
-        en: this.getEmptyLanguageContent()
-      }
-    };
-    this.updateTranslatedContent();
-  }
 }

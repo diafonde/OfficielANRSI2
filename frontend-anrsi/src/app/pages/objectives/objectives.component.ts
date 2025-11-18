@@ -1,5 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { Subscription } from 'rxjs';
 import { PageService, PageDTO } from '../../services/page.service';
 
 interface ObjectiveItem {
@@ -8,95 +10,182 @@ interface ObjectiveItem {
   description: string;
 }
 
-interface ObjectivesContent {
+interface ObjectivesLanguageContent {
   heroTitle: string;
   heroSubtitle: string;
   sectionTitle: string;
   objectives: ObjectiveItem[];
 }
 
+interface ObjectivesContent {
+  translations: {
+    fr: ObjectivesLanguageContent;
+    ar: ObjectivesLanguageContent;
+    en: ObjectivesLanguageContent;
+  };
+}
+
 @Component({
   selector: 'app-objectives',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './objectives.component.html',
   styleUrls: ['./objectives.component.scss']
 })
-export class ObjectivesComponent implements OnInit {
+export class ObjectivesComponent implements OnInit, OnDestroy {
   page: PageDTO | null = null;
-  heroTitle: string = '';
-  heroSubtitle: string = '';
-  sectionTitle: string = '';
-  objectives: ObjectiveItem[] = [];
+  content: ObjectivesContent | null = null;
+  displayContent: ObjectivesLanguageContent | null = null;
   isLoading = true;
+  currentLang = 'fr';
+  private langSubscription?: Subscription;
 
-  constructor(private pageService: PageService) {}
-  
-  defaultObjectives: ObjectiveItem[] = [
-    {
-      number: 1,
-      title: 'Accroître la production scientifique Nationale',
-      description: 'L\'ANRSI vise à stimuler et augmenter significativement la production scientifique nationale en soutenant les chercheurs et les institutions de recherche.'
-    },
-    {
-      number: 2,
-      title: 'Améliorer l\'excellence et le rayonnement de la recherche scientifique en Mauritanie',
-      description: 'Nous nous engageons à promouvoir l\'excellence dans la recherche scientifique et à renforcer le rayonnement international de la recherche mauritanienne.'
-    },
-    {
-      number: 3,
-      title: 'Améliorer l\'impact de la recherche et l\'innovation sur l\'économie, la société et le développement durable',
-      description: 'L\'ANRSI travaille à maximiser l\'impact de la recherche et de l\'innovation sur le développement économique, social et durable de la Mauritanie.'
-    },
-    {
-      number: 4,
-      title: 'Accroître la capacité d\'innovation et de création de richesses de notre pays par et grâce à la recherche',
-      description: 'Nous visons à renforcer les capacités d\'innovation nationales et à favoriser la création de richesses grâce aux résultats de la recherche scientifique.'
-    }
-  ];
+  constructor(
+    private pageService: PageService,
+    private translate: TranslateService
+  ) {}
 
   ngOnInit(): void {
+    // Get current language
+    this.currentLang = this.translate.currentLang || this.translate.defaultLang || 'fr';
+    
+    // Subscribe to language changes
+    this.langSubscription = this.translate.onLangChange.subscribe(event => {
+      this.currentLang = event.lang;
+      this.updateTranslatedContent();
+    });
+
     this.loadPage();
+  }
+
+  ngOnDestroy(): void {
+    if (this.langSubscription) {
+      this.langSubscription.unsubscribe();
+    }
+  }
+
+  private updateTranslatedContent(): void {
+    if (!this.page) return;
+    
+    // Try to get translation from page.translations (new system)
+    const translation = this.page.translations?.[this.currentLang];
+    if (translation && translation.content) {
+      try {
+        const parsedContent = JSON.parse(translation.content);
+        this.displayContent = parsedContent;
+        if (translation.heroTitle) this.page.heroTitle = translation.heroTitle;
+        if (translation.heroSubtitle) this.page.heroSubtitle = translation.heroSubtitle;
+        if (translation.title) this.page.title = translation.title;
+        return;
+      } catch (e) {
+        console.error('Error parsing translated content:', e);
+      }
+    }
+    
+    // Fallback to old format if available
+    if (this.content) {
+      const langContent = this.content.translations[this.currentLang as 'fr' | 'ar' | 'en'];
+      this.displayContent = langContent || this.content.translations.fr;
+    } else {
+      this.loadContentFromPage();
+    }
   }
 
   loadPage(): void {
     this.pageService.getPageBySlug('objectives').subscribe({
       next: (page) => {
         this.page = page;
-        this.parseContent();
+        // Try new translation system first
+        if (page.translations && Object.keys(page.translations).length > 0) {
+          this.updateTranslatedContent();
+        } else if (page.content) {
+          // Fallback to old format
+          try {
+            const parsedContent = JSON.parse(page.content);
+            if (parsedContent.translations) {
+              this.content = parsedContent;
+            } else {
+              const oldContent: ObjectivesLanguageContent = parsedContent;
+              this.content = {
+                translations: {
+                  fr: oldContent,
+                  ar: this.getEmptyLanguageContent(),
+                  en: this.getEmptyLanguageContent()
+                }
+              };
+            }
+            this.updateTranslatedContent();
+          } catch (e) {
+            console.error('Error parsing content:', e);
+            // Show empty state - data should come from database via DataInitializer
+            this.content = null;
+            this.displayContent = null;
+          }
+        } else {
+          // Show empty state - data should come from database via DataInitializer
+          this.content = null;
+          this.displayContent = null;
+        }
         this.isLoading = false;
       },
       error: (error) => {
         console.error('Error loading page:', error);
-        this.loadDefaultContent();
+        // Show empty state - data should come from database via DataInitializer
+        this.content = null;
+        this.displayContent = null;
         this.isLoading = false;
       }
     });
   }
 
-  parseContent(): void {
-    if (!this.page?.content) {
-      this.loadDefaultContent();
-      return;
-    }
-
-    try {
-      const content: ObjectivesContent = JSON.parse(this.page.content);
-      
-      this.heroTitle = content.heroTitle || 'Objectifs';
-      this.heroSubtitle = content.heroSubtitle || 'Les objectifs stratégiques de l\'Agence Nationale de la Recherche Scientifique et de l\'Innovation';
-      this.sectionTitle = content.sectionTitle || 'Nos Objectifs';
-      this.objectives = content.objectives || this.defaultObjectives;
-    } catch (e) {
-      console.error('Error parsing content:', e);
-      this.loadDefaultContent();
+  loadContentFromPage(): void {
+    if (this.page?.content) {
+      try {
+        const parsedContent = JSON.parse(this.page.content);
+        if (parsedContent.translations) {
+          this.content = parsedContent;
+          this.updateTranslatedContent();
+        } else {
+          const oldContent: ObjectivesLanguageContent = parsedContent;
+          this.displayContent = oldContent;
+        }
+      } catch (e) {
+        console.error('Error parsing content:', e);
+        // Show empty state - data should come from database via DataInitializer
+        this.content = null;
+        this.displayContent = null;
+      }
+    } else {
+      // Show empty state - data should come from database via DataInitializer
+      this.content = null;
+      this.displayContent = null;
     }
   }
 
-  loadDefaultContent(): void {
-    this.heroTitle = 'Objectifs';
-    this.heroSubtitle = 'Les objectifs stratégiques de l\'Agence Nationale de la Recherche Scientifique et de l\'Innovation';
-    this.sectionTitle = 'Nos Objectifs';
-    this.objectives = this.defaultObjectives;
+  private getEmptyLanguageContent(): ObjectivesLanguageContent {
+    return {
+      heroTitle: '',
+      heroSubtitle: '',
+      sectionTitle: '',
+      objectives: []
+    };
+  }
+
+
+  // Getters for template
+  get heroTitle(): string {
+    return this.displayContent?.heroTitle || '';
+  }
+
+  get heroSubtitle(): string {
+    return this.displayContent?.heroSubtitle || '';
+  }
+
+  get sectionTitle(): string {
+    return this.displayContent?.sectionTitle || '';
+  }
+
+  get objectives(): ObjectiveItem[] {
+    return this.displayContent?.objectives || [];
   }
 }

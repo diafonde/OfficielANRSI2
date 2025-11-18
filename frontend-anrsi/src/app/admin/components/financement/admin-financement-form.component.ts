@@ -186,6 +186,16 @@ export class AdminFinancementFormComponent implements OnInit {
             if (parsedContent.translations) {
               const content: FinancementContent = parsedContent;
               this.populateForm(content);
+              // Check if Arabic data is empty and load defaults
+              const arGroup = this.getLanguageFormGroup('ar');
+              if (!arGroup.get('heroTitle')?.value || (arGroup.get('process') as FormArray).length === 0) {
+                this.loadDefaultArabicData();
+              }
+              // Check if English data is empty and load defaults
+              const enGroup = this.getLanguageFormGroup('en');
+              if (!enGroup.get('heroTitle')?.value || (enGroup.get('process') as FormArray).length === 0) {
+                this.loadDefaultEnglishData();
+              }
             } else {
               // Old format - migrate to new format
               const oldContent: FinancementLanguageContent = parsedContent;
@@ -197,6 +207,8 @@ export class AdminFinancementFormComponent implements OnInit {
                 }
               };
               this.populateForm(content);
+              this.loadDefaultArabicData();
+              this.loadDefaultEnglishData();
             }
           } catch (e) {
             console.error('Error parsing content:', e);
@@ -266,6 +278,96 @@ export class AdminFinancementFormComponent implements OnInit {
     this.addBenefit('Accompagnement dans la réalisation des projets', 'fr');
     this.addBenefit('Mise en réseau avec d\'autres chercheurs', 'fr');
     this.addBenefit('Valorisation des résultats de recherche', 'fr');
+
+    // Load Arabic and English defaults
+    this.loadDefaultArabicData();
+    this.loadDefaultEnglishData();
+  }
+
+  loadDefaultArabicData(): void {
+    const arGroup = this.getLanguageFormGroup('ar');
+    
+    // Check if Arabic data already exists
+    if (arGroup.get('heroTitle')?.value && (arGroup.get('process') as FormArray).length > 0) {
+      return; // Don't overwrite existing data
+    }
+
+    arGroup.patchValue({
+      heroTitle: 'التمويل',
+      heroSubtitle: 'تمول الوكالة العديد من الأنشطة المتعلقة بالبحث العلمي. هذه الأنشطة تأتي ضمن برامج الوكالة التي يتم الإعلان عنها سنويًا.',
+      ctaTitle: 'هل أنت مستعد للتقديم؟',
+      ctaDescription: 'اطلع على دعواتنا للمشاريع وقدم مشروعك'
+    });
+
+    // Clear existing arrays for Arabic
+    const arProcess = arGroup.get('process') as FormArray;
+    const arRequirements = arGroup.get('requirements') as FormArray;
+    const arBenefits = arGroup.get('benefits') as FormArray;
+    while (arProcess.length) arProcess.removeAt(0);
+    while (arRequirements.length) arRequirements.removeAt(0);
+    while (arBenefits.length) arBenefits.removeAt(0);
+
+    // Add default process steps for Arabic
+    this.addProcessStep({ step: 1, title: 'تحديد البرنامج', description: 'يجب على المتقدم تحديد البرنامج المناسب لنشاطه', icon: 'fas fa-search' }, 'ar');
+    this.addProcessStep({ step: 2, title: 'الالتزام بالمواعيد النهائية', description: 'الالتزام بالمواعيد النهائية وشروط التقديم المنشورة على موقع الوكالة', icon: 'fas fa-clock' }, 'ar');
+    this.addProcessStep({ step: 3, title: 'مراجعة اللوائح', description: 'مراجعة القرار الوزاري المنظم للتمويل لمزيد من التفاصيل', icon: 'fas fa-file-alt' }, 'ar');
+
+    // Add default requirements for Arabic
+    this.addRequirement('أن تكون مؤسسة بحثية معترف بها', 'ar');
+    this.addRequirement('امتلاك مشروع متوافق مع برامج الوكالة', 'ar');
+    this.addRequirement('الالتزام بمواعيد التقديم', 'ar');
+    this.addRequirement('تقديم جميع المستندات المطلوبة', 'ar');
+    this.addRequirement('تبرير الأهمية العلمية للمشروع', 'ar');
+
+    // Add default benefits for Arabic
+    this.addBenefit('تمويل الأنشطة البحثية العلمية', 'ar');
+    this.addBenefit('دعم المشاريع المبتكرة', 'ar');
+    this.addBenefit('توجيه في تنفيذ المشاريع', 'ar');
+    this.addBenefit('التواصل مع باحثين آخرين', 'ar');
+    this.addBenefit('تسليط الضوء على نتائج البحث', 'ar');
+  }
+
+  loadDefaultEnglishData(): void {
+    const enGroup = this.getLanguageFormGroup('en');
+    
+    // Check if English data already exists
+    if (enGroup.get('heroTitle')?.value && (enGroup.get('process') as FormArray).length > 0) {
+      return; // Don't overwrite existing data
+    }
+
+    enGroup.patchValue({
+      heroTitle: 'Funding',
+      heroSubtitle: 'The Agency funds numerous activities related to scientific research. These activities are part of the Agency\'s programs, announced annually.',
+      ctaTitle: 'Ready to Apply?',
+      ctaDescription: 'Check our calls for proposals and submit your project'
+    });
+
+    // Clear existing arrays for English
+    const enProcess = enGroup.get('process') as FormArray;
+    const enRequirements = enGroup.get('requirements') as FormArray;
+    const enBenefits = enGroup.get('benefits') as FormArray;
+    while (enProcess.length) enProcess.removeAt(0);
+    while (enRequirements.length) enRequirements.removeAt(0);
+    while (enBenefits.length) enBenefits.removeAt(0);
+
+    // Add default process steps for English
+    this.addProcessStep({ step: 1, title: 'Identify the Program', description: 'The applicant must identify the program suitable for their activity', icon: 'fas fa-search' }, 'en');
+    this.addProcessStep({ step: 2, title: 'Meet Deadlines', description: 'Respect the deadlines and application conditions published on the Agency\'s website', icon: 'fas fa-clock' }, 'en');
+    this.addProcessStep({ step: 3, title: 'Consult Regulations', description: 'Consult the ministerial decree regulating funding for more details', icon: 'fas fa-file-alt' }, 'en');
+
+    // Add default requirements for English
+    this.addRequirement('Be a recognized research institution', 'en');
+    this.addRequirement('Have a project in accordance with ANRSI programs', 'en');
+    this.addRequirement('Respect application deadlines', 'en');
+    this.addRequirement('Provide all required documents', 'en');
+    this.addRequirement('Justify the scientific relevance of the project', 'en');
+
+    // Add default benefits for English
+    this.addBenefit('Funding for scientific research activities', 'en');
+    this.addBenefit('Support for innovative projects', 'en');
+    this.addBenefit('Guidance in project implementation', 'en');
+    this.addBenefit('Networking with other researchers', 'en');
+    this.addBenefit('Valorization of research results', 'en');
   }
 
   populateForm(content: FinancementContent): void {

@@ -167,6 +167,16 @@ export class AdminProgrammesFormComponent implements OnInit {
             if (parsedContent.translations) {
               const content: ProgrammesContent = parsedContent;
               this.populateForm(content);
+              // Check if Arabic data is empty and load defaults
+              const arGroup = this.getLanguageFormGroup('ar');
+              if (!arGroup.get('heroTitle')?.value || (arGroup.get('programmes') as FormArray).length === 0) {
+                this.loadDefaultArabicData();
+              }
+              // Check if English data is empty and load defaults
+              const enGroup = this.getLanguageFormGroup('en');
+              if (!enGroup.get('heroTitle')?.value || (enGroup.get('programmes') as FormArray).length === 0) {
+                this.loadDefaultEnglishData();
+              }
             } else {
               // Old format - migrate to new format
               const oldContent: ProgrammesLanguageContent = parsedContent;
@@ -178,6 +188,8 @@ export class AdminProgrammesFormComponent implements OnInit {
                 }
               };
               this.populateForm(content);
+              this.loadDefaultArabicData();
+              this.loadDefaultEnglishData();
             }
           } catch (e) {
             console.error('Error parsing content:', e);
@@ -280,6 +292,166 @@ export class AdminProgrammesFormComponent implements OnInit {
       icon: 'fas fa-industry',
       color: '#126564'
     }, 'fr');
+
+    // Load Arabic and English defaults
+    this.loadDefaultArabicData();
+    this.loadDefaultEnglishData();
+  }
+
+  loadDefaultArabicData(): void {
+    const arGroup = this.getLanguageFormGroup('ar');
+    
+    // Check if Arabic data already exists
+    if (arGroup.get('heroTitle')?.value && (arGroup.get('programmes') as FormArray).length > 0) {
+      return; // Don't overwrite existing data
+    }
+
+    arGroup.patchValue({
+      heroTitle: 'البرامج',
+      heroSubtitle: 'برامج الوكالة',
+      ctaTitle: 'مهتم ببرامجنا؟',
+      ctaDescription: 'اكتشف كيفية المشاركة في برامجنا للبحث والابتكار'
+    });
+
+    // Clear existing array for Arabic
+    const arProgrammes = arGroup.get('programmes') as FormArray;
+    while (arProgrammes.length) arProgrammes.removeAt(0);
+
+    // Add default programmes for Arabic
+    this.addProgramme({
+      id: 'temkin',
+      name: 'برنامج تمكين (التمكين)',
+      description: 'برنامج تمكين الهياكل البحثية',
+      objectives: [
+        'ضمان سير عمل الهياكل البحثية المعترف بها',
+        'تشجيع ثقافة تبادل الموارد',
+        'كسر عزلة الباحثين',
+        'تعزيز قدرات مؤسسات التعليم العالي والبحث العلمي والباحثين في مجال إدارة وحوكمة البحث العلمي'
+      ],
+      icon: 'fas fa-university',
+      color: '#0a3d62'
+    }, 'ar');
+    this.addProgramme({
+      id: 'temeyouz',
+      name: 'برنامج تميوز (التميز)',
+      description: 'برنامج التميز العلمي للباحثين الشباب',
+      objectives: [
+        'دعم التميز العلمي بين الباحثين الشباب',
+        'تشجيع طلبة الدكتوراه على تكريس وقت كامل لأطروحاتهم',
+        'زيادة الإنتاج العلمي الوطني وتحسين وضوحه',
+        'تشجيع وتحفيز الإشراف والإنتاج العلمي',
+        'تطوير الإبداع وروح ريادة الأعمال لدى الباحثين الشباب'
+      ],
+      icon: 'fas fa-graduation-cap',
+      color: '#20a39e'
+    }, 'ar');
+    this.addProgramme({
+      id: 'tethmin',
+      name: 'برنامج تثمين (التثمين)',
+      description: 'برنامج تثمين البحث العلمي',
+      objectives: [
+        'ضمان نشر ومشاركة المعرفة',
+        'التعريف بموضوعات البحث لدى الهياكل البحثية',
+        'تعزيز شبكة الباحثين حول الموضوعات ذات الأولوية',
+        'تعزيز وضوح الإنتاج العلمي الوطني',
+        'دعم إنشاء هياكل لتثمين البحث العلمي (حاضنات)',
+        'حماية الملكية الفكرية'
+      ],
+      icon: 'fas fa-lightbulb',
+      color: '#ff6b6b'
+    }, 'ar');
+    this.addProgramme({
+      id: 'temm',
+      name: 'برنامج TEMM للتنمية المحلية',
+      description: 'برنامج التنمية المحلية والتصنيع',
+      objectives: [
+        'تصميم وتمويل مشاريع تجريبية في مجالات محددة من التنمية المحلية',
+        'إظهار واستغلال الإمكانيات الكبرى للبلاد',
+        'تشجيع الاستثمارات في التصنيع والبحث العلمي',
+        'التعاون مع الشركاء الفنيين والعلميين'
+      ],
+      details: 'يعد برنامج TEMM أحد أحدث البرامج التي اعتمدها مجلس إدارة الوكالة. يقوم البرنامج بتصميم وتمويل مشاريع تجريبية في مجالات محددة من التنمية المحلية لإظهار واستغلال الإمكانيات الكبرى للبلاد وتشجيع الاستثمارات في التصنيع والبحث العلمي مع الشركاء الفنيين والعلميين. وقد تم إطلاق أول مشروع في إطار هذا البرنامج، الذي يركز على المحاصيل الزراعية المحمية وإنتاجها وحفظها وتحويلها، بشكل فعلي بموجب الاتفاقية الموقعة في 4 نوفمبر 2021 بين الوكالة وISET.',
+      icon: 'fas fa-industry',
+      color: '#126564'
+    }, 'ar');
+  }
+
+  loadDefaultEnglishData(): void {
+    const enGroup = this.getLanguageFormGroup('en');
+    
+    // Check if English data already exists
+    if (enGroup.get('heroTitle')?.value && (enGroup.get('programmes') as FormArray).length > 0) {
+      return; // Don't overwrite existing data
+    }
+
+    enGroup.patchValue({
+      heroTitle: 'Programs',
+      heroSubtitle: 'Agency Programs',
+      ctaTitle: 'Interested in our programs?',
+      ctaDescription: 'Discover how to participate in our research and innovation programs'
+    });
+
+    // Clear existing array for English
+    const enProgrammes = enGroup.get('programmes') as FormArray;
+    while (enProgrammes.length) enProgrammes.removeAt(0);
+
+    // Add default programmes for English
+    this.addProgramme({
+      id: 'temkin',
+      name: 'Temkin Program (Empowerment)',
+      description: 'Program for empowering research structures',
+      objectives: [
+        'Ensure the proper functioning of recognized Research Structures (RS)',
+        'Encourage a culture of resource sharing',
+        'Break the isolation of researchers',
+        'Strengthen the capacities of Higher Education and Research Institutions and researchers in research management and governance'
+      ],
+      icon: 'fas fa-university',
+      color: '#0a3d62'
+    }, 'en');
+    this.addProgramme({
+      id: 'temeyouz',
+      name: 'Temeyouz Program (Excellence)',
+      description: 'Scientific excellence program for young researchers',
+      objectives: [
+        'Support scientific excellence among young researchers',
+        'Encourage PhD students to dedicate full time to their theses',
+        'Increase national scientific output and improve its visibility',
+        'Encourage and motivate supervision and scientific production',
+        'Develop creativity and entrepreneurship among young researchers'
+      ],
+      icon: 'fas fa-graduation-cap',
+      color: '#20a39e'
+    }, 'en');
+    this.addProgramme({
+      id: 'tethmin',
+      name: 'Tethmin Program (Valorization)',
+      description: 'Program for the valorization of scientific research',
+      objectives: [
+        'Ensure dissemination and sharing of knowledge',
+        'Raise awareness of the research topics of Research Structures',
+        'Strengthen networking among researchers around priority topics',
+        'Promote the visibility of national scientific output',
+        'Support the establishment of research valorization structures (incubators)',
+        'Protect intellectual property'
+      ],
+      icon: 'fas fa-lightbulb',
+      color: '#ff6b6b'
+    }, 'en');
+    this.addProgramme({
+      id: 'temm',
+      name: 'TEMM Program for Local Development',
+      description: 'Program for local development and industrialization',
+      objectives: [
+        'Design and fund pilot projects in specific areas of local development',
+        'Demonstrate and exploit the country\'s major potential',
+        'Encourage investments in industrialization and scientific research',
+        'Collaborate with technical and scientific partners'
+      ],
+      details: 'The TEMM program is one of the most recent programs adopted by the ANRSI Board of Directors. It designs and funds pilot projects in specific areas of local development to demonstrate and exploit the country\'s major potential and encourage investments in industrialization and scientific research with technical and scientific partners. The first project under this program, focused on protected horticultural crops, their production, conservation, and processing, was effectively launched under the agreement signed on November 4, 2021, between ANRSI and ISET.',
+      icon: 'fas fa-industry',
+      color: '#126564'
+    }, 'en');
   }
 
   populateForm(content: ProgrammesContent): void {

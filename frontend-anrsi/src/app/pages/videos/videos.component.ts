@@ -83,7 +83,7 @@ export class VideosComponent implements OnInit, OnDestroy {
     // Subscribe to language changes
     this.langSubscription = this.translate.onLangChange.subscribe(event => {
       this.currentLang = event.lang;
-      this.parseContent();
+      this.updateTranslatedContent();
     });
     
     this.loadPage();
@@ -99,7 +99,7 @@ export class VideosComponent implements OnInit, OnDestroy {
     this.pageService.getPageBySlug('videos').subscribe({
       next: (page) => {
         this.page = page;
-        this.parseContent();
+        this.updateTranslatedContent();
         this.isLoading = false;
       },
       error: (error) => {
@@ -110,14 +110,35 @@ export class VideosComponent implements OnInit, OnDestroy {
     });
   }
 
-  parseContent(): void {
-    if (!this.page?.content) {
-      this.loadDefaultContent();
-      return;
+  updateTranslatedContent(): void {
+    if (!this.page) return;
+    const translation = this.page.translations?.[this.currentLang];
+    if (translation && translation.content) {
+      try {
+        this.parseContent(translation.content);
+        if (translation.heroTitle) this.page.heroTitle = translation.heroTitle;
+        if (translation.heroSubtitle) this.page.heroSubtitle = translation.heroSubtitle;
+        if (translation.title) this.page.title = translation.title;
+      } catch (e) {
+        console.error('Error parsing translated content:', e);
+        this.loadContentFromPage();
+      }
+    } else {
+      this.loadContentFromPage();
     }
+  }
 
+  loadContentFromPage(): void {
+    if (this.page?.content) {
+      this.parseContent(this.page.content);
+    } else {
+      this.loadDefaultContent();
+    }
+  }
+
+  parseContent(contentString: string): void {
     try {
-      const content: VideosContent = JSON.parse(this.page.content);
+      const content: VideosContent = JSON.parse(contentString);
       
       // Check if it's the new format with translations
       if (content.translations) {

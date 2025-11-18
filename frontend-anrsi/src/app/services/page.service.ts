@@ -2,6 +2,15 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+export interface PageTranslationDTO {
+  id?: number;
+  language: string;
+  title: string;
+  heroTitle?: string;
+  heroSubtitle?: string;
+  content?: string;
+}
+
 export interface PageDTO {
   id?: number;
   slug: string;
@@ -16,6 +25,7 @@ export interface PageDTO {
   isActive?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
+  translations?: { [key: string]: PageTranslationDTO };
 }
 
 @Injectable({

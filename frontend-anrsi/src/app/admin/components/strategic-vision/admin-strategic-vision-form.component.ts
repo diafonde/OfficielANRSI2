@@ -153,6 +153,16 @@ export class AdminStrategicVisionFormComponent implements OnInit {
             if (parsedContent.translations) {
               const content: StrategicVisionContent = parsedContent;
               this.populateForm(content);
+              // Check if Arabic data is empty and load defaults
+              const arGroup = this.getLanguageFormGroup('ar');
+              if (!arGroup.get('heroTitle')?.value || (arGroup.get('values') as FormArray).length === 0) {
+                this.loadDefaultArabicData();
+              }
+              // Check if English data is empty and load defaults
+              const enGroup = this.getLanguageFormGroup('en');
+              if (!enGroup.get('heroTitle')?.value || (enGroup.get('values') as FormArray).length === 0) {
+                this.loadDefaultEnglishData();
+              }
             } else {
               // Old format - migrate to new format
               const oldContent: StrategicVisionLanguageContent = parsedContent;
@@ -164,6 +174,8 @@ export class AdminStrategicVisionFormComponent implements OnInit {
                 }
               };
               this.populateForm(content);
+              this.loadDefaultArabicData();
+              this.loadDefaultEnglishData();
             }
           } catch (e) {
             console.error('Error parsing content:', e);
@@ -236,6 +248,100 @@ export class AdminStrategicVisionFormComponent implements OnInit {
       title: 'Impact',
       description: 'Maximiser l\'impact de la recherche sur la société et l\'économie'
     }, 'fr');
+
+    // Load Arabic and English defaults
+    this.loadDefaultArabicData();
+    this.loadDefaultEnglishData();
+  }
+
+  loadDefaultArabicData(): void {
+    const arGroup = this.getLanguageFormGroup('ar');
+    
+    // Check if Arabic data already exists
+    if (arGroup.get('heroTitle')?.value && (arGroup.get('values') as FormArray).length > 0) {
+      return; // Don't overwrite existing data
+    }
+
+    arGroup.patchValue({
+      heroTitle: 'الرؤية الاستراتيجية',
+      heroSubtitle: 'الرؤية والرسالة للوكالة الوطنية للبحث العلمي والابتكار',
+      visionTitle: 'الرؤية',
+      visionText: 'تهدف الوكالة إلى تعزيز القدرات والكفاءات في البحث العلمي لتكون رائدة إقليمياً ومرجعاً في مجال العلوم والتكنولوجيا.',
+      messageTitle: 'الرسالة',
+      messageText: 'دعم الابتكار وتعزيز البحث العلمي لخدمة تنمية البلاد وصناعاتها.',
+      valuesTitle: 'قيمنا'
+    });
+
+    // Clear existing array for Arabic
+    const arValues = arGroup.get('values') as FormArray;
+    while (arValues.length) arValues.removeAt(0);
+
+    // Add default values for Arabic
+    this.addValue({
+      icon: '🔬',
+      title: 'التميز العلمي',
+      description: 'تعزيز الجودة والتميز في جميع مبادرات البحث العلمي'
+    }, 'ar');
+    this.addValue({
+      icon: '🤝',
+      title: 'التعاون',
+      description: 'تشجيع التعاون بين الباحثين والمؤسسات والشركاء'
+    }, 'ar');
+    this.addValue({
+      icon: '🌱',
+      title: 'الابتكار',
+      description: 'تشجيع الابتكار التكنولوجي والعلمي من أجل التنمية'
+    }, 'ar');
+    this.addValue({
+      icon: '🎯',
+      title: 'الأثر',
+      description: 'تعظيم أثر البحث العلمي على المجتمع والاقتصاد'
+    }, 'ar');
+  }
+
+  loadDefaultEnglishData(): void {
+    const enGroup = this.getLanguageFormGroup('en');
+    
+    // Check if English data already exists
+    if (enGroup.get('heroTitle')?.value && (enGroup.get('values') as FormArray).length > 0) {
+      return; // Don't overwrite existing data
+    }
+
+    enGroup.patchValue({
+      heroTitle: 'Strategic Vision',
+      heroSubtitle: 'The vision and message of the National Agency for Scientific Research and Innovation',
+      visionTitle: 'Vision',
+      visionText: 'The Agency aims to strengthen research capacities and skills to become a regional leader and a reference in the field of science and technology.',
+      messageTitle: 'Message',
+      messageText: 'Supporting innovation and promoting scientific research to serve the country\'s development and its industries.',
+      valuesTitle: 'Our Values'
+    });
+
+    // Clear existing array for English
+    const enValues = enGroup.get('values') as FormArray;
+    while (enValues.length) enValues.removeAt(0);
+
+    // Add default values for English
+    this.addValue({
+      icon: '🔬',
+      title: 'Scientific Excellence',
+      description: 'Promoting quality and excellence in all our research initiatives'
+    }, 'en');
+    this.addValue({
+      icon: '🤝',
+      title: 'Collaboration',
+      description: 'Encouraging cooperation among researchers, institutions, and partners'
+    }, 'en');
+    this.addValue({
+      icon: '🌱',
+      title: 'Innovation',
+      description: 'Fostering technological and scientific innovation for development'
+    }, 'en');
+    this.addValue({
+      icon: '🎯',
+      title: 'Impact',
+      description: 'Maximizing the impact of research on society and the economy'
+    }, 'en');
   }
 
   populateForm(content: StrategicVisionContent): void {

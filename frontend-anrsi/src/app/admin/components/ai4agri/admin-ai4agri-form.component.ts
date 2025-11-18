@@ -382,6 +382,22 @@ export class AdminAi4agriFormComponent implements OnInit {
             if (parsedContent.translations) {
               const content: Ai4agriContent = parsedContent;
               this.populateForm(content);
+              // Check if Arabic data is empty and load defaults
+              const arGroup = this.getLanguageFormGroup('ar');
+              const arHeroTitle = arGroup.get('heroTitle')?.value;
+              const arWorkshops = arGroup.get('workshops') as FormArray;
+              const arBenefits = arGroup.get('benefits') as FormArray;
+              if ((!arHeroTitle || arHeroTitle.trim() === '') && arWorkshops.length === 0 && arBenefits.length === 0) {
+                this.loadDefaultArabicData();
+              }
+              // Check if English data is empty and load defaults
+              const enGroup = this.getLanguageFormGroup('en');
+              const enHeroTitle = enGroup.get('heroTitle')?.value;
+              const enWorkshops = enGroup.get('workshops') as FormArray;
+              const enBenefits = enGroup.get('benefits') as FormArray;
+              if ((!enHeroTitle || enHeroTitle.trim() === '') && enWorkshops.length === 0 && enBenefits.length === 0) {
+                this.loadDefaultEnglishData();
+              }
             } else {
               // Old format - migrate to new format
               const oldContent: Ai4agriLanguageContent = parsedContent;
@@ -393,6 +409,9 @@ export class AdminAi4agriFormComponent implements OnInit {
                 }
               };
               this.populateForm(content);
+              // Load default Arabic and English data for old format
+              this.loadDefaultArabicData();
+              this.loadDefaultEnglishData();
             }
           } catch (e) {
             console.error('Error parsing content:', e);
@@ -472,6 +491,120 @@ export class AdminAi4agriFormComponent implements OnInit {
     this.addPartnershipHighlight({ icon: '🔬', title: 'Recherche et Développement', description: 'Collaboration avec des centres de recherche internationaux spécialisés en IA agricole.' }, 'fr');
     this.addPartnershipHighlight({ icon: '🎓', title: 'Formation et Éducation', description: 'Programmes de formation pour les agriculteurs et les professionnels du secteur.' }, 'fr');
     this.addPartnershipHighlight({ icon: '🤝', title: 'Coopération Internationale', description: 'Échange d\'expertise et de technologies avec des partenaires internationaux.' }, 'fr');
+
+    // Load default Arabic and English data
+    this.loadDefaultArabicData();
+    this.loadDefaultEnglishData();
+  }
+
+  private loadDefaultArabicData(): void {
+    // Check if Arabic data already exists to avoid duplicates
+    const arGroup = this.getLanguageFormGroup('ar');
+    const heroTitle = arGroup.get('heroTitle')?.value;
+    const existingWorkshops = arGroup.get('workshops') as FormArray;
+    const existingBenefits = arGroup.get('benefits') as FormArray;
+
+    // Only load if Arabic data is empty (no hero title and no workshops/benefits items)
+    if ((!heroTitle || heroTitle.trim() === '') && existingWorkshops.length === 0 && existingBenefits.length === 0) {
+      arGroup.patchValue({
+        heroTitle: 'الذكاء الاصطناعي للزراعة',
+        heroSubtitle: 'الذكاء الاصطناعي للزراعة الدقيقة',
+        introText: 'تنظم ANRSI ورش عمل دولية حول تطبيقات الذكاء الاصطناعي في الزراعة الدقيقة لضمان الأمن الغذائي.',
+        partnershipText: 'تتعاون ANRSI مع المؤسسات الدولية وخبراء الذكاء الاصطناعي لتطوير حلول مبتكرة للزراعة في موريتانيا.'
+      });
+
+      // Add default workshops for Arabic
+      this.addWorkshop({
+        date: '13-15 فبراير 2024',
+        title: 'افتتاح ورشة العمل الدولية حول تطبيقات الذكاء الاصطناعي في الزراعة',
+        description: 'ورشة عمل دولية حول "تطبيقات الذكاء الاصطناعي في الزراعة الدقيقة لضمان الأمن الغذائي"',
+        detailsTitle: 'برنامج AI 4 AGRI 13-15 فبراير 2024',
+        detailsItems: [
+          'عرض محاضرات حول الذكاء الاصطناعي الزراعي',
+          'نماذج من العروض التقديمية',
+          'عروض عملية',
+          'بناء شبكة علاقات وتعاون'
+        ]
+      }, 'ar');
+      this.addWorkshop({
+        date: 'فبراير 2024',
+        title: 'AI 4 Agri - المبادرة المستمرة',
+        description: 'برنامج مستمر لتطوير وتطبيق الذكاء الاصطناعي في قطاع الزراعة الموريتانية.',
+        detailsTitle: 'أهداف البرنامج',
+        detailsItems: [
+          'تحديث الزراعة من خلال الذكاء الاصطناعي',
+          'تحسين الإنتاجية الزراعية',
+          'تعزيز الأمن الغذائي',
+          'تدريب المزارعين على التقنيات الجديدة'
+        ]
+      }, 'ar');
+
+      // Add default benefits for Arabic
+      this.addBenefit({ icon: '🌱', title: 'الزراعة الدقيقة', description: 'تحسين استخدام الموارد وزيادة الإنتاجية من خلال تحليل البيانات الدقيقة.' }, 'ar');
+      this.addBenefit({ icon: '📊', title: 'التحليلات التنبؤية', description: 'التنبؤ بالظروف الجوية والأمراض للمحاصيل لتحسين التخطيط.' }, 'ar');
+      this.addBenefit({ icon: '🤖', title: 'الأتمتة', description: 'استخدام الروبوتات في المهام الزراعية لتحسين الكفاءة وتقليل التكاليف.' }, 'ar');
+      this.addBenefit({ icon: '🌍', title: 'التنمية المستدامة', description: 'تشجيع الزراعة الصديقة للبيئة والمستدامة.' }, 'ar');
+
+      // Add default partnership highlights for Arabic
+      this.addPartnershipHighlight({ icon: '🔬', title: 'البحث والتطوير', description: 'التعاون مع مراكز بحث دولية متخصصة في الذكاء الاصطناعي الزراعي.' }, 'ar');
+      this.addPartnershipHighlight({ icon: '🎓', title: 'التدريب والتعليم', description: 'برامج تدريبية للمزارعين والمتخصصين في القطاع.' }, 'ar');
+      this.addPartnershipHighlight({ icon: '🤝', title: 'التعاون الدولي', description: 'تبادل الخبرات والتقنيات مع الشركاء الدوليين.' }, 'ar');
+    }
+  }
+
+  private loadDefaultEnglishData(): void {
+    // Check if English data already exists to avoid duplicates
+    const enGroup = this.getLanguageFormGroup('en');
+    const heroTitle = enGroup.get('heroTitle')?.value;
+    const existingWorkshops = enGroup.get('workshops') as FormArray;
+    const existingBenefits = enGroup.get('benefits') as FormArray;
+
+    // Only load if English data is empty (no hero title and no workshops/benefits items)
+    if ((!heroTitle || heroTitle.trim() === '') && existingWorkshops.length === 0 && existingBenefits.length === 0) {
+      enGroup.patchValue({
+        heroTitle: 'AI 4 AGRI',
+        heroSubtitle: 'Artificial Intelligence for Precision Agriculture',
+        introText: 'ANRSI organizes international workshops on the application of Artificial Intelligence in precision agriculture for food security.',
+        partnershipText: 'ANRSI collaborates with international institutions and AI experts to develop innovative solutions for Mauritanian agriculture.'
+      });
+
+      // Add default workshops for English
+      this.addWorkshop({
+        date: '13-15 February 2024',
+        title: 'Opening of the International Workshop on AI Applications in Agriculture',
+        description: 'International Workshop on "Application of Artificial Intelligence in Precision Agriculture for Food Security"',
+        detailsTitle: 'AI 4 AGRI Program 13-15 February 2024',
+        detailsItems: [
+          'Presentations on agricultural AI',
+          'Sample presentations',
+          'Practical demonstrations',
+          'Networking and collaboration'
+        ]
+      }, 'en');
+      this.addWorkshop({
+        date: 'February 2024',
+        title: 'AI 4 Agri - Ongoing Initiative',
+        description: 'Ongoing program for the development and application of AI in the Mauritanian agricultural sector.',
+        detailsTitle: 'Program Objectives',
+        detailsItems: [
+          'Modernize agriculture through AI',
+          'Improve agricultural productivity',
+          'Strengthen food security',
+          'Train farmers in new technologies'
+        ]
+      }, 'en');
+
+      // Add default benefits for English
+      this.addBenefit({ icon: '🌱', title: 'Precision Agriculture', description: 'Optimize resources and increase yields through precise data analysis.' }, 'en');
+      this.addBenefit({ icon: '📊', title: 'Predictive Analytics', description: 'Forecast weather conditions and crop diseases for better planning.' }, 'en');
+      this.addBenefit({ icon: '🤖', title: 'Automation', description: 'Robotic agricultural tasks to improve efficiency and reduce costs.' }, 'en');
+      this.addBenefit({ icon: '🌍', title: 'Sustainable Development', description: 'Promote environmentally friendly and sustainable agriculture.' }, 'en');
+
+      // Add default partnership highlights for English
+      this.addPartnershipHighlight({ icon: '🔬', title: 'Research & Development', description: 'Collaboration with international research centers specialized in agricultural AI.' }, 'en');
+      this.addPartnershipHighlight({ icon: '🎓', title: 'Training & Education', description: 'Training programs for farmers and sector professionals.' }, 'en');
+      this.addPartnershipHighlight({ icon: '🤝', title: 'International Cooperation', description: 'Exchange of expertise and technology with international partners.' }, 'en');
+    }
   }
 
   populateForm(content: Ai4agriContent): void {

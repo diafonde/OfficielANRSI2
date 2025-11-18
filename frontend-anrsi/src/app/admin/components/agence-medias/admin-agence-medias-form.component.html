@@ -59,6 +59,52 @@
       </div>
     </div>
 
+    <!-- Media Links -->
+    <div class="form-section">
+      <h2>{{ getLabel('mediaLinksSection') }} - {{ getActiveLanguageName() }}</h2>
+      <div [formGroup]="getActiveLanguageFormGroup()">
+        <div formArrayName="mediaLinks" *ngFor="let item of mediaLinks.controls; let i = index">
+          <div [formGroupName]="i" class="nested-form-group">
+            <div class="form-row">
+              <div class="form-group">
+                <label>{{ getLabel('mediaLinksLabel') }}</label>
+                <input type="text" formControlName="label" class="form-control" />
+              </div>
+              <div class="form-group">
+                <label>{{ getLabel('mediaLinksUrl') }}</label>
+                <input type="text" formControlName="url" class="form-control" />
+              </div>
+              <button type="button" (click)="removeMediaLink(i)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
+            </div>
+          </div>
+        </div>
+        <button type="button" (click)="addMediaLink()" class="btn btn-primary">{{ getLabel('addMediaLink') }}</button>
+      </div>
+    </div>
+
+    <!-- Article Links -->
+    <div class="form-section">
+      <h2>{{ getLabel('articleLinksSection') }} - {{ getActiveLanguageName() }}</h2>
+      <div [formGroup]="getActiveLanguageFormGroup()">
+        <div formArrayName="articleLinks" *ngFor="let item of articleLinks.controls; let i = index">
+          <div [formGroupName]="i" class="nested-form-group">
+            <div class="form-row">
+              <div class="form-group">
+                <label>{{ getLabel('articleLinksTitle') }}</label>
+                <input type="text" formControlName="title" class="form-control" />
+              </div>
+              <div class="form-group">
+                <label>{{ getLabel('articleLinksUrl') }}</label>
+                <input type="text" formControlName="url" class="form-control" />
+              </div>
+              <button type="button" (click)="removeArticleLink(i)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
+            </div>
+          </div>
+        </div>
+        <button type="button" (click)="addArticleLink()" class="btn btn-primary">{{ getLabel('addArticleLink') }}</button>
+      </div>
+    </div>
+
     <!-- Media Overview -->
     <div class="form-section">
       <h2>{{ getLabel('mediaOverviewSection') }} - {{ getActiveLanguageName() }}</h2>

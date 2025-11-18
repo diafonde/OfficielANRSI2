@@ -200,6 +200,18 @@ export class AdminCooperationFormComponent implements OnInit {
             if (parsedContent.translations) {
               const content: CooperationContent = parsedContent;
               this.populateForm(content);
+              // Check if Arabic data is empty and load defaults
+              const arGroup = this.getLanguageFormGroup('ar');
+              const arCooperationInfo = arGroup.get('cooperationInfo') as FormGroup;
+              if (!arCooperationInfo.get('title')?.value || (arGroup.get('partnerships') as FormArray).length === 0) {
+                this.loadDefaultArabicData();
+              }
+              // Check if English data is empty and load defaults
+              const enGroup = this.getLanguageFormGroup('en');
+              const enCooperationInfo = enGroup.get('cooperationInfo') as FormGroup;
+              if (!enCooperationInfo.get('title')?.value || (enGroup.get('partnerships') as FormArray).length === 0) {
+                this.loadDefaultEnglishData();
+              }
             } else {
               // Old format - migrate to new format
               const oldContent: CooperationLanguageContent = parsedContent;
@@ -211,6 +223,8 @@ export class AdminCooperationFormComponent implements OnInit {
                 }
               };
               this.populateForm(content);
+              this.loadDefaultArabicData();
+              this.loadDefaultEnglishData();
             }
           } catch (e) {
             console.error('Error parsing content:', e);
@@ -336,6 +350,210 @@ export class AdminCooperationFormComponent implements OnInit {
       icon: 'fas fa-seedling',
       color: '#126564'
     }, 'fr');
+
+    // Load Arabic and English defaults
+    this.loadDefaultArabicData();
+    this.loadDefaultEnglishData();
+  }
+
+  loadDefaultArabicData(): void {
+    const arGroup = this.getLanguageFormGroup('ar');
+    const arCooperationInfo = arGroup.get('cooperationInfo') as FormGroup;
+    
+    // Check if Arabic data already exists
+    if (arCooperationInfo.get('title')?.value && (arGroup.get('partnerships') as FormArray).length > 0) {
+      return; // Don't overwrite existing data
+    }
+
+    arCooperationInfo.patchValue({
+      title: 'التعاون والشراكات',
+      description: 'ترتبط الوكالة بمؤسسات ذات مصلحة مشتركة من خلال اتفاقيات التعاون والشراكة لتحقيق أهداف مشتركة.'
+    });
+
+    // Clear existing arrays for Arabic
+    const arBenefits = arCooperationInfo.get('benefits') as FormArray;
+    const arPartnerships = arGroup.get('partnerships') as FormArray;
+    while (arBenefits.length) arBenefits.removeAt(0);
+    while (arPartnerships.length) arPartnerships.removeAt(0);
+
+    // Add default benefits for Arabic
+    this.addBenefit('تعزيز قدرات البحث العلمي', 'ar');
+    this.addBenefit('تبادل الخبرات والمعرفة', 'ar');
+    this.addBenefit('تطوير مشاريع مبتكرة', 'ar');
+    this.addBenefit('بناء شبكة علاقات بين الباحثين', 'ar');
+    this.addBenefit('تسليط الضوء على نتائج البحث', 'ar');
+    this.addBenefit('نقل التكنولوجيا', 'ar');
+
+    // Add default partnerships for Arabic
+    this.addPartnership({
+      id: 'anrsa-senegal',
+      title: 'اتفاقية شراكة مع ANRSA السنغال',
+      description: 'شراكة استراتيجية مع الوكالة الوطنية للبحث العلمي التطبيقي في السنغال',
+      type: 'شراكة',
+      country: 'السنغال',
+      flag: '🇸🇳',
+      objectives: [
+        'تبادل الخبرات في البحث العلمي',
+        'التعاون في المشاريع المشتركة',
+        'تعزيز قدرات البحث العلمي',
+        'مشاركة الموارد والبنى التحتية'
+      ],
+      status: 'نشط',
+      icon: 'fas fa-handshake',
+      color: '#0a3d62'
+    }, 'ar');
+    this.addPartnership({
+      id: 'cnrst-maroc',
+      title: 'اتفاقية تعاون مع CNRST المغرب',
+      description: 'التعاون مع المركز الوطني للبحث العلمي والتقني في المغرب',
+      type: 'تعاون',
+      country: 'المغرب',
+      flag: '🇲🇦',
+      objectives: [
+        'تطوير مشاريع بحثية مشتركة',
+        'تدريب وتبادل الباحثين',
+        'تسليط الضوء على نتائج البحث',
+        'الابتكار التكنولوجي'
+      ],
+      status: 'نشط',
+      icon: 'fas fa-microscope',
+      color: '#20a39e'
+    }, 'ar');
+    this.addPartnership({
+      id: 'tunisie-dri',
+      title: 'شراكة مع DRI تونس',
+      description: 'التعاون مع قسم البحث العلمي والابتكار في تونس',
+      type: 'شراكة',
+      country: 'تونس',
+      flag: '🇹🇳',
+      objectives: [
+        'البحث التطبيقي والابتكار',
+        'نقل التكنولوجيا',
+        'التدريب المتخصص',
+        'تطوير حلول مبتكرة'
+      ],
+      status: 'نشط',
+      icon: 'fas fa-lightbulb',
+      color: '#ff6b6b'
+    }, 'ar');
+    this.addPartnership({
+      id: 'iset-rosso',
+      title: 'شراكة مع ISET روسو',
+      description: 'التعاون مع المعهد العالي للتعليم التكنولوجي بروسو لإنتاج الخضروات المحمية',
+      type: 'شراكة محلية',
+      country: 'موريتانيا',
+      flag: '🇲🇷',
+      objectives: [
+        'إنتاج الخضروات المحمية',
+        'تقنيات زراعية مبتكرة',
+        'تدريب تقني متخصص',
+        'تنمية زراعية محلية'
+      ],
+      details: 'تهدف هذه الشراكة المحلية إلى تطوير تقنيات مبتكرة لإنتاج الخضروات المحمية، مما يساهم في التنمية الزراعية والأمن الغذائي في موريتانيا.',
+      status: 'نشط',
+      icon: 'fas fa-seedling',
+      color: '#126564'
+    }, 'ar');
+  }
+
+  loadDefaultEnglishData(): void {
+    const enGroup = this.getLanguageFormGroup('en');
+    const enCooperationInfo = enGroup.get('cooperationInfo') as FormGroup;
+    
+    // Check if English data already exists
+    if (enCooperationInfo.get('title')?.value && (enGroup.get('partnerships') as FormArray).length > 0) {
+      return; // Don't overwrite existing data
+    }
+
+    enCooperationInfo.patchValue({
+      title: 'Cooperation & Partnerships',
+      description: 'The Agency is linked to institutions of common interest through cooperation and partnership agreements to achieve shared objectives.'
+    });
+
+    // Clear existing arrays for English
+    const enBenefits = enCooperationInfo.get('benefits') as FormArray;
+    const enPartnerships = enGroup.get('partnerships') as FormArray;
+    while (enBenefits.length) enBenefits.removeAt(0);
+    while (enPartnerships.length) enPartnerships.removeAt(0);
+
+    // Add default benefits for English
+    this.addBenefit('Strengthening research capacities', 'en');
+    this.addBenefit('Exchange of expertise and knowledge', 'en');
+    this.addBenefit('Development of innovative projects', 'en');
+    this.addBenefit('Networking among researchers', 'en');
+    this.addBenefit('Valorization of research results', 'en');
+    this.addBenefit('Technology transfer', 'en');
+
+    // Add default partnerships for English
+    this.addPartnership({
+      id: 'anrsa-senegal',
+      title: 'Partnership Agreement with ANRSA Senegal',
+      description: 'Strategic partnership with the National Agency for Applied Scientific Research of Senegal',
+      type: 'Partnership',
+      country: 'Senegal',
+      flag: '🇸🇳',
+      objectives: [
+        'Exchange of expertise in scientific research',
+        'Collaboration on joint projects',
+        'Strengthening research capacities',
+        'Sharing of resources and infrastructure'
+      ],
+      status: 'Active',
+      icon: 'fas fa-handshake',
+      color: '#0a3d62'
+    }, 'en');
+    this.addPartnership({
+      id: 'cnrst-maroc',
+      title: 'Cooperation Agreement with CNRST Morocco',
+      description: 'Cooperation with the National Center for Scientific and Technical Research of Morocco',
+      type: 'Cooperation',
+      country: 'Morocco',
+      flag: '🇲🇦',
+      objectives: [
+        'Development of joint research projects',
+        'Training and exchange of researchers',
+        'Valorization of research results',
+        'Technological innovation'
+      ],
+      status: 'Active',
+      icon: 'fas fa-microscope',
+      color: '#20a39e'
+    }, 'en');
+    this.addPartnership({
+      id: 'tunisie-dri',
+      title: 'Partnership with DRI Tunisia',
+      description: 'Collaboration with the Department of Scientific Research and Innovation in Tunisia',
+      type: 'Partnership',
+      country: 'Tunisia',
+      flag: '🇹🇳',
+      objectives: [
+        'Applied research and innovation',
+        'Technology transfer',
+        'Specialized training',
+        'Development of innovative solutions'
+      ],
+      status: 'Active',
+      icon: 'fas fa-lightbulb',
+      color: '#ff6b6b'
+    }, 'en');
+    this.addPartnership({
+      id: 'iset-rosso',
+      title: 'Partnership with ISET Rosso',
+      description: 'Collaboration with the Higher Institute of Technological Education of Rosso for protected vegetable production',
+      type: 'Local Partnership',
+      country: 'Mauritania',
+      flag: '🇲🇷',
+      objectives: [
+        'Production of protected vegetables',
+        'Innovative agricultural techniques',
+        'Specialized technical training',
+        'Local agricultural development'
+      ],
+      details: 'This local partnership aims to develop innovative techniques for protected vegetable production, thereby contributing to agricultural development and food security in Mauritania.',
+      status: 'Active',
+      icon: 'fas fa-seedling',
+      color: '#126564'
+    }, 'en');
   }
 
   populateForm(content: CooperationContent): void {

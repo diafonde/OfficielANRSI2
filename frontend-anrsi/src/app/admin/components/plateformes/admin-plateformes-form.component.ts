@@ -322,6 +322,22 @@ export class AdminPlateformesFormComponent implements OnInit {
             if (parsedContent.translations) {
               const content: PlateformesContent = parsedContent;
               this.populateForm(content);
+              // Check if Arabic data is empty in the form and load defaults if needed
+              const arGroup = this.getLanguageFormGroup('ar');
+              const arHeroTitle = arGroup.get('heroTitle')?.value;
+              const arPlateformes = arGroup.get('plateformes') as FormArray;
+              const arAccessModes = arGroup.get('accessModes') as FormArray;
+              if ((!arHeroTitle || arHeroTitle.trim() === '') && arPlateformes.length === 0 && arAccessModes.length === 0) {
+                this.loadDefaultArabicData();
+              }
+              // Check if English data is empty in the form and load defaults if needed
+              const enGroup = this.getLanguageFormGroup('en');
+              const enHeroTitle = enGroup.get('heroTitle')?.value;
+              const enPlateformes = enGroup.get('plateformes') as FormArray;
+              const enAccessModes = enGroup.get('accessModes') as FormArray;
+              if ((!enHeroTitle || enHeroTitle.trim() === '') && enPlateformes.length === 0 && enAccessModes.length === 0) {
+                this.loadDefaultEnglishData();
+              }
             } else {
               // Old format - migrate to new format
               const oldContent: PlateformesLanguageContent = parsedContent;
@@ -333,6 +349,9 @@ export class AdminPlateformesFormComponent implements OnInit {
                 }
               };
               this.populateForm(content);
+              // Load default Arabic and English data since they're empty
+              this.loadDefaultArabicData();
+              this.loadDefaultEnglishData();
             }
           } catch (e) {
             console.error('Error parsing content:', e);
@@ -472,6 +491,236 @@ export class AdminPlateformesFormComponent implements OnInit {
     this.addContactItem({ icon: 'fas fa-phone', label: 'Téléphone', value: '+222 45 25 44 21' }, 'fr');
     this.addContactItem({ icon: 'fas fa-map-marker-alt', label: 'Adresse', value: 'ANRSI, Nouakchott, Mauritanie' }, 'fr');
     this.addContactItem({ icon: 'fas fa-clock', label: 'Horaires', value: 'Lundi - Vendredi : 8h00 - 18h00' }, 'fr');
+
+    // Load default Arabic and English data
+    this.loadDefaultArabicData();
+    this.loadDefaultEnglishData();
+  }
+
+  private loadDefaultArabicData(): void {
+    // Check if Arabic data already exists to avoid duplicates
+    const arGroup = this.getLanguageFormGroup('ar');
+    const heroTitle = arGroup.get('heroTitle')?.value;
+    const existingPlateformes = arGroup.get('plateformes') as FormArray;
+    const existingAccessModes = arGroup.get('accessModes') as FormArray;
+
+    // Only load if Arabic data is empty (no hero title and no plateformes/access modes items)
+    if ((!heroTitle || heroTitle.trim() === '') && existingPlateformes.length === 0 && existingAccessModes.length === 0) {
+      arGroup.patchValue({
+        heroTitle: 'المنصات',
+        heroSubtitle: 'أدوات وتقنيات للبحث والابتكار',
+        introText: 'توفر الوكالة الوطنية للبحث العلمي والابتكار للباحثين والمبتكرين الموريتانيين منصات تكنولوجية متطورة لدعم مشاريعهم البحثية والابتكارية.'
+      });
+
+      // Add default plateformes for Arabic
+      this.addPlateforme({
+        icon: '🔬',
+        title: 'منصة التحليل الكيميائي',
+        description: 'مختبر مجهز بأدوات متطورة للتحليل الكيميائي والطيفي وتوصيف المواد.',
+        equipments: ['مطياف الكتلة', 'كروماتوغرافيا الغاز', 'مقياس حيود الأشعة السينية', 'المجهر الإلكتروني'],
+        services: ['تحليل التركيب', 'توصيف المواد', 'مراقبة الجودة', 'التدريب التقني'],
+        contact: 'chimie@anrsi.mr'
+      }, 'ar');
+      this.addPlateforme({
+        icon: '💻',
+        title: 'منصة المعلوماتية والحوسبة',
+        description: 'بنية تحتية معلوماتية عالية الأداء للحوسبة العلمية والمحاكاة الرقمية ومعالجة البيانات.',
+        equipments: ['عنقود حوسبة عالي الأداء', 'خوادم تخزين ضخمة', 'شبكة عالية السرعة', 'برامج علمية'],
+        services: ['حوسبة متوازية', 'محاكاة رقمية', 'تحليل البيانات', 'الدعم التقني'],
+        contact: 'informatique@anrsi.mr'
+      }, 'ar');
+      this.addPlateforme({
+        icon: '🌱',
+        title: 'المنصة البيوتكنولوجية',
+        description: 'مختبر متخصص في البيوتكنولوجيا للبحث في البيولوجيا الجزيئية والوراثة وبيولوجيا النبات.',
+        equipments: ['تفاعل البوليميراز المتسلسل في الوقت الفعلي', 'الرحلان الكهربائي', 'مجاهر الفلورة', 'حاضنات محكومة'],
+        services: ['التحليل الوراثي', 'زراعة الخلايا', 'الاختبارات البيولوجية', 'الاستشارة العلمية'],
+        contact: 'biotech@anrsi.mr'
+      }, 'ar');
+      this.addPlateforme({
+        icon: '⚡',
+        title: 'المنصة الطاقوية',
+        description: 'منشأة مخصصة لاختبار وتطوير تقنيات الطاقة المتجددة وأنظمة التخزين.',
+        equipments: ['محاكي شمسي', 'منصة اختبار الرياح', 'نظام تخزين البطاريات', 'محلل الطاقة'],
+        services: ['اختبارات الأداء', 'تحسين الأنظمة', 'دراسات الجدوى', 'التدريب التقني'],
+        contact: 'energie@anrsi.mr'
+      }, 'ar');
+      this.addPlateforme({
+        icon: '🌍',
+        title: 'المنصة البيئية',
+        description: 'مختبر التحليل البيئي لدراسة جودة الهواء والماء والتربة.',
+        equipments: ['محلل جودة الهواء', 'مطياف الأشعة فوق البنفسجية والمرئية', 'مقاييس الأس الهيدروجيني الدقيقة', 'أخذ العينات التلقائي'],
+        services: ['المراقبة البيئية', 'تحليل التلوث', 'دراسات التأثير', 'الاستشارة التنظيمية'],
+        contact: 'environnement@anrsi.mr'
+      }, 'ar');
+      this.addPlateforme({
+        icon: '🏭',
+        title: 'منصة النمذجة',
+        description: 'ورشة التصنيع الرقمي للنمذجة السريعة والطباعة ثلاثية الأبعاد وتطوير المنتجات.',
+        equipments: ['طابعات ثلاثية الأبعاد صناعية', 'آلة قطع بالليزر', 'مخرطة تحكم رقمي', 'ماسح ثلاثي الأبعاد'],
+        services: ['النمذجة السريعة', 'التصميم بمساعدة الكمبيوتر', 'التصنيع حسب الطلب', 'التدريب التقني'],
+        contact: 'prototypage@anrsi.mr'
+      }, 'ar');
+
+      // Add default access modes for Arabic
+      this.addAccessMode({
+        icon: '🎓',
+        title: 'الوصول الأكاديمي',
+        description: 'أسعار تفضيلية للجامعات ومؤسسات البحث العامة.',
+        items: ['خصم 50% على الأسعار القياسية', 'تدريب مجاني مشمول', 'دعم تقني ذو أولوية']
+      }, 'ar');
+      this.addAccessMode({
+        icon: '🏢',
+        title: 'الوصول الصناعي',
+        description: 'خدمات كاملة للشركات والشركات الناشئة المبتكرة.',
+        items: ['أسعار تنافسية', 'السرية مضمونة', 'تقارير مفصلة']
+      }, 'ar');
+      this.addAccessMode({
+        icon: '🤝',
+        title: 'الشراكات',
+        description: 'تعاون طويل الأمد مع المؤسسات الشريكة.',
+        items: ['وصول مميز', 'التطوير المشترك للمشاريع', 'تدريب الموظفين']
+      }, 'ar');
+
+      // Add default booking steps for Arabic
+      this.addBookingStep({ number: 1, title: 'طلب الوصول', description: 'تقديم طلب مفصل مع وصف المشروع والاحتياجات التقنية.' }, 'ar');
+      this.addBookingStep({ number: 2, title: 'التقييم التقني', description: 'تحليل الجدوى التقنية وتقييم الموارد اللازمة.' }, 'ar');
+      this.addBookingStep({ number: 3, title: 'التدريب', description: 'تدريب إلزامي على إجراءات السلامة واستخدام المعدات.' }, 'ar');
+      this.addBookingStep({ number: 4, title: 'الحجز', description: 'تخطيط فترات الاستخدام حسب توفر المعدات.' }, 'ar');
+      this.addBookingStep({ number: 5, title: 'الاستخدام', description: 'الوصول إلى المنصات مع الدعم التقني والإشراف عند الضرورة.' }, 'ar');
+
+      // Add default booking requirements for Arabic
+      this.addBookingRequirement('مشروع بحث أو ابتكار معتمد', 'ar');
+      this.addBookingRequirement('تدريب على إجراءات السلامة', 'ar');
+      this.addBookingRequirement('تأمين المسؤولية المدنية', 'ar');
+      this.addBookingRequirement('احترام قواعد الاستخدام', 'ar');
+      this.addBookingRequirement('توقيع اتفاقية السرية', 'ar');
+
+      // Add default support items for Arabic
+      this.addSupportItem({ icon: '📚', title: 'التدريب التقني', description: 'تدريب شامل على استخدام المعدات وإجراءات السلامة.' }, 'ar');
+      this.addSupportItem({ icon: '🔧', title: 'الدعم التقني', description: 'مساعدة تقنية أثناء استخدام المنصات والصيانة الوقائية.' }, 'ar');
+      this.addSupportItem({ icon: '📊', title: 'تحليل البيانات', description: 'دعم في تحليل وتفسير النتائج التي تم الحصول عليها على المنصات.' }, 'ar');
+      this.addSupportItem({ icon: '🤝', title: 'الاستشارة العلمية', description: 'نصيحة علمية لتحسين البروتوكولات وتحسين النتائج.' }, 'ar');
+
+      // Add default contact info for Arabic
+      this.addContactItem({ icon: 'fas fa-envelope', label: 'البريد الإلكتروني العام', value: 'plateformes@anrsi.mr' }, 'ar');
+      this.addContactItem({ icon: 'fas fa-phone', label: 'الهاتف', value: '+222 45 25 44 21' }, 'ar');
+      this.addContactItem({ icon: 'fas fa-map-marker-alt', label: 'العنوان', value: 'الوكالة الوطنية للبحث العلمي والابتكار، نواكشوط، موريتانيا' }, 'ar');
+      this.addContactItem({ icon: 'fas fa-clock', label: 'ساعات العمل', value: 'الاثنين - الجمعة: 8:00 - 18:00' }, 'ar');
+    }
+  }
+
+  private loadDefaultEnglishData(): void {
+    // Check if English data already exists to avoid duplicates
+    const enGroup = this.getLanguageFormGroup('en');
+    const heroTitle = enGroup.get('heroTitle')?.value;
+    const existingPlateformes = enGroup.get('plateformes') as FormArray;
+    const existingAccessModes = enGroup.get('accessModes') as FormArray;
+
+    // Only load if English data is empty (no hero title and no plateformes/access modes items)
+    if ((!heroTitle || heroTitle.trim() === '') && existingPlateformes.length === 0 && existingAccessModes.length === 0) {
+      enGroup.patchValue({
+        heroTitle: 'Platforms',
+        heroSubtitle: 'Tools and technologies for research and innovation',
+        introText: 'ANRSI provides Mauritanian researchers and innovators with cutting-edge technological platforms to support their research and innovation projects.'
+      });
+
+      // Add default plateformes for English
+      this.addPlateforme({
+        icon: '🔬',
+        title: 'Chemical Analysis Platform',
+        description: 'Laboratory equipped with state-of-the-art instruments for chemical analysis, spectroscopy, and material characterization.',
+        equipments: ['Mass spectrometer', 'Gas chromatograph', 'X-ray diffractometer', 'Electron microscope'],
+        services: ['Composition analysis', 'Material characterization', 'Quality control', 'Technical training'],
+        contact: 'chimie@anrsi.mr'
+      }, 'en');
+      this.addPlateforme({
+        icon: '💻',
+        title: 'IT and Computing Platform',
+        description: 'High-performance IT infrastructure for scientific computing, numerical simulation, and data processing.',
+        equipments: ['High-performance computing cluster', 'Massive storage servers', 'High-speed network', 'Scientific software'],
+        services: ['Parallel computing', 'Numerical simulation', 'Data analysis', 'Technical support'],
+        contact: 'informatique@anrsi.mr'
+      }, 'en');
+      this.addPlateforme({
+        icon: '🌱',
+        title: 'Biotechnology Platform',
+        description: 'Specialized biotechnology laboratory for research in molecular biology, genetics, and plant biology.',
+        equipments: ['Real-time PCR', 'Electrophoresis', 'Fluorescence microscopes', 'Controlled incubators'],
+        services: ['Genetic analysis', 'Cell culture', 'Biological testing', 'Scientific consultation'],
+        contact: 'biotech@anrsi.mr'
+      }, 'en');
+      this.addPlateforme({
+        icon: '⚡',
+        title: 'Energy Platform',
+        description: 'Facility dedicated to testing and developing renewable energy technologies and storage systems.',
+        equipments: ['Solar simulator', 'Wind test bench', 'Battery storage system', 'Power analyzer'],
+        services: ['Performance testing', 'System optimization', 'Feasibility studies', 'Technical training'],
+        contact: 'energie@anrsi.mr'
+      }, 'en');
+      this.addPlateforme({
+        icon: '🌍',
+        title: 'Environmental Platform',
+        description: 'Environmental analysis laboratory for studying air, water, and soil quality.',
+        equipments: ['Air quality analyzer', 'UV-Vis spectrometer', 'Precision pH meters', 'Automatic samplers'],
+        services: ['Environmental monitoring', 'Pollution analysis', 'Impact studies', 'Regulatory consultation'],
+        contact: 'environnement@anrsi.mr'
+      }, 'en');
+      this.addPlateforme({
+        icon: '🏭',
+        title: 'Prototyping Platform',
+        description: 'Digital manufacturing workshop for rapid prototyping, 3D printing, and product development.',
+        equipments: ['Industrial 3D printers', 'Laser cutting machine', 'CNC milling machine', '3D scanner'],
+        services: ['Rapid prototyping', 'Computer-aided design', 'Custom manufacturing', 'Technical training'],
+        contact: 'prototypage@anrsi.mr'
+      }, 'en');
+
+      // Add default access modes for English
+      this.addAccessMode({
+        icon: '🎓',
+        title: 'Academic Access',
+        description: 'Preferential rates for universities and public research institutions.',
+        items: ['50% discount on standard rates', 'Free training included', 'Priority technical support']
+      }, 'en');
+      this.addAccessMode({
+        icon: '🏢',
+        title: 'Industrial Access',
+        description: 'Complete services for innovative companies and startups.',
+        items: ['Competitive rates', 'Guaranteed confidentiality', 'Detailed reports']
+      }, 'en');
+      this.addAccessMode({
+        icon: '🤝',
+        title: 'Partnerships',
+        description: 'Long-term collaborations with partner institutions.',
+        items: ['Privileged access', 'Co-development of projects', 'Staff training']
+      }, 'en');
+
+      // Add default booking steps for English
+      this.addBookingStep({ number: 1, title: 'Access Request', description: 'Submission of a detailed request with project description and technical needs.' }, 'en');
+      this.addBookingStep({ number: 2, title: 'Technical Evaluation', description: 'Analysis of technical feasibility and assessment of required resources.' }, 'en');
+      this.addBookingStep({ number: 3, title: 'Training', description: 'Mandatory training on safety procedures and equipment use.' }, 'en');
+      this.addBookingStep({ number: 4, title: 'Booking', description: 'Scheduling of usage slots according to equipment availability.' }, 'en');
+      this.addBookingStep({ number: 5, title: 'Usage', description: 'Access to platforms with technical support and supervision if necessary.' }, 'en');
+
+      // Add default booking requirements for English
+      this.addBookingRequirement('Validated research or innovation project', 'en');
+      this.addBookingRequirement('Safety procedure training', 'en');
+      this.addBookingRequirement('Civil liability insurance', 'en');
+      this.addBookingRequirement('Compliance with usage rules', 'en');
+      this.addBookingRequirement('Signing of a confidentiality agreement', 'en');
+
+      // Add default support items for English
+      this.addSupportItem({ icon: '📚', title: 'Technical Training', description: 'Complete training on equipment use and safety procedures.' }, 'en');
+      this.addSupportItem({ icon: '🔧', title: 'Technical Support', description: 'Technical assistance during platform use and preventive maintenance.' }, 'en');
+      this.addSupportItem({ icon: '📊', title: 'Data Analysis', description: 'Support in analyzing and interpreting results obtained on platforms.' }, 'en');
+      this.addSupportItem({ icon: '🤝', title: 'Scientific Consultation', description: 'Scientific advice for optimizing protocols and improving results.' }, 'en');
+
+      // Add default contact info for English
+      this.addContactItem({ icon: 'fas fa-envelope', label: 'General Email', value: 'plateformes@anrsi.mr' }, 'en');
+      this.addContactItem({ icon: 'fas fa-phone', label: 'Phone', value: '+222 45 25 44 21' }, 'en');
+      this.addContactItem({ icon: 'fas fa-map-marker-alt', label: 'Address', value: 'ANRSI, Nouakchott, Mauritania' }, 'en');
+      this.addContactItem({ icon: 'fas fa-clock', label: 'Hours', value: 'Monday - Friday: 8:00 AM - 6:00 PM' }, 'en');
+    }
   }
 
   populateForm(content: PlateformesContent): void {

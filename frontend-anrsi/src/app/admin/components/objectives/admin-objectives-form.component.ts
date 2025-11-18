@@ -153,6 +153,20 @@ export class AdminObjectivesFormComponent implements OnInit {
             if (parsedContent.translations) {
               const content: ObjectivesContent = parsedContent;
               this.populateForm(content);
+              // Check if Arabic data is empty and load defaults
+              const arGroup = this.getLanguageFormGroup('ar');
+              const arHeroTitle = arGroup.get('heroTitle')?.value;
+              const arObjectives = arGroup.get('objectives') as FormArray;
+              if ((!arHeroTitle || arHeroTitle.trim() === '') && arObjectives.length === 0) {
+                this.loadDefaultArabicData();
+              }
+              // Check if English data is empty and load defaults
+              const enGroup = this.getLanguageFormGroup('en');
+              const enHeroTitle = enGroup.get('heroTitle')?.value;
+              const enObjectives = enGroup.get('objectives') as FormArray;
+              if ((!enHeroTitle || enHeroTitle.trim() === '') && enObjectives.length === 0) {
+                this.loadDefaultEnglishData();
+              }
             } else {
               // Old format - migrate to new format
               const oldContent: ObjectivesLanguageContent = parsedContent;
@@ -164,6 +178,9 @@ export class AdminObjectivesFormComponent implements OnInit {
                 }
               };
               this.populateForm(content);
+              // Load default Arabic and English data for old format
+              this.loadDefaultArabicData();
+              this.loadDefaultEnglishData();
             }
           } catch (e) {
             console.error('Error parsing content:', e);
@@ -228,6 +245,92 @@ export class AdminObjectivesFormComponent implements OnInit {
       title: 'Accroître la capacité d\'innovation et de création de richesses de notre pays par et grâce à la recherche',
       description: 'Nous visons à renforcer les capacités d\'innovation nationales et à favoriser la création de richesses grâce aux résultats de la recherche scientifique.'
     }, 'fr');
+
+    // Load default Arabic and English data
+    this.loadDefaultArabicData();
+    this.loadDefaultEnglishData();
+  }
+
+  private loadDefaultArabicData(): void {
+    // Check if Arabic data already exists to avoid duplicates
+    const arGroup = this.getLanguageFormGroup('ar');
+    const heroTitle = arGroup.get('heroTitle')?.value;
+    const existingObjectives = arGroup.get('objectives') as FormArray;
+
+    // Only load if Arabic data is empty (no hero title and no objectives)
+    if ((!heroTitle || heroTitle.trim() === '') && existingObjectives.length === 0) {
+      arGroup.patchValue({
+        heroTitle: 'الأهداف',
+        heroSubtitle: 'الأهداف الاستراتيجية للوكالة الوطنية للبحث العلمي والابتكار',
+        sectionTitle: 'أهدافنا'
+      });
+
+      // Clear existing array for Arabic
+      while (existingObjectives.length) existingObjectives.removeAt(0);
+
+      // Add default objectives for Arabic
+      this.addObjective({
+        number: 1,
+        title: 'زيادة الإنتاج العلمي الوطني',
+        description: 'تهدف الوكالة إلى تحفيز وزيادة الإنتاج العلمي الوطني بشكل كبير من خلال دعم الباحثين والمؤسسات البحثية.'
+      }, 'ar');
+      this.addObjective({
+        number: 2,
+        title: 'تعزيز التميز وانتشار البحث العلمي في موريتانيا',
+        description: 'نلتزم بتعزيز التميز في البحث العلمي وتقوية الانتشار الدولي للبحث الموريتاني.'
+      }, 'ar');
+      this.addObjective({
+        number: 3,
+        title: 'تعزيز أثر البحث والابتكار على الاقتصاد والمجتمع والتنمية المستدامة',
+        description: 'تعمل الوكالة على تعظيم أثر البحث والابتكار على التنمية الاقتصادية والاجتماعية والمستدامة في موريتانيا.'
+      }, 'ar');
+      this.addObjective({
+        number: 4,
+        title: 'زيادة قدرة البلاد على الابتكار وخلق الثروات من خلال البحث',
+        description: 'نسعى لتعزيز القدرات الوطنية للابتكار وتشجيع خلق الثروات بفضل نتائج البحث العلمي.'
+      }, 'ar');
+    }
+  }
+
+  private loadDefaultEnglishData(): void {
+    // Check if English data already exists to avoid duplicates
+    const enGroup = this.getLanguageFormGroup('en');
+    const heroTitle = enGroup.get('heroTitle')?.value;
+    const existingObjectives = enGroup.get('objectives') as FormArray;
+
+    // Only load if English data is empty (no hero title and no objectives)
+    if ((!heroTitle || heroTitle.trim() === '') && existingObjectives.length === 0) {
+      enGroup.patchValue({
+        heroTitle: 'Objectives',
+        heroSubtitle: 'The strategic objectives of the National Agency for Scientific Research and Innovation',
+        sectionTitle: 'Our Objectives'
+      });
+
+      // Clear existing array for English
+      while (existingObjectives.length) existingObjectives.removeAt(0);
+
+      // Add default objectives for English
+      this.addObjective({
+        number: 1,
+        title: 'Increase National Scientific Output',
+        description: 'ANRSI aims to stimulate and significantly increase national scientific output by supporting researchers and research institutions.'
+      }, 'en');
+      this.addObjective({
+        number: 2,
+        title: 'Enhance Excellence and Visibility of Scientific Research in Mauritania',
+        description: 'We are committed to promoting excellence in scientific research and strengthening the international visibility of Mauritanian research.'
+      }, 'en');
+      this.addObjective({
+        number: 3,
+        title: 'Improve the Impact of Research and Innovation on Economy, Society, and Sustainable Development',
+        description: 'ANRSI works to maximize the impact of research and innovation on Mauritania\'s economic, social, and sustainable development.'
+      }, 'en');
+      this.addObjective({
+        number: 4,
+        title: 'Increase the Country\'s Innovation Capacity and Wealth Creation through Research',
+        description: 'We aim to strengthen national innovation capacities and foster wealth creation through scientific research outcomes.'
+      }, 'en');
+    }
   }
 
   populateForm(content: ObjectivesContent): void {

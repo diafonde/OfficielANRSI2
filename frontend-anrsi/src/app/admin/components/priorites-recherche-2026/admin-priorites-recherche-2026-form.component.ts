@@ -177,6 +177,16 @@ export class AdminPrioritesRecherche2026FormComponent implements OnInit {
             if (parsedContent.translations) {
               const content: PrioritesRecherche2026Content = parsedContent;
               this.populateForm(content);
+              // Check if Arabic data is empty and load defaults
+              const arGroup = this.getLanguageFormGroup('ar');
+              if (!arGroup.get('heroTitle')?.value || (arGroup.get('researchPriorities') as FormArray).length === 0) {
+                this.loadDefaultArabicData();
+              }
+              // Check if English data is empty and load defaults
+              const enGroup = this.getLanguageFormGroup('en');
+              if (!enGroup.get('heroTitle')?.value || (enGroup.get('researchPriorities') as FormArray).length === 0) {
+                this.loadDefaultEnglishData();
+              }
             } else {
               // Old format - migrate to new format
               const oldContent: PrioritesRecherche2026LanguageContent = parsedContent;
@@ -188,6 +198,8 @@ export class AdminPrioritesRecherche2026FormComponent implements OnInit {
                 }
               };
               this.populateForm(content);
+              this.loadDefaultArabicData();
+              this.loadDefaultEnglishData();
             }
           } catch (e) {
             console.error('Error parsing content:', e);
@@ -284,6 +296,152 @@ export class AdminPrioritesRecherche2026FormComponent implements OnInit {
       description: 'Promotion de pratiques respectueuses de l\'environnement et du développement durable à long terme.',
       icon: 'fas fa-leaf'
     }, 'fr');
+
+    // Load Arabic and English defaults
+    this.loadDefaultArabicData();
+    this.loadDefaultEnglishData();
+  }
+
+  loadDefaultArabicData(): void {
+    const arGroup = this.getLanguageFormGroup('ar');
+    
+    // Check if Arabic data already exists
+    if (arGroup.get('heroTitle')?.value && (arGroup.get('researchPriorities') as FormArray).length > 0) {
+      return; // Don't overwrite existing data
+    }
+
+    arGroup.patchValue({
+      heroTitle: 'أولويات البحث في أفق 2026',
+      heroSubtitle: 'تحدد الوكالة الوطنية للبحث العلمي والابتكار أولويات البحث العلمي والابتكار لخدمة التنمية الوطنية',
+      sectionTitle: 'المحاور الاستراتيجية السبعة',
+      publicationDate: '18 يناير 2023'
+    });
+
+    // Clear existing arrays for Arabic
+    const arParagraphs = arGroup.get('introParagraphs') as FormArray;
+    const arPriorities = arGroup.get('researchPriorities') as FormArray;
+    while (arParagraphs.length) arParagraphs.removeAt(0);
+    while (arPriorities.length) arPriorities.removeAt(0);
+
+    // Add default intro paragraphs for Arabic
+    this.addIntroParagraph('استنادًا إلى الاستراتيجية الوطنية للبحث العلمي والابتكار التي اعتمدتها الحكومة، تنشر الوكالة الوطنية للبحث العلمي والابتكار تفاصيل المحاور السبعة لهذه الاستراتيجية.', 'ar');
+    this.addIntroParagraph('توزَّع هذه المحاور وفق احتياجات التنمية واستجابةً للتحديات الراهنة، لتغطي مجالات متنوعة تمتد من تحقيق الاكتفاء الذاتي الغذائي إلى الرقمنة والتحديات الناشئة مع تطور الذكاء الاصطناعي، مرورًا بالصحة والصناعات الاستخراجية.', 'ar');
+    this.addIntroParagraph('تحظى البحوث الإنسانية والاجتماعية بمكانة مهمة في هذه المحاور، حيث خصصت لها الاستراتيجية محورين يمكن من خلالهما العمل على "تثمين المعارف التقليدية الأصيلة لمواجهة التحديات المجتمعية، ومحاربة الهشاشة والفوارق الاجتماعية والإقصاء، وتعزيز الوحدة الوطنية".', 'ar');
+
+    // Add default research priorities for Arabic
+    this.addResearchPriority({
+      id: 1,
+      title: 'الاكتفاء الذاتي الغذائي',
+      description: 'تطوير استراتيجيات لضمان الأمن الغذائي الوطني وتقليل الاعتماد على الواردات.',
+      icon: 'fas fa-seedling'
+    }, 'ar');
+    this.addResearchPriority({
+      id: 2,
+      title: 'الرقمنة والذكاء الاصطناعي',
+      description: 'دمج التقنيات الرقمية والذكاء الاصطناعي لتحديث القطاعات الاقتصادية وتحسين الكفاءة.',
+      icon: 'fas fa-robot'
+    }, 'ar');
+    this.addResearchPriority({
+      id: 3,
+      title: 'الصحة والرفاه',
+      description: 'تحسين الأنظمة الصحية، الوقاية من الأمراض، وتعزيز رفاه السكان.',
+      icon: 'fas fa-heartbeat'
+    }, 'ar');
+    this.addResearchPriority({
+      id: 4,
+      title: 'الصناعات الاستخراجية',
+      description: 'تحسين استغلال الموارد الطبيعية بطريقة مستدامة ومسؤولة.',
+      icon: 'fas fa-mountain'
+    }, 'ar');
+    this.addResearchPriority({
+      id: 5,
+      title: 'البحوث الإنسانية والاجتماعية I',
+      description: 'تثمين المعارف التقليدية الأصيلة لمواجهة التحديات المجتمعية المعاصرة.',
+      icon: 'fas fa-users'
+    }, 'ar');
+    this.addResearchPriority({
+      id: 6,
+      title: 'البحوث الإنسانية والاجتماعية II',
+      description: 'مكافحة الهشاشة والفوارق الاجتماعية والإقصاء لتعزيز الوحدة الوطنية.',
+      icon: 'fas fa-hands-helping'
+    }, 'ar');
+    this.addResearchPriority({
+      id: 7,
+      title: 'التنمية المستدامة',
+      description: 'تعزيز الممارسات الصديقة للبيئة والتنمية المستدامة على المدى الطويل.',
+      icon: 'fas fa-leaf'
+    }, 'ar');
+  }
+
+  loadDefaultEnglishData(): void {
+    const enGroup = this.getLanguageFormGroup('en');
+    
+    // Check if English data already exists
+    if (enGroup.get('heroTitle')?.value && (enGroup.get('researchPriorities') as FormArray).length > 0) {
+      return; // Don't overwrite existing data
+    }
+
+    enGroup.patchValue({
+      heroTitle: 'RESEARCH PRIORITIES FOR 2026',
+      heroSubtitle: 'ANRSI defines the priorities for scientific research and innovation for national development',
+      sectionTitle: 'The Seven Strategic Axes',
+      publicationDate: '18 January 2023'
+    });
+
+    // Clear existing arrays for English
+    const enParagraphs = enGroup.get('introParagraphs') as FormArray;
+    const enPriorities = enGroup.get('researchPriorities') as FormArray;
+    while (enParagraphs.length) enParagraphs.removeAt(0);
+    while (enPriorities.length) enPriorities.removeAt(0);
+
+    // Add default intro paragraphs for English
+    this.addIntroParagraph('Based on the national strategy for scientific research and innovation adopted by the Government, the National Agency for Scientific Research and Innovation publishes the details of the seven axes of this strategy.', 'en');
+    this.addIntroParagraph('These axes are organized according to development needs and in response to current challenges, covering various fields ranging from food self-sufficiency to digitalization and emerging challenges with the rise of artificial intelligence, as well as health and extractive industries.', 'en');
+    this.addIntroParagraph('Human and social sciences occupy a central place in these axes, as the strategy dedicated two axes to them, enabling efforts toward "the promotion of ancestral indigenous knowledge to address societal challenges, combat vulnerability, social disparities and exclusion, and strengthen national unity."', 'en');
+
+    // Add default research priorities for English
+    this.addResearchPriority({
+      id: 1,
+      title: 'Food Self-Sufficiency',
+      description: 'Development of strategies to ensure national food security and reduce dependence on imports.',
+      icon: 'fas fa-seedling'
+    }, 'en');
+    this.addResearchPriority({
+      id: 2,
+      title: 'Digitalization and Artificial Intelligence',
+      description: 'Integration of digital technologies and AI to modernize economic sectors and improve efficiency.',
+      icon: 'fas fa-robot'
+    }, 'en');
+    this.addResearchPriority({
+      id: 3,
+      title: 'Health and Well-being',
+      description: 'Improving health systems, disease prevention, and promoting population well-being.',
+      icon: 'fas fa-heartbeat'
+    }, 'en');
+    this.addResearchPriority({
+      id: 4,
+      title: 'Extractive Industries',
+      description: 'Optimizing the exploitation of natural resources in a sustainable and responsible manner.',
+      icon: 'fas fa-mountain'
+    }, 'en');
+    this.addResearchPriority({
+      id: 5,
+      title: 'Human and Social Research I',
+      description: 'Promoting ancestral indigenous knowledge to face contemporary societal challenges.',
+      icon: 'fas fa-users'
+    }, 'en');
+    this.addResearchPriority({
+      id: 6,
+      title: 'Human and Social Research II',
+      description: 'Fighting vulnerability, social disparities, and exclusion to strengthen national unity.',
+      icon: 'fas fa-hands-helping'
+    }, 'en');
+    this.addResearchPriority({
+      id: 7,
+      title: 'Sustainable Development',
+      description: 'Promoting environmentally friendly practices and long-term sustainable development.',
+      icon: 'fas fa-leaf'
+    }, 'en');
   }
 
   populateForm(content: PrioritesRecherche2026Content): void {

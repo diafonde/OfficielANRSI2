@@ -54,7 +54,7 @@ export class ArticleService {
       publishDate: new Date(dto.publishDate),
       imageUrl: this.normalizeImageUrl(dto.imageUrl),
       attachmentUrl: dto.attachmentUrl ? this.normalizeAttachmentUrl(dto.attachmentUrl) : undefined,
-      images: dto.images || [],
+      images: dto.images ? dto.images.map(img => this.normalizeImageUrl(img)) : [],
       category: dto.category || '',
       tags: dto.tags || [],
       featured: dto.featured || false,

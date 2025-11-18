@@ -1,13 +1,18 @@
 package mr.gov.anrsi.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import mr.gov.anrsi.dto.PageCreateDTO;
 import mr.gov.anrsi.dto.PageDTO;
 import mr.gov.anrsi.dto.PageUpdateDTO;
+import mr.gov.anrsi.entity.Language;
 import mr.gov.anrsi.entity.Page;
 import mr.gov.anrsi.entity.PagePhoto;
+import mr.gov.anrsi.entity.PageTranslation;
 import mr.gov.anrsi.entity.PageVideo;
 import mr.gov.anrsi.exception.PageNotFoundException;
 import mr.gov.anrsi.repository.PageRepository;
+import mr.gov.anrsi.repository.PageTranslationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.PageRequest;
@@ -17,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,6 +32,16 @@ public class PageService {
     
     @Autowired
     private PageRepository pageRepository;
+    
+    @Autowired
+    private PageTranslationRepository pageTranslationRepository;
+    
+    private final ObjectMapper objectMapper;
+    
+    public PageService() {
+        // Initialize ObjectMapper (thread-safe, can be reused)
+        this.objectMapper = new ObjectMapper();
+    }
     
     private Page loadPageWithRelations(Page page) {
         if (page == null) return null;
@@ -135,6 +151,9 @@ public class PageService {
         }
         if (pageUpdateDTO.getContent() != null) {
             page.setContent(pageUpdateDTO.getContent());
+            
+            // Update PageTranslation entries if content contains translations
+            updatePageTranslations(page, pageUpdateDTO.getContent());
         }
         if (pageUpdateDTO.getPageType() != null) {
             page.setPageType(pageUpdateDTO.getPageType());
@@ -151,6 +170,86 @@ public class PageService {
         
         Page updatedPage = pageRepository.save(page);
         return PageDTO.fromEntity(updatedPage);
+    }
+    
+    /**
+     * Updates PageTranslation entries based on the content JSON.
+     * If content contains a "translations" object with fr, ar, en keys,
+     * it will create or update the corresponding PageTranslation entries.
+     */
+    private void updatePageTranslations(Page page, String contentJson) {
+        if (contentJson == null || contentJson.trim().isEmpty()) {
+            return;
+        }
+        
+        try {
+            JsonNode contentNode = objectMapper.readTree(contentJson);
+            
+            // Check if content has a "translations" object
+            JsonNode translationsNode = contentNode.get("translations");
+            if (translationsNode == null || !translationsNode.isObject()) {
+                // No translations structure, skip
+                return;
+            }
+            
+            // Process each language (fr, ar, en)
+            String[] languages = {"fr", "ar", "en"};
+            for (String langCode : languages) {
+                JsonNode langContent = translationsNode.get(langCode);
+                if (langContent == null || !langContent.isObject()) {
+                    continue; // Skip if language content doesn't exist
+                }
+                
+                try {
+                    Language language = Language.valueOf(langCode.toUpperCase());
+                    
+                    // Extract title, heroTitle, heroSubtitle, and full content
+                    String title = langContent.has("heroTitle") 
+                        ? langContent.get("heroTitle").asText() 
+                        : (langContent.has("title") ? langContent.get("title").asText() : page.getTitle());
+                    
+                    String heroTitle = langContent.has("heroTitle") 
+                        ? langContent.get("heroTitle").asText() 
+                        : null;
+                    
+                    String heroSubtitle = langContent.has("heroSubtitle") 
+                        ? langContent.get("heroSubtitle").asText() 
+                        : null;
+                    
+                    // Get the full language content as JSON string
+                    String langContentJson = objectMapper.writeValueAsString(langContent);
+                    
+                    // Find existing translation or create new one
+                    Optional<PageTranslation> existingTranslation = 
+                        pageTranslationRepository.findByPageAndLanguage(page, language);
+                    
+                    PageTranslation translation;
+                    if (existingTranslation.isPresent()) {
+                        translation = existingTranslation.get();
+                    } else {
+                        translation = new PageTranslation();
+                        translation.setPage(page);
+                        translation.setLanguage(language);
+                    }
+                    
+                    // Update translation fields
+                    translation.setTitle(title != null ? title : page.getTitle());
+                    translation.setHeroTitle(heroTitle);
+                    translation.setHeroSubtitle(heroSubtitle);
+                    translation.setContent(langContentJson);
+                    
+                    // Save the translation
+                    pageTranslationRepository.save(translation);
+                } catch (IllegalArgumentException e) {
+                    // Skip invalid language codes
+                    continue;
+                }
+            }
+        } catch (Exception e) {
+            // If JSON parsing fails, just log and continue
+            // The page content will still be saved, but translations won't be updated
+            System.err.println("Error parsing content JSON for translations: " + e.getMessage());
+        }
     }
     
     public void deletePage(Long id) {
