@@ -15,7 +15,7 @@
 <div class="container" *ngIf="!isLoading && content">
   <section class="section zone-humide-section">
     <div class="zone-humide-content">
-      <h2>Colloque International sur les Zones Humides du Sahel</h2>
+      <h2>{{ 'WETLAND_COLLOQUIUM_TITLE' | translate }}</h2>
       <p class="intro-text">{{ content.introText }}</p>
       
       <div class="colloque-overview" *ngIf="content.overview && content.overview.length > 0">
@@ -29,7 +29,7 @@
       </div>
       
       <div class="themes-section" *ngIf="content.themes && content.themes.length > 0">
-        <h3>Thématiques du Colloque</h3>
+        <h3>{{ 'WETLAND_THEMES_TITLE' | translate }}</h3>
         <div class="themes-grid">
           <div class="theme-item" *ngFor="let theme of content.themes">
             <div class="theme-icon">{{ theme.icon }}</div>
@@ -111,7 +111,7 @@
       </div>
       
       <div class="contact-section" *ngIf="content.contactInfo && content.contactInfo.length > 0">
-        <h3>Contact et Informations</h3>
+        <h3>{{ 'WETLAND_CONTACT_INFO_TITLE' | translate }}</h3>
         <div class="contact-info">
           <div class="contact-item" *ngFor="let contact of content.contactInfo">
             <i [class]="contact.icon"></i>

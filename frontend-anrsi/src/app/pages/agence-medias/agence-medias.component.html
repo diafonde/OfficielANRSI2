@@ -8,7 +8,7 @@
 
 <div class="container">
   <section class="section media-links-section">
-    <h2 style="text-align: center;">Des liens vers les articles de l'ANRSI</h2>
+    <h2 style="text-align: center;">{{ 'MEDIA_ARTICLES_LINKS' | translate }}</h2>
     <div class="media-links-container">
       <div class="media-link-item">
         <a href="https://anrsi.mr/actualites" target="_blank" rel="noopener" class="media-link-card">
@@ -57,7 +57,7 @@
 <div class="container" *ngIf="!isLoading && content">
   <section class="section medias-section">
     <div class="medias-content">
-      <h2>Présence Médias de l'ANRSI</h2>
+      <h2>{{ 'MEDIA_PRESENCE_TITLE' | translate }}</h2>
       <p class="intro-text">{{ content.introText }}</p>
       
       <div class="medias-overview" *ngIf="content.mediaOverview && content.mediaOverview.length > 0">
@@ -93,7 +93,7 @@
       </div>
       
       <div class="media-types" *ngIf="content.mediaTypes && content.mediaTypes.length > 0">
-        <h3>Types de Couverture Médias</h3>
+        <h3>{{ 'MEDIA_COVERAGE_TYPES' | translate }}</h3>
         <div class="types-grid">
           <div class="type-item" *ngFor="let item of content.mediaTypes">
             <div class="type-icon">{{ item.icon }}</div>
@@ -109,7 +109,7 @@
       </div>
       
       <div class="press-releases" *ngIf="content.pressReleases && content.pressReleases.length > 0">
-        <h3>Communiqués de Presse</h3>
+        <h3>{{ 'MEDIA_PRESS_RELEASES' | translate }}</h3>
         <div class="releases-list">
           <div class="release-item" *ngFor="let release of content.pressReleases">
             <div class="release-date">{{ release.date }}</div>
@@ -125,7 +125,7 @@
 
       
       <div class="social-media" *ngIf="content.socialMedia && content.socialMedia.length > 0">
-        <h3>Réseaux Sociaux</h3>
+        <h3>{{ 'MEDIA_SOCIAL_NETWORKS' | translate }}</h3>
         <div class="social-content">
           <p>Suivez l'ANRSI sur les réseaux sociaux pour les dernières actualités et informations :</p>
           
@@ -143,7 +143,7 @@
       </div>
       
       <div class="contact-section" *ngIf="content.contactInfo && content.contactInfo.length > 0">
-        <h3>Contact Presse</h3>
+        <h3>{{ 'MEDIA_PRESS_CONTACT' | translate }}</h3>
         <div class="contact-info">
           <div class="contact-item" *ngFor="let contact of content.contactInfo">
             <i [class]="contact.icon"></i>

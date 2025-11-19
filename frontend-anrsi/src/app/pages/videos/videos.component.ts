@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SafePipe } from '../../pages/videos/safe.pipe';
 import { PageService, PageDTO } from '../../services/page.service';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 
 interface VideoItem {
@@ -39,7 +39,7 @@ interface VideosContent {
 @Component({
   selector: 'app-videos',
   standalone: true,
-  imports: [CommonModule, SafePipe],
+  imports: [CommonModule, SafePipe, TranslateModule],
   templateUrl: './videos.component.html',
   styleUrls: ['./videos.component.scss']
 })

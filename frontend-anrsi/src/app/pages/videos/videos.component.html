@@ -16,7 +16,7 @@
   <!-- Container for the image gallery -->
   <div class="media-sections">
     <section class="media-block" *ngIf="videos && videos.length > 0">
-      <h2 class="media-title">Vidéos</h2>
+      <h2 class="media-title">{{ 'VIDEOS' | translate }}</h2>
       <div class="media-grid">
         <div class="media-card" *ngFor="let video of videos">
           <div class="media-thumb">
@@ -33,7 +33,7 @@
     </section>
 
     <section class="media-block" *ngIf="photos && photos.length > 0">
-      <h2 class="media-title">Photos</h2>
+      <h2 class="media-title">{{ 'PHOTOS' | translate }}</h2>
       <div class="media-grid">
         <div class="media-card" *ngFor="let photo of photos">
           <div class="media-thumb">

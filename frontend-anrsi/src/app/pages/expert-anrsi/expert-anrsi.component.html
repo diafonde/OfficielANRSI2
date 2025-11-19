@@ -15,11 +15,11 @@
 <div class="container" *ngIf="!isLoading && content">
   <section class="section expert-section">
     <div class="expert-content">
-      <h2>Devenir Expert ANRSI</h2>
+      <h2>{{ 'EXPERT_BECOME_TITLE' | translate }}</h2>
       <p class="intro-text">{{ content.introText }}</p>
       
       <div class="expert-requirements" *ngIf="content.requirements && content.requirements.length > 0">
-        <h3>Profil Requis</h3>
+        <h3>{{ 'EXPERT_PROFILE_REQUIRED' | translate }}</h3>
         <div class="requirements-grid">
           <div class="requirement-item" *ngFor="let requirement of content.requirements">
             <div class="requirement-icon">{{ requirement.icon }}</div>
@@ -32,7 +32,7 @@
       </div>
       
       <div class="expert-domains" *ngIf="content.domains && content.domains.length > 0">
-        <h3>Domaines d'Expertise Recherchés</h3>
+        <h3>{{ 'EXPERT_DOMAINS_SEARCHED' | translate }}</h3>
         <div class="domains-grid">
           <div class="domain-item" *ngFor="let domain of content.domains">
             <h4>{{ domain.icon }} {{ domain.title }}</h4>
@@ -42,7 +42,7 @@
       </div>
       
       <div class="expert-process" *ngIf="content.processSteps && content.processSteps.length > 0">
-        <h3>Processus de Recrutement</h3>
+        <h3>{{ 'EXPERT_RECRUITMENT_PROCESS' | translate }}</h3>
         <div class="process-steps">
           <div class="step-item" *ngFor="let step of content.processSteps">
             <div class="step-number">{{ step.number }}</div>
@@ -55,7 +55,7 @@
       </div>
       
       <div class="expert-benefits" *ngIf="content.benefits && content.benefits.length > 0">
-        <h3>Avantages d'être Expert ANRSI</h3>
+        <h3>{{ 'EXPERT_BENEFITS_TITLE' | translate }}</h3>
         <div class="benefits-list">
           <div class="benefit-item" *ngFor="let benefit of content.benefits">
             <div class="benefit-icon">{{ benefit.icon }}</div>
@@ -68,7 +68,7 @@
       </div>
       
       <div class="application-section" *ngIf="content.applicationText">
-        <h3>Comment Postuler</h3>
+        <h3>{{ 'EXPERT_HOW_TO_APPLY' | translate }}</h3>
         <div class="application-info">
           <p>{{ content.applicationText }}</p>
           <div class="contact-info" *ngIf="content.contactInfo && content.contactInfo.length > 0">
@@ -79,7 +79,7 @@
           </div>
           
           <div class="required-documents" *ngIf="content.requiredDocuments && content.requiredDocuments.length > 0">
-            <h4>Documents Requis :</h4>
+            <h4>{{ 'EXPERT_REQUIRED_DOCUMENTS' | translate }}</h4>
             <ul>
               <li *ngFor="let doc of content.requiredDocuments">{{ doc }}</li>
             </ul>

@@ -19,7 +19,7 @@
       
       <!-- Process Section -->
       <div class="process-section" *ngIf="fundingInfo.process && fundingInfo.process.length > 0">
-        <h2 data-aos="fade-up">{{ 'Processus de candidature' | translate }}</h2>
+        <h2 data-aos="fade-up">{{ 'CALLS_APPLICATION_PROCESS' | translate }}</h2>
         <div class="process-steps">
           <div 
             *ngFor="let step of fundingInfo.process; let i = index" 
@@ -43,8 +43,8 @@
       <div class="requirements-section" *ngIf="fundingInfo.requirements && fundingInfo.requirements.length > 0">
         <div class="section-content">
           <div class="requirements-info" data-aos="fade-right">
-            <h2>{{ 'Conditions requises' | translate }}</h2>
-            <p>{{ 'Pour bénéficier du financement de l\'ANRSI, les candidats doivent remplir les conditions suivantes' | translate }}:</p>
+            <h2>{{ 'FUNDING_REQUIREMENTS_TITLE' | translate }}</h2>
+            <p>{{ 'FUNDING_REQUIREMENTS_DESCRIPTION' | translate }}:</p>
             
             <ul class="requirements-list">
               <li *ngFor="let requirement of fundingInfo.requirements">
@@ -57,8 +57,8 @@
           <div class="requirements-visual" data-aos="fade-left">
             <div class="visual-card">
               <i class="fas fa-handshake"></i>
-              <h3>{{ 'Partenariat' | translate }}</h3>
-              <p>{{ 'Collaboration avec l\'ANRSI pour le développement de la recherche' | translate }}</p>
+              <h3>{{ 'FUNDING_PARTNERSHIP_TITLE' | translate }}</h3>
+              <p>{{ 'FUNDING_PARTNERSHIP_DESCRIPTION' | translate }}</p>
             </div>
           </div>
         </div>
@@ -66,7 +66,7 @@
 
       <!-- Benefits Section -->
       <div class="benefits-section" *ngIf="fundingInfo.benefits && fundingInfo.benefits.length > 0">
-        <h2 data-aos="fade-up">{{ 'Avantages du financement' | translate }}</h2>
+        <h2 data-aos="fade-up">{{ 'FUNDING_BENEFITS_TITLE' | translate }}</h2>
         <div class="benefits-grid">
           <div 
             *ngFor="let benefit of fundingInfo.benefits; let i = index" 
@@ -83,17 +83,7 @@
       </div>
 
       <!-- Call to Action -->
-      <div class="cta-section">
-      <div class="cta-content" data-aos="fade-up">
-        <h2>{{ ctaTitle || ('Prêt à candidater ?' | translate) }}</h2>
-        <p>{{ ctaDescription || ('Consultez nos appels à candidatures et soumettez votre projet' | translate) }}</p>
-        <div class="cta-buttons">
-          <button class="btn btn-primary">{{ 'Appels à candidatures' | translate }}</button>
-          <button class="btn btn-secondary">{{ 'Guide du candidat' | translate }}</button>
-          <button class="btn btn-accent">{{ 'Nous contacter' | translate }}</button>
-        </div>
-      </div>
-      </div>
+
 
     </div>
   </div>

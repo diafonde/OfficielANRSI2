@@ -15,7 +15,7 @@
 <div class="container" *ngIf="!isLoading && content">
   <section class="section appels-section">
     <div class="appels-content">
-      <h2>Appels à Candidatures Ouverts</h2>
+      <h2>{{ 'CALLS_OPEN_TITLE' | translate }}</h2>
       <p class="intro-text">{{ content.introText }}</p>
       
       <div class="appels-timeline" *ngIf="content.appels && content.appels.length > 0">
@@ -44,7 +44,7 @@
       </div>
       
       <div class="appels-categories" *ngIf="content.categories && content.categories.length > 0">
-        <h3>Domaines Prioritaires</h3>
+        <h3>{{ 'CALLS_PRIORITY_DOMAINS' | translate }}</h3>
         <div class="categories-grid">
           <div class="category-item" *ngFor="let category of content.categories">
             <div class="category-icon">{{ category.icon }}</div>
@@ -57,7 +57,7 @@
       </div>
       
       <div class="application-process" *ngIf="content.processSteps && content.processSteps.length > 0">
-        <h3>Processus de Candidature</h3>
+        <h3>{{ 'CALLS_APPLICATION_PROCESS' | translate }}</h3>
         <div class="process-steps">
           <div class="step-item" *ngFor="let step of content.processSteps">
             <div class="step-number">{{ step.number }}</div>
@@ -70,7 +70,7 @@
       </div>
       
       <div class="criteria-section" *ngIf="content.criteria && content.criteria.length > 0">
-        <h3>Critères d'Évaluation</h3>
+        <h3>{{ 'CALLS_EVALUATION_CRITERIA' | translate }}</h3>
         <div class="criteria-grid">
           <div class="criteria-item" *ngFor="let item of content.criteria">
             <h4>{{ item.icon }} {{ item.title }}</h4>
@@ -80,9 +80,9 @@
       </div>
       
       <div class="support-section" *ngIf="content.supportServices && content.supportServices.length > 0">
-        <h3>Support et Accompagnement</h3>
+        <h3>{{ 'CALLS_SUPPORT_TITLE' | translate }}</h3>
         <div class="support-info">
-          <p>L'ANRSI offre un accompagnement complet aux porteurs de projets sélectionnés :</p>
+          <p>{{ 'CALLS_SUPPORT_DESCRIPTION' | translate }}</p>
           
           <div class="support-services">
             <div class="service-item" *ngFor="let service of content.supportServices">
@@ -97,7 +97,7 @@
       </div>
       
       <div class="contact-section" *ngIf="content.contactInfo && content.contactInfo.length > 0">
-        <h3>Contact et Informations</h3>
+        <h3>{{ 'CALLS_CONTACT_INFO_TITLE' | translate }}</h3>
         <div class="contact-info">
           <div class="contact-item" *ngFor="let contact of content.contactInfo">
             <i [class]="contact.icon"></i>
