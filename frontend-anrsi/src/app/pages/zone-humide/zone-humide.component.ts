@@ -59,6 +59,9 @@ interface ZoneHumideContent {
   heroTitle: string;
   heroSubtitle: string;
   introText: string;
+  image?: string;
+  mediaText?: string;
+  mediaLink?: string;
   overview: OverviewItem[];
   themes: ThemeItem[];
   programme: ProgrammeDay[];
@@ -130,7 +133,16 @@ export class ZoneHumideComponent implements OnInit, OnDestroy {
     
     if (translation && translation.content) {
       try {
-        this.content = JSON.parse(translation.content);
+        const parsedContent = JSON.parse(translation.content);
+        // Check if it's the new format with translations
+        if (parsedContent.translations) {
+          // Get content for current language, fallback to 'fr'
+          const lang = this.currentLang || 'fr';
+          this.content = parsedContent.translations[lang] || parsedContent.translations.fr || null;
+        } else {
+          // Old format - use directly
+          this.content = parsedContent;
+        }
         // Update page title and hero from translation
         if (translation.heroTitle) {
           this.page.heroTitle = translation.heroTitle;
@@ -154,7 +166,16 @@ export class ZoneHumideComponent implements OnInit, OnDestroy {
   loadContentFromPage(): void {
     if (this.page?.content) {
       try {
-        this.content = JSON.parse(this.page.content);
+        const parsedContent = JSON.parse(this.page.content);
+        // Check if it's the new format with translations
+        if (parsedContent.translations) {
+          // Get content for current language, fallback to 'fr'
+          const lang = this.currentLang || 'fr';
+          this.content = parsedContent.translations[lang] || parsedContent.translations.fr || null;
+        } else {
+          // Old format - use directly
+          this.content = parsedContent;
+        }
       } catch (e) {
         console.error('Error parsing content:', e);
         // Show empty state - data should come from database via DataInitializer

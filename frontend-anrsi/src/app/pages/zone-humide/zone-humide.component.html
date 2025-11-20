@@ -78,50 +78,22 @@
         </div>
       </div>
       
-      <div class="registration-section" *ngIf="content.registrationModes && content.registrationModes.length > 0">
-        <h3>Inscription et Participation</h3>
-        <div class="registration-info">
-          <div class="registration-modes">
-            <div class="mode-item" *ngFor="let mode of content.registrationModes">
-              <div class="mode-icon">{{ mode.icon }}</div>
-              <div class="mode-content">
-                <h4>{{ mode.title }}</h4>
-                <p>{{ mode.description }}</p>
-                <ul>
-                  <li *ngFor="let item of mode.items">{{ item }}</li>
-                </ul>
-                <div class="mode-price">{{ mode.price }}</div>
-              </div>
-            </div>
+
+      <section class="media-section" *ngIf="content?.image || content?.mediaText || content?.mediaLink">
+        <div class="media-content">
+          <div class="media-image" *ngIf="content.image">
+            <img [src]="content.image" alt="Media Image" />
           </div>
-          
-          <div class="registration-process" *ngIf="content.processSteps && content.processSteps.length > 0">
-            <h4>Processus d'Inscription :</h4>
-            <div class="process-steps">
-              <div class="process-step" *ngFor="let step of content.processSteps">
-                <div class="step-number">{{ step.number }}</div>
-                <div class="step-content">
-                  <h5>{{ step.title }}</h5>
-                  <p>{{ step.description }}</p>
-                </div>
-              </div>
-            </div>
+          <div class="media-text" *ngIf="content.mediaText">
+            <p>{{ content.mediaText }}</p>
+          </div>
+          <div class="media-link" *ngIf="content.mediaLink">
+            <a [href]="content.mediaLink" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+              {{ 'VIEW_MORE' | translate }}
+            </a>
           </div>
         </div>
-      </div>
-      
-      <div class="contact-section" *ngIf="content.contactInfo && content.contactInfo.length > 0">
-        <h3>{{ 'WETLAND_CONTACT_INFO_TITLE' | translate }}</h3>
-        <div class="contact-info">
-          <div class="contact-item" *ngFor="let contact of content.contactInfo">
-            <i [class]="contact.icon"></i>
-            <div class="contact-details">
-              <h4>{{ contact.label }}</h4>
-              <p>{{ contact.value }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      </section>
     </div>
   </section>
 </div>

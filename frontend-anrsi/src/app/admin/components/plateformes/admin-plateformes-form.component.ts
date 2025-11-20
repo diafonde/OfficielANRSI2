@@ -42,6 +42,7 @@ interface PlateformesLanguageContent {
   heroTitle: string;
   heroSubtitle: string;
   introText: string;
+  mediaLink?: string;
   plateformes: PlateformeItem[];
   accessModes: AccessMode[];
   bookingSteps: BookingStep[];
@@ -113,6 +114,7 @@ export class AdminPlateformesFormComponent implements OnInit {
       heroTitle: ['', Validators.required],
       heroSubtitle: ['', Validators.required],
       introText: ['', Validators.required],
+      mediaLink: [''],
       plateformes: this.fb.array([]),
       accessModes: this.fb.array([]),
       bookingSteps: this.fb.array([]),
@@ -732,7 +734,8 @@ export class AdminPlateformesFormComponent implements OnInit {
         langGroup.patchValue({
           heroTitle: langContent.heroTitle || '',
           heroSubtitle: langContent.heroSubtitle || '',
-          introText: langContent.introText || ''
+          introText: langContent.introText || '',
+          mediaLink: langContent.mediaLink || ''
         });
 
         // Clear existing arrays
@@ -832,6 +835,7 @@ export class AdminPlateformesFormComponent implements OnInit {
       heroTitle: langData.heroTitle || '',
       heroSubtitle: langData.heroSubtitle || '',
       introText: langData.introText || '',
+      mediaLink: langData.mediaLink || '',
       plateformes: (langData.plateformes || []).map((item: any) => ({
         icon: item.icon,
         title: item.title,
@@ -1065,6 +1069,16 @@ export class AdminPlateformesFormComponent implements OnInit {
         fr: 'Erreur lors de la création de la page',
         ar: 'خطأ في إنشاء الصفحة',
         en: 'Error creating page'
+      },
+      'mediaSection': {
+        fr: 'Section Médias',
+        ar: 'قسم الإعلام',
+        en: 'Media Section'
+      },
+      'mediaLink': {
+        fr: 'Lien Média',
+        ar: 'رابط الإعلام',
+        en: 'Media Link'
       }
     };
 

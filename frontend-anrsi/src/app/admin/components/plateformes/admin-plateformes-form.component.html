@@ -59,6 +59,21 @@
       </div>
     </div>
 
+    <div class="form-section">
+      <h2>{{ getLabel('mediaSection') }} - {{ getActiveLanguageName() }}</h2>
+      <div [formGroup]="getActiveLanguageFormGroup()">
+        <div class="form-group">
+          <label>{{ getLabel('Lien') }}</label>
+          <input
+            type="text"
+            formControlName="mediaLink"
+            class="form-control"
+            placeholder="https://example.com"
+          />
+        </div>
+      </div>
+    </div>
+
     <!-- Plateformes -->
     <div class="form-section">
       <h2>{{ getLabel('plateformesSection') }} - {{ getActiveLanguageName() }}</h2>

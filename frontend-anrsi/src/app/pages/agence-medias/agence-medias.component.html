@@ -6,42 +6,24 @@
   <div class="hero-overlay"></div>
 </div>
 
-<div class="container">
+<div class="container" *ngIf="content && ((content.mediaLinks && content.mediaLinks.length > 0) || (content.articleLinks && content.articleLinks.length > 0))">
   <section class="section media-links-section">
     <h2 style="text-align: center;">{{ 'MEDIA_ARTICLES_LINKS' | translate }}</h2>
     <div class="media-links-container">
-      <div class="media-link-item">
-        <a href="https://anrsi.mr/actualites" target="_blank" rel="noopener" class="media-link-card">
-          <div class="media-link-icon">📰</div>
-          <div class="media-link-content">
-            <h3>Actualités de l'ANRSI</h3>
-          </div>
-        </a>
-      </div>
-      <div class="media-link-item">
-        <a href="https://anrsi.mr/publications" target="_blank" rel="noopener" class="media-link-card">
-          <div class="media-link-icon">📄</div>
-          <div class="media-link-content">
-            <h3>Publications & Communiqués</h3>
-          </div>
-        </a>
-      </div>
-      <div class="media-link-item">
-        <a href="https://anrsi.mr/videos" target="_blank" rel="noopener" class="media-link-card">
-          <div class="media-link-icon">📺</div>
-          <div class="media-link-content">
-            <h3>Interventions Radio & TV</h3>
-          </div>
-        </a>
-      </div>
-      <div class="media-link-item">
-        <a href="https://anrsi.mr/presse" target="_blank" rel="noopener" class="media-link-card">
-          <div class="media-link-icon">📰</div>
-          <div class="media-link-content">
-            <h3>Presse écrite & en ligne</h3>
-          </div>
-        </a>
-      </div>
+      <ul class="media-links-list">
+        <!-- Display Media Links -->
+        <li *ngFor="let link of content.mediaLinks">
+          <a [href]="link.url" target="_blank" rel="noopener noreferrer">
+            {{ link.label }}
+          </a>
+        </li>
+        <!-- Display Article Links -->
+        <li *ngFor="let link of content.articleLinks">
+          <a [href]="link.url" target="_blank" rel="noopener noreferrer">
+            {{ link.title }}
+          </a>
+        </li>
+      </ul>
     </div>
   </section>
 </div>

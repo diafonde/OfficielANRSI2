@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { PageAdminService, PageDTO, PageCreateDTO, PageUpdateDTO } from '../../services/page-admin.service';
+import { ArticleAdminService } from '../../services/article-admin.service';
 
 interface AppelDetail {
   label: string;
@@ -97,6 +98,7 @@ export class AdminAppelsCandidaturesFormComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private pageService: PageAdminService,
+    private articleService: ArticleAdminService,
     private router: Router,
     private route: ActivatedRoute
   ) {
@@ -224,6 +226,49 @@ export class AdminAppelsCandidaturesFormComponent implements OnInit {
 
   removeAppelAction(appelIndex: number, actionIndex: number): void {
     this.getAppelActions(appelIndex).removeAt(actionIndex);
+  }
+
+  onFileSelected(event: Event, appelIndex: number, actionIndex: number): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      
+      // Validate file type - allow PDF and common document types
+      const validTypes = ['application/pdf', 'application/msword', 
+                         'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      const validExtensions = ['.pdf', '.doc', '.docx'];
+      const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+      
+      if (!validTypes.includes(file.type) && !validExtensions.includes(fileExtension)) {
+        this.errorMessage = 'Le fichier doit être un PDF ou un document Word';
+        return;
+      }
+      
+      // Validate file size (50MB)
+      if (file.size > 50 * 1024 * 1024) {
+        this.errorMessage = 'La taille du fichier ne doit pas dépasser 50MB';
+        return;
+      }
+      
+      // Upload file
+      this.uploadDocument(file, appelIndex, actionIndex);
+    }
+  }
+
+  uploadDocument(file: File, appelIndex: number, actionIndex: number): void {
+    this.errorMessage = '';
+    const actionGroup = this.getAppelActions(appelIndex).at(actionIndex) as FormGroup;
+    
+    this.articleService.uploadDocument(file).subscribe({
+      next: (response) => {
+        actionGroup.patchValue({ url: response.url });
+        this.errorMessage = '';
+      },
+      error: (error) => {
+        console.error('Upload error:', error);
+        this.errorMessage = error.error?.error || 'Erreur lors du téléchargement du fichier';
+      }
+    });
   }
 
   // Categories FormArray methods

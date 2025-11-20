@@ -63,6 +63,9 @@
     <div class="form-section">
       <h2>{{ getLabel('mediaLinksSection') }} - {{ getActiveLanguageName() }}</h2>
       <div [formGroup]="getActiveLanguageFormGroup()">
+        <div *ngIf="mediaLinks.length === 0" class="empty-state">
+          <p class="text-muted">{{ getLabel('noMediaLinks') || 'No media links added yet. Click the button below to add one.' }}</p>
+        </div>
         <div formArrayName="mediaLinks" *ngFor="let item of mediaLinks.controls; let i = index">
           <div [formGroupName]="i" class="nested-form-group">
             <div class="form-row">
@@ -86,6 +89,9 @@
     <div class="form-section">
       <h2>{{ getLabel('articleLinksSection') }} - {{ getActiveLanguageName() }}</h2>
       <div [formGroup]="getActiveLanguageFormGroup()">
+        <div *ngIf="articleLinks.length === 0" class="empty-state">
+          <p class="text-muted">{{ getLabel('noArticleLinks') || 'No article links added yet. Click the button below to add one.' }}</p>
+        </div>
         <div formArrayName="articleLinks" *ngFor="let item of articleLinks.controls; let i = index">
           <div [formGroupName]="i" class="nested-form-group">
             <div class="form-row">

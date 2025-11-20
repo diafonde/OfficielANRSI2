@@ -52,10 +52,22 @@ interface ContactItem {
   value: string;
 }
 
+interface MediaLink {
+  label: string;
+  url: string;
+}
+
+interface ArticleLink {
+  title: string;
+  url: string;
+}
+
 interface AgenceMediasContent {
   heroTitle: string;
   heroSubtitle: string;
   introText: string;
+  mediaLinks?: MediaLink[];
+  articleLinks?: ArticleLink[];
   mediaOverview: MediaOverview[];
   recentCoverage: CoverageItem[];
   mediaTypes: MediaType[];
@@ -122,12 +134,57 @@ export class AgenceMediasComponent implements OnInit, OnDestroy {
   updateTranslatedContent(): void {
     if (!this.page) return;
 
-    // Try to get translation for current language
+    // First, try to get from page.content (where admin form saves the translations structure)
+    if (this.page.content) {
+      try {
+        const parsedContent = JSON.parse(this.page.content);
+        // Check if it's the new format with translations
+        if (parsedContent.translations) {
+          // Extract content for current language, fallback to French
+          const langContent = parsedContent.translations[this.currentLang] 
+            || parsedContent.translations['fr'] 
+            || parsedContent.translations['ar'] 
+            || parsedContent.translations['en'];
+          
+          if (langContent) {
+            // Ensure mediaLinks and articleLinks are initialized as arrays if they don't exist
+            if (!langContent.mediaLinks) {
+              langContent.mediaLinks = [];
+            }
+            if (!langContent.articleLinks) {
+              langContent.articleLinks = [];
+            }
+            this.content = langContent;
+            
+            // Update page title and hero from the language content
+            if (langContent.heroTitle) {
+              this.page.heroTitle = langContent.heroTitle;
+            }
+            if (langContent.heroSubtitle) {
+              this.page.heroSubtitle = langContent.heroSubtitle;
+            }
+            return;
+          }
+        }
+      } catch (e) {
+        console.error('Error parsing page.content:', e);
+      }
+    }
+
+    // Fallback: Try to get translation for current language from page.translations
     const translation = this.page.translations?.[this.currentLang];
     
     if (translation && translation.content) {
       try {
-        this.content = JSON.parse(translation.content);
+        const parsedContent = JSON.parse(translation.content);
+        // Ensure mediaLinks and articleLinks are initialized as arrays if they don't exist
+        if (!parsedContent.mediaLinks) {
+          parsedContent.mediaLinks = [];
+        }
+        if (!parsedContent.articleLinks) {
+          parsedContent.articleLinks = [];
+        }
+        this.content = parsedContent;
         // Update page title and hero from translation
         if (translation.heroTitle) {
           this.page.heroTitle = translation.heroTitle;
@@ -143,7 +200,7 @@ export class AgenceMediasComponent implements OnInit, OnDestroy {
         this.loadContentFromPage();
       }
     } else {
-      // Fallback to page.content or default
+      // Final fallback
       this.loadContentFromPage();
     }
   }
@@ -151,7 +208,35 @@ export class AgenceMediasComponent implements OnInit, OnDestroy {
   loadContentFromPage(): void {
     if (this.page?.content) {
       try {
-        this.content = JSON.parse(this.page.content);
+        const parsedContent = JSON.parse(this.page.content);
+        // Check if it's the new format with translations
+        if (parsedContent.translations) {
+          // Extract content for current language, fallback to French
+          const langContent = parsedContent.translations[this.currentLang] 
+            || parsedContent.translations['fr'] 
+            || parsedContent.translations['ar'] 
+            || parsedContent.translations['en'];
+          
+          if (langContent) {
+            // Ensure mediaLinks is initialized as an array if it doesn't exist
+            if (!langContent.mediaLinks) {
+              langContent.mediaLinks = [];
+            }
+            this.content = langContent;
+          } else {
+            this.content = null;
+          }
+        } else {
+          // Old format - single language
+          // Ensure mediaLinks and articleLinks are initialized as arrays if they don't exist
+          if (!parsedContent.mediaLinks) {
+            parsedContent.mediaLinks = [];
+          }
+          if (!parsedContent.articleLinks) {
+            parsedContent.articleLinks = [];
+          }
+          this.content = parsedContent;
+        }
       } catch (e) {
         console.error('Error parsing content:', e);
         // Show empty state - data should come from database via DataInitializer

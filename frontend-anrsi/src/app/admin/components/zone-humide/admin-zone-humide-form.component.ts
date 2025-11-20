@@ -59,6 +59,9 @@ interface ZoneHumideLanguageContent {
   heroTitle: string;
   heroSubtitle: string;
   introText: string;
+  image?: string;
+  mediaText?: string;
+  mediaLink?: string;
   overview: OverviewItem[];
   themes: ThemeItem[];
   programme: ProgrammeDay[];
@@ -131,6 +134,9 @@ export class AdminZoneHumideFormComponent implements OnInit {
       heroTitle: ['', Validators.required],
       heroSubtitle: ['', Validators.required],
       introText: ['', Validators.required],
+      image: [''],
+      mediaText: [''],
+      mediaLink: [''],
       overview: this.fb.array([]),
       themes: this.fb.array([]),
       programme: this.fb.array([]),
@@ -460,6 +466,9 @@ export class AdminZoneHumideFormComponent implements OnInit {
       heroTitle: '',
       heroSubtitle: '',
       introText: '',
+      image: '',
+      mediaText: '',
+      mediaLink: '',
       overview: [],
       themes: [],
       programme: [],
@@ -734,7 +743,10 @@ export class AdminZoneHumideFormComponent implements OnInit {
         langGroup.patchValue({
           heroTitle: langContent.heroTitle || '',
           heroSubtitle: langContent.heroSubtitle || '',
-          introText: langContent.introText || ''
+          introText: langContent.introText || '',
+          image: langContent.image || '',
+          mediaText: langContent.mediaText || '',
+          mediaLink: langContent.mediaLink || ''
         });
 
         // Clear existing arrays
@@ -837,6 +849,9 @@ export class AdminZoneHumideFormComponent implements OnInit {
       heroTitle: langData.heroTitle || '',
       heroSubtitle: langData.heroSubtitle || '',
       introText: langData.introText || '',
+      image: langData.image || '',
+      mediaText: langData.mediaText || '',
+      mediaLink: langData.mediaLink || '',
       overview: (langData.overview || []).map((item: any) => ({
         icon: item.icon,
         title: item.title,
@@ -1118,6 +1133,31 @@ export class AdminZoneHumideFormComponent implements OnInit {
         fr: 'Erreur lors de la création de la page',
         ar: 'خطأ في إنشاء الصفحة',
         en: 'Error creating page'
+      },
+      'mediaSection': {
+        fr: 'Section Médias',
+        ar: 'قسم الإعلام',
+        en: 'Media Section'
+      },
+      'imageUpload': {
+        fr: 'Télécharger une image',
+        ar: 'تحميل صورة',
+        en: 'Upload Image'
+      },
+      'removeImage': {
+        fr: 'Supprimer l\'image',
+        ar: 'إزالة الصورة',
+        en: 'Remove Image'
+      },
+      'mediaText': {
+        fr: 'Texte Média',
+        ar: 'نص الإعلام',
+        en: 'Media Text'
+      },
+      'mediaLink': {
+        fr: 'Lien Média',
+        ar: 'رابط الإعلام',
+        en: 'Media Link'
       }
     };
 
@@ -1126,6 +1166,24 @@ export class AdminZoneHumideFormComponent implements OnInit {
 
   onCancel(): void {
     this.router.navigate(['/admin/pages']);
+  }
+
+  onImageSelected(event: Event, lang: 'fr' | 'ar' | 'en'): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        const langGroup = this.getLanguageFormGroup(lang);
+        langGroup.patchValue({ image: e.target.result });
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  removeImage(lang: 'fr' | 'ar' | 'en'): void {
+    const langGroup = this.getLanguageFormGroup(lang);
+    langGroup.patchValue({ image: '' });
   }
 }
 

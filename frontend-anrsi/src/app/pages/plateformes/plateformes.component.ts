@@ -42,6 +42,7 @@ interface PlateformesContent {
   heroTitle: string;
   heroSubtitle: string;
   introText: string;
+  mediaLink?: string;
   plateformes: PlateformeItem[];
   accessModes: AccessMode[];
   bookingSteps: BookingStep[];

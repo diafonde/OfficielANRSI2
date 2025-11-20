@@ -100,7 +100,7 @@
               <div formArrayName="actions" *ngFor="let action of getAppelActions(i).controls; let j = index">
                 <div [formGroupName]="j" class="form-row">
                   <input type="text" formControlName="text" class="form-control" placeholder="Button Text" />
-                  <input type="text" formControlName="url" class="form-control" placeholder="URL" />
+                  <input type="file" (change)="onFileSelected($event, i, j)" class="form-control" />
                   <select formControlName="type" class="form-control">
                     <option value="primary">Primary</option>
                     <option value="outline">Outline</option>
