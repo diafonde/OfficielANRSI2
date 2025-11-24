@@ -6,6 +6,10 @@ import mr.gov.anrsi.dto.ArticleDTO;
 import mr.gov.anrsi.service.ArticleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,8 +26,16 @@ public class ArticleController {
     private ArticleService articleService;
     
     @GetMapping
-    public ResponseEntity<List<ArticleDTO>> getAllArticles() {
-        // Public endpoint returns only published articles
+    public ResponseEntity<?> getAllArticles(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size
+    ) {
+        // If pagination parameters are provided, return paginated response
+        if (page != null && size != null) {
+            Pageable pageable = PageRequest.of(page, size, Sort.by("publishDate").descending());
+            return ResponseEntity.ok(articleService.getPublishedArticles(pageable));
+        }
+        // Otherwise, return all articles for backward compatibility
         return ResponseEntity.ok(articleService.getPublishedArticles());
     }
     
@@ -45,8 +57,14 @@ public class ArticleController {
     }
     
     @GetMapping("/featured")
-    public ResponseEntity<List<ArticleDTO>> getFeaturedArticles() {
-        return ResponseEntity.ok(articleService.getFeaturedArticles());
+    public ResponseEntity<List<ArticleDTO>> getFeaturedArticles(
+            @RequestParam(required = false) Integer limit
+    ) {
+        List<ArticleDTO> articles = articleService.getFeaturedArticles();
+        if (limit != null && limit > 0) {
+            articles = articles.stream().limit(limit).collect(java.util.stream.Collectors.toList());
+        }
+        return ResponseEntity.ok(articles);
     }
     
     @GetMapping("/recent")
@@ -55,18 +73,22 @@ public class ArticleController {
     }
     
     @GetMapping("/non-featured")
-    public ResponseEntity<List<ArticleDTO>> getNonFeaturedArticles() {
+    public ResponseEntity<?> getNonFeaturedArticles(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size
+    ) {
+        // If pagination parameters are provided, return paginated response
+        if (page != null && size != null) {
+            Pageable pageable = PageRequest.of(page, size, Sort.by("publishDate").descending());
+            return ResponseEntity.ok(articleService.getNonFeaturedArticles(pageable));
+        }
+        // Otherwise, return all articles for backward compatibility
         return ResponseEntity.ok(articleService.getNonFeaturedArticles());
     }
     
     @GetMapping("/search")
     public ResponseEntity<List<ArticleDTO>> searchArticles(@RequestParam String q) {
         return ResponseEntity.ok(articleService.searchArticles(q));
-    }
-    
-    @GetMapping("/category/{category}")
-    public ResponseEntity<List<ArticleDTO>> getArticlesByCategory(@PathVariable String category) {
-        return ResponseEntity.ok(articleService.getArticlesByCategory(category));
     }
     
     @PostMapping

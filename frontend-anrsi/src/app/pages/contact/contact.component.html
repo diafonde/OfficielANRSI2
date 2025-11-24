@@ -48,8 +48,20 @@
               <label for="consent">{{ 'J\'accepte que l\'ANRSI stocke et traite mes données personnelles pour répondre à ma demande.' | translate }}</label>
             </div>
             
-            <button type="submit" class="btn btn-primary">{{ 'Envoyer le message' | translate }}</button>
+            <button type="submit" class="btn btn-primary" [disabled]="submitting">
+              <span *ngIf="!submitting">{{ 'Envoyer le message' | translate }}</span>
+              <span *ngIf="submitting">{{ 'Envoi en cours...' | translate }}</span>
+            </button>
           </form>
+          
+          <div class="error-message" *ngIf="errorMessage">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <p>{{ errorMessage }}</p>
+          </div>
           
           <div class="success-message" *ngIf="submitted">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

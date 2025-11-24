@@ -1,12 +1,12 @@
 <div class="articles-page">
   <div class="page-header">
     <div class="header-content">
-      <h1>Articles Management</h1>
-      <p>Manage and organize your articles</p>
+      <h1>{{ 'ADMIN_ARTICLES_TITLE' | translate }}</h1>
+      <p>{{ 'ADMIN_ARTICLES_DESCRIPTION' | translate }}</p>
     </div>
     <a routerLink="/admin/articles/new" class="btn btn-primary">
       <i class="fas fa-plus"></i>
-      New Article
+      {{ 'ADMIN_ARTICLES_NEW' | translate }}
     </a>
   </div>
 
@@ -16,18 +16,10 @@
       <i class="fas fa-search"></i>
       <input
         type="text"
-        placeholder="Search articles..."
+        [placeholder]="'ADMIN_ARTICLES_SEARCH_PLACEHOLDER' | translate"
         (input)="onSearchChange($event)"
         class="search-input"
       >
-    </div>
-    <div class="category-filter">
-      <select (change)="onCategoryChange($event)" class="filter-select">
-        <option value="">All Categories</option>
-        <option *ngFor="let category of getCategories()" [value]="category">
-          {{ category }}
-        </option>
-      </select>
     </div>
   </div>
 
@@ -36,14 +28,13 @@
     <div class="articles-table">
       <div class="table-header">
         <div class="table-row">
-          <div class="col-image">Image</div>
-          <div class="col-title">Title</div>
-          <div class="col-languages">Languages</div>
-          <div class="col-author">Author</div>
-          <div class="col-category">Category</div>
-          <div class="col-featured">Featured</div>
-          <div class="col-date">Date</div>
-          <div class="col-actions">Actions</div>
+          <div class="col-image">{{ 'ADMIN_ARTICLES_COL_IMAGE' | translate }}</div>
+          <div class="col-title">{{ 'ADMIN_ARTICLES_COL_TITLE' | translate }}</div>
+          <div class="col-languages">{{ 'ADMIN_ARTICLES_COL_LANGUAGES' | translate }}</div>
+          <div class="col-author">{{ 'ADMIN_ARTICLES_COL_AUTHOR' | translate }}</div>
+          <div class="col-featured">{{ 'ADMIN_ARTICLES_COL_FEATURED' | translate }}</div>
+          <div class="col-date">{{ 'ADMIN_ARTICLES_COL_DATE' | translate }}</div>
+          <div class="col-actions">{{ 'ADMIN_ARTICLES_COL_ACTIONS' | translate }}</div>
         </div>
       </div>
 
@@ -59,51 +50,47 @@
             </div>
           </div>
           <div class="col-languages">
-            <div class="mobile-label">Languages:</div>
+            <div class="mobile-label">{{ 'ADMIN_ARTICLES_COL_LANGUAGES' | translate }}:</div>
             <div class="language-status">
-              <span class="lang-badge" [class.available]="hasTranslation(article, 'fr')" title="Français">
+              <span class="lang-badge" [class.available]="hasTranslation(article, 'fr')" [title]="'ADMIN_ARTICLES_LANG_FR' | translate">
                 🇫🇷
               </span>
-              <span class="lang-badge" [class.available]="hasTranslation(article, 'ar')" title="العربية">
+              <span class="lang-badge" [class.available]="hasTranslation(article, 'ar')" [title]="'ADMIN_ARTICLES_LANG_AR' | translate">
                 🇲🇷
               </span>
-              <span class="lang-badge" [class.available]="hasTranslation(article, 'en')" title="English">
+              <span class="lang-badge" [class.available]="hasTranslation(article, 'en')" [title]="'ADMIN_ARTICLES_LANG_EN' | translate">
                 🇺🇸
               </span>
             </div>
           </div>
           <div class="col-author">
-            <div class="mobile-label">Author:</div>
+            <div class="mobile-label">{{ 'ADMIN_ARTICLES_COL_AUTHOR' | translate }}:</div>
             <span class="author-name">{{ article.author }}</span>
           </div>
-          <div class="col-category">
-            <div class="mobile-label">Category:</div>
-            <span class="category-badge">{{ article.category }}</span>
-          </div>
           <div class="col-featured">
-            <div class="mobile-label">Featured:</div>
+            <div class="mobile-label">{{ 'ADMIN_ARTICLES_COL_FEATURED' | translate }}:</div>
             <button 
               class="featured-toggle" 
               [class.active]="article.featured"
               (click)="toggleFeatured(article)"
-              [title]="article.featured ? 'Remove from featured' : 'Mark as featured'">
+              [title]="(article.featured ? 'ADMIN_ARTICLES_FEATURED_REMOVE' : 'ADMIN_ARTICLES_FEATURED_MARK') | translate">
               <i class="fas fa-star" [class.filled]="article.featured"></i>
-              <span class="featured-label">{{ article.featured ? 'Featured' : 'Not Featured' }}</span>
+              <span class="featured-label">{{ (article.featured ? 'ADMIN_ARTICLES_FEATURED' : 'ADMIN_ARTICLES_NOT_FEATURED') | translate }}</span>
             </button>
           </div>
           <div class="col-date">
-            <div class="mobile-label">Date:</div>
+            <div class="mobile-label">{{ 'ADMIN_ARTICLES_COL_DATE' | translate }}:</div>
             <span class="date-text">{{ formatDate(article.publishDate) }}</span>
           </div>
           <div class="col-actions">
             <div class="action-buttons">
               <a [routerLink]="['/admin/articles/edit', article.id]" class="btn btn-sm btn-outline">
                 <i class="fas fa-edit"></i>
-                <span class="btn-text">Edit</span>
+                <span class="btn-text">{{ 'ADMIN_ARTICLES_EDIT' | translate }}</span>
               </a>
               <button (click)="deleteArticle(article.id)" class="btn btn-sm btn-danger">
                 <i class="fas fa-trash"></i>
-                <span class="btn-text">Delete</span>
+                <span class="btn-text">{{ 'ADMIN_ARTICLES_DELETE' | translate }}</span>
               </button>
             </div>
           </div>
@@ -113,11 +100,11 @@
       <div class="table-footer" *ngIf="articles.length === 0">
         <div class="empty-state">
           <i class="fas fa-newspaper"></i>
-          <h3>No articles found</h3>
-          <p>Start by creating your first article</p>
+          <h3>{{ 'ADMIN_ARTICLES_NO_ARTICLES' | translate }}</h3>
+          <p>{{ 'ADMIN_ARTICLES_NO_ARTICLES_DESC' | translate }}</p>
           <a routerLink="/admin/articles/new" class="btn btn-primary">
             <i class="fas fa-plus"></i>
-            Create Article
+            {{ 'ADMIN_ARTICLES_CREATE' | translate }}
           </a>
         </div>
       </div>
@@ -128,9 +115,7 @@
   <div class="pagination-container" *ngIf="(getTotalArticlesCount() | async) as totalCount">
     <div class="pagination-info" *ngIf="totalCount > 0">
       <span>
-        Showing {{ (currentPage - 1) * itemsPerPage + 1 }} - 
-        {{ Math.min(currentPage * itemsPerPage, totalCount) }} 
-        of {{ totalCount }} articles
+        {{ 'ADMIN_ARTICLES_PAGINATION_SHOWING' | translate: {start: (currentPage - 1) * itemsPerPage + 1, end: Math.min(currentPage * itemsPerPage, totalCount), total: totalCount} }}
       </span>
     </div>
     <div class="pagination" *ngIf="totalPages > 1">
@@ -140,7 +125,7 @@
         (click)="previousPage()"
         [disabled]="currentPage === 1">
         <i class="fas fa-chevron-left"></i>
-        <span>Previous</span>
+        <span>{{ 'ADMIN_ARTICLES_PAGINATION_PREVIOUS' | translate }}</span>
       </button>
       
       <div class="page-numbers">
@@ -174,7 +159,7 @@
         [class.disabled]="currentPage === totalPages"
         (click)="nextPage()"
         [disabled]="currentPage === totalPages">
-        <span>Next</span>
+        <span>{{ 'ADMIN_ARTICLES_PAGINATION_NEXT' | translate }}</span>
         <i class="fas fa-chevron-right"></i>
       </button>
     </div>

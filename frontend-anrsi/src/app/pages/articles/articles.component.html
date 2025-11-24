@@ -1,7 +1,7 @@
 <div class="articles-hero">
   <div class="container">
-    <h1>Toutes les Actualités</h1>
-    <p>Découvrez toutes les actualités et événements de l'ANRSI</p>
+    <h1>{{ 'ARTICLES_ALL_NEWS_TITLE' | translate }}</h1>
+    <p>{{ 'ARTICLES_ALL_NEWS_DESCRIPTION' | translate }}</p>
   </div>
   <div class="hero-overlay"></div>
 </div>
@@ -9,21 +9,16 @@
 <div class="container">
   <section class="section articles-section">
     <div class="articles-header">
-      <h2>Articles et Actualités</h2>
-      <p class="articles-count">{{ articles.length }} article(s) trouvé(s)</p>
+      <h2>{{ 'ARTICLES_AND_NEWS_TITLE' | translate }}</h2>
+      <p class="articles-count">
+        <span *ngIf="!searchTerm">{{ totalElements || articles.length }} article(s) au total</span>
+        <span *ngIf="searchTerm">{{ filteredArticles.length }} article(s) trouvé(s)</span>
+      </p>
     </div>
     
     <div class="articles-filters">
       <div class="filter-group">
-        <label for="category-filter">Catégorie:</label>
-        <select id="category-filter" [(ngModel)]="selectedCategory" (change)="filterArticles()">
-          <option value="">Toutes les catégories</option>
-          <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
-        </select>
-      </div>
-      
-      <div class="filter-group">
-        <label for="search-filter">Recherche:</label>
+        <label for="search-filter">{{ 'ARTICLES_SEARCH_LABEL' | translate }}</label>
         <input 
           id="search-filter" 
           type="text" 
@@ -40,12 +35,24 @@
       </app-article-card>
     </div>
     
-    <div class="no-articles" *ngIf="filteredArticles.length === 0">
+    <!-- Loading indicator -->
+    <div class="loading-indicator" *ngIf="loading && !initialLoad">
+      <div class="spinner"></div>
+      <p>Chargement des articles...</p>
+    </div>
+    
+    <!-- Load more button (alternative to infinite scroll) -->
+    <div class="load-more-container" *ngIf="hasMore && !loading && !searchTerm && filteredArticles.length > 0">
+      <button class="btn btn-primary" (click)="loadMore()">Charger plus d'articles</button>
+    </div>
+    
+    <div class="no-articles" *ngIf="filteredArticles.length === 0 && !loading">
       <div class="no-articles-content">
         <div class="no-articles-icon">📰</div>
         <h3>Aucun article trouvé</h3>
-        <p>Essayez de modifier vos critères de recherche ou de filtrer par catégorie.</p>
-        <button class="btn btn-primary" (click)="clearFilters()">Effacer les filtres</button>
+        <p *ngIf="searchTerm">Essayez de modifier vos critères de recherche ou de filtrer par catégorie.</p>
+        <p *ngIf="!searchTerm">Aucun article disponible pour le moment.</p>
+        <button class="btn btn-primary" *ngIf="searchTerm" (click)="clearFilters()">Effacer les filtres</button>
       </div>
     </div>
   </section>

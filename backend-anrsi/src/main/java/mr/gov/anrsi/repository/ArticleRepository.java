@@ -1,7 +1,8 @@
 package mr.gov.anrsi.repository;
 
 import mr.gov.anrsi.entity.Article;
-import mr.gov.anrsi.entity.Categories;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -16,19 +17,17 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
     
     List<Article> findByFeaturedFalseAndPublishedTrue();
     
-    List<Article> findByCategory(Categories category);
-    
-    List<Article> findByCategoryId(Long categoryId);
-    
-    List<Article> findByCategorySlug(String slug);
-    
     List<Article> findByPublishDateBeforeOrderByPublishDateDesc(LocalDateTime date);
     
     List<Article> findAllByOrderByPublishDateDesc();
     
     List<Article> findByPublishedTrue();
     
+    Page<Article> findByPublishedTrue(Pageable pageable);
+    
     List<Article> findByPublishedFalse();
+    
+    Page<Article> findByFeaturedFalseAndPublishedTrue(Pageable pageable);
     
     long countByPublishedTrue();
     

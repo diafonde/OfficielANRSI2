@@ -2,6 +2,8 @@ import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef } fr
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { Subscription } from 'rxjs';
 import { Article } from '../../models/article.model';
 
 interface Slide {
@@ -15,7 +17,7 @@ interface Slide {
 @Component({
   selector: 'app-hero-section',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslateModule],
   templateUrl: './hero-section.component.html',
   styleUrls: ['./hero-section.component.scss']
 })
@@ -26,29 +28,53 @@ export class HeroSectionComponent implements OnInit, OnDestroy, AfterViewInit {
   slides: Slide[] = [];
   currentSlide = 0;
   loading = true;
+  isRTL = false;
+  currentLang = 'fr';
+  private articles: Article[] = [];
   private slideInterval: any;
   private resizeHandler = () => this.updateContainerHeight();
+  private langChangeSubscription?: Subscription;
 
   constructor(
     private router: Router,
-    private http: HttpClient
-  ) {}
+    private http: HttpClient,
+    private translate: TranslateService
+  ) {
+    // Get current language
+    this.currentLang = this.translate.currentLang || this.translate.defaultLang || 'fr';
+    
+    // Check initial RTL state
+    this.isRTL = document.body.dir === 'rtl';
+    
+    // Listen to language changes
+    this.langChangeSubscription = this.translate.onLangChange.subscribe((event) => {
+      this.currentLang = event.lang;
+      this.isRTL = document.body.dir === 'rtl';
+      // Update slides with translated content from stored articles
+      this.updateSlidesWithTranslation();
+    });
+  }
 
   ngOnInit() {
     this.loadArticles();
   }
 
   loadArticles() {
-    // First try to get featured articles, if none, get recent articles
-    this.http.get<Article[]>('/api/articles/featured').subscribe({
+    // Load only 4 featured articles for slideshow (limit the initial load)
+    this.http.get<Article[]>('/api/articles/featured', {
+      params: { limit: '4' }
+    }).subscribe({
       next: (articles) => {
         if (articles && articles.length > 0) {
-          this.slides = this.mapArticlesToSlides(articles);
+          // Limit to 4 articles max
+          this.articles = articles.slice(0, 4);
+          this.slides = this.mapArticlesToSlides(this.articles);
         } else {
-          // If no featured articles, get recent articles
+          // If no featured articles, get recent articles (limit to 4)
           this.http.get<Article[]>('/api/articles/recent').subscribe({
             next: (recentArticles) => {
-              this.slides = this.mapArticlesToSlides(recentArticles.slice(0, 4));
+              this.articles = recentArticles.slice(0, 4);
+              this.slides = this.mapArticlesToSlides(this.articles);
               this.initializeSlideshow();
             },
             error: (error) => {
@@ -61,10 +87,11 @@ export class HeroSectionComponent implements OnInit, OnDestroy, AfterViewInit {
       },
       error: (error) => {
         console.error('Error loading featured articles:', error);
-        // Try to get all published articles as fallback
-        this.http.get<Article[]>('/api/articles').subscribe({
+        // Try to get recent articles as fallback (limit to 4)
+        this.http.get<Article[]>('/api/articles/recent').subscribe({
           next: (articles) => {
-            this.slides = this.mapArticlesToSlides(articles.slice(0, 4));
+            this.articles = articles.slice(0, 4);
+            this.slides = this.mapArticlesToSlides(this.articles);
             this.initializeSlideshow();
           },
           error: (fallbackError) => {
@@ -76,8 +103,24 @@ export class HeroSectionComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
+  private updateSlidesWithTranslation() {
+    // Update slides with translated content from stored articles
+    if (this.articles && this.articles.length > 0) {
+      this.slides = this.mapArticlesToSlides(this.articles);
+      // Reset to first slide when language changes
+      this.currentSlide = 0;
+      this.updateContainerHeight();
+    }
+  }
+
   mapArticlesToSlides(articles: Article[]): Slide[] {
+    // Get translated action text
+    const actionText = this.translate.instant('Read More') || 'Lire la suite';
+    
     const slides = articles.map(article => {
+      // Get translation for current language
+      const translation = this.getTranslation(article, this.currentLang);
+      
       // Handle image URLs from the backend
       let imageUrl = article.imageUrl || 'assets/images/article1.jpeg';
       
@@ -103,19 +146,36 @@ export class HeroSectionComponent implements OnInit, OnDestroy, AfterViewInit {
       }
       
       const actionUrl = `/article/${article.id}`;
-      console.log('Mapping article to slide:', { id: article.id, title: article.title, actionUrl });
+      console.log('Mapping article to slide:', { id: article.id, title: translation.title, actionUrl, lang: this.currentLang });
       
       return {
         url: imageUrl,
-        title: article.title,
-        description: article.excerpt,
-        actionText: 'Lire la suite',
+        title: translation.title,
+        description: translation.excerpt,
+        actionText: actionText,
         actionUrl: actionUrl
       };
     });
     
     console.log('All slides mapped:', slides.map(s => ({ title: s.title, actionUrl: s.actionUrl })));
     return slides;
+  }
+
+  /**
+   * Get translation for a specific language, with fallback to default article fields
+   */
+  private getTranslation(article: Article, lang: string): { title: string; excerpt: string; content: string } {
+    // Try to get translation for the requested language
+    if (article.translations && article.translations[lang as 'fr' | 'ar' | 'en']) {
+      return article.translations[lang as 'fr' | 'ar' | 'en']!;
+    }
+    
+    // Fallback to default article fields
+    return {
+      title: article.title,
+      excerpt: article.excerpt,
+      content: article.content
+    };
   }
 
   loadFallbackSlides() {
@@ -178,6 +238,9 @@ export class HeroSectionComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnDestroy() {
     if (this.slideInterval) {
       clearInterval(this.slideInterval);
+    }
+    if (this.langChangeSubscription) {
+      this.langChangeSubscription.unsubscribe();
     }
     window.removeEventListener('resize', this.resizeHandler);
   }

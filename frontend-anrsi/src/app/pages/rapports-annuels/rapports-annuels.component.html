@@ -1,38 +1,38 @@
 <div class="rapports-hero">
   <div class="container">
-    <h1>{{ heroTitle || 'Rapports Annuels' }}</h1>
-    <p>{{ heroSubtitle || "Rapports annuels de l'Agence Nationale de la Recherche Scientifique et de l'Innovation" }}</p>
+    <h1>{{ heroTitle || ('ANNUAL_REPORTS' | translate) }}</h1>
+    <p>{{ heroSubtitle || ('ANNUAL_REPORTS_DESCRIPTION' | translate) }}</p>
   </div>
   <div class="hero-overlay"></div>
 </div>
 
 <div class="container" *ngIf="isLoading">
   <div class="loading-container">
-    <div class="loading">Loading...</div>
+    <div class="loading">{{ 'LOADING' | translate }}</div>
   </div>
 </div>
 
 <div class="container" *ngIf="!isLoading">
   <section class="section rapports-section">
     <div class="rapports-content">
-      <h2>{{ sectionTitle || 'Rapports Annuels' }}</h2>
+      <h2>{{ sectionTitle || ('ANNUAL_REPORTS' | translate) }}</h2>
       <div class="rapports-list" *ngIf="rapports && rapports.length > 0">
         <div class="rapport-item" *ngFor="let rapport of rapports">
           <div class="rapport-info">
             <h3>{{ rapport.title }}</h3>
-            <p class="rapport-year">Année: {{ rapport.year }}</p>
+            <p class="rapport-year">{{ 'ANNUAL_REPORTS_YEAR' | translate }}: {{ rapport.year }}</p>
           </div>
           <button 
             class="download-btn" 
             (click)="downloadRapport(rapport)"
             [disabled]="!rapport.downloadUrl">
             <span class="download-icon">📥</span>
-            Télécharger
+            {{ 'DOWNLOAD' | translate }}
           </button>
         </div>
       </div>
       <div class="no-rapports" *ngIf="!rapports || rapports.length === 0">
-        <p>Aucun rapport disponible pour le moment.</p>
+        <p>{{ 'ANNUAL_REPORTS_NO_REPORTS' | translate }}</p>
       </div>
     </div>
   </section>

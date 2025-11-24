@@ -1,7 +1,37 @@
 <div class="dashboard">
   <div class="dashboard-header">
-    <h1>Dashboard</h1>
-    <p>Welcome back, {{ currentUser?.firstName }}! Here's what's happening with your content.</p>
+    <div class="header-content">
+      <div>
+        <h1>{{ 'DASHBOARD_TITLE' | translate }}</h1>
+        <p>{{ 'DASHBOARD_WELCOME' | translate: {firstName: currentUser?.firstName} }}</p>
+      </div>
+      <div class="language-switcher">
+        <button 
+          class="lang-dropdown-btn" 
+          (click)="toggleLangDropdown()"
+          [class.active]="isLangDropdownOpen">
+          <span class="lang-flag">{{ getLanguageFlag(currentLang) }}</span>
+          <span class="lang-text">{{ getLanguageName(currentLang) }}</span>
+          <i class="fas fa-chevron-down" [class.rotated]="isLangDropdownOpen"></i>
+        </button>
+        <div class="lang-dropdown-menu" [class.show]="isLangDropdownOpen">
+          <button 
+            class="lang-option"
+            [class.active]="currentLang === 'fr'"
+            (click)="switchLanguage('fr')">
+            <span class="lang-flag">🇫🇷</span>
+            <span class="lang-text">Français</span>
+          </button>
+          <button 
+            class="lang-option"
+            [class.active]="currentLang === 'ar'"
+            (click)="switchLanguage('ar')">
+            <span class="lang-flag">🇲🇷</span>
+            <span class="lang-text">العربية</span>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Stats Cards -->
@@ -12,7 +42,7 @@
       </div>
       <div class="stat-content">
         <h3>{{ stats.totalArticles }}</h3>
-        <p>Total Articles</p>
+        <p>{{ 'DASHBOARD_TOTAL_ARTICLES' | translate }}</p>
       </div>
     </div>
 
@@ -22,7 +52,7 @@
       </div>
       <div class="stat-content">
         <h3>{{ stats.publishedArticles }}</h3>
-        <p>Published</p>
+        <p>{{ 'DASHBOARD_PUBLISHED' | translate }}</p>
       </div>
     </div>
 
@@ -32,7 +62,7 @@
       </div>
       <div class="stat-content">
         <h3>{{ stats.draftArticles }}</h3>
-        <p>Drafts</p>
+        <p>{{ 'DASHBOARD_DRAFTS' | translate }}</p>
       </div>
     </div>
 
@@ -42,22 +72,22 @@
       </div>
       <div class="stat-content">
         <h3>{{ stats.recentArticles }}</h3>
-        <p>This Week</p>
+        <p>{{ 'DASHBOARD_THIS_WEEK' | translate }}</p>
       </div>
     </div>
   </div>
 
   <!-- Quick Actions -->
   <div class="quick-actions">
-    <h2>Quick Actions</h2>
+    <h2>{{ 'DASHBOARD_QUICK_ACTIONS' | translate }}</h2>
     <div class="actions-grid">
       <a routerLink="/admin/articles/new" class="action-card">
         <div class="action-icon">
           <i class="fas fa-plus"></i>
         </div>
         <div class="action-content">
-          <h3>New Article</h3>
-          <p>Create a new article</p>
+          <h3>{{ 'DASHBOARD_NEW_ARTICLE' | translate }}</h3>
+          <p>{{ 'DASHBOARD_CREATE_ARTICLE' | translate }}</p>
         </div>
       </a>
 
@@ -66,8 +96,8 @@
           <i class="fas fa-edit"></i>
         </div>
         <div class="action-content">
-          <h3>Manage Articles</h3>
-          <p>Edit existing articles</p>
+          <h3>{{ 'DASHBOARD_MANAGE_ARTICLES' | translate }}</h3>
+          <p>{{ 'DASHBOARD_EDIT_ARTICLES' | translate }}</p>
         </div>
       </a>
 
@@ -76,8 +106,8 @@
           <i class="fas fa-users"></i>
         </div>
         <div class="action-content">
-          <h3>Manage Users</h3>
-          <p>User administration</p>
+          <h3>{{ 'DASHBOARD_MANAGE_USERS' | translate }}</h3>
+          <p>{{ 'DASHBOARD_USER_ADMIN' | translate }}</p>
         </div>
       </a>
 
@@ -86,8 +116,8 @@
           <i class="fas fa-external-link-alt"></i>
         </div>
         <div class="action-content">
-          <h3>View Site</h3>
-          <p>Preview public website</p>
+          <h3>{{ 'DASHBOARD_VIEW_SITE' | translate }}</h3>
+          <p>{{ 'DASHBOARD_PREVIEW_SITE' | translate }}</p>
         </div>
       </a>
     </div>
@@ -96,8 +126,8 @@
   <!-- Recent Articles -->
   <div class="recent-articles">
     <div class="section-header">
-      <h2>Recent Articles</h2>
-      <a routerLink="/admin/articles" class="view-all-link">View All</a>
+      <h2>{{ 'DASHBOARD_RECENT_ARTICLES' | translate }}</h2>
+      <a routerLink="/admin/articles" class="view-all-link">{{ 'DASHBOARD_VIEW_ALL' | translate }}</a>
     </div>
 
     <div class="articles-list" *ngIf="getRecentArticles() | async as articles">
@@ -111,13 +141,12 @@
           <div class="article-meta">
             <span class="author">{{ article.author }}</span>
             <span class="date">{{ formatDate(article.publishDate) }}</span>
-            <span class="category">{{ article.category }}</span>
           </div>
         </div>
         <div class="article-actions">
           <a [routerLink]="['/admin/articles/edit', article.id]" class="btn btn-sm btn-outline">
             <i class="fas fa-edit"></i>
-            Edit
+            {{ 'DASHBOARD_EDIT' | translate }}
           </a>
         </div>
       </div>

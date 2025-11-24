@@ -175,6 +175,11 @@ section#news {
   min-width: 100%;  // Ensure it's at least container width
 }
 
+// RTL support for articles track
+[dir="rtl"] .articles-track {
+  flex-direction: row-reverse;
+}
+
 .articles-slide {
   flex: 0 0 calc(100% / 3);  // Use calc to ensure exact 33.333% relative to container
   padding: var(--space-2) var(--space-3);
@@ -216,6 +221,11 @@ section#news {
   transform: scale(1.1);
 }
 
+// RTL flip for navigation icons
+.slideshow-btn.rtl-flip svg {
+  transform: scaleX(-1);
+}
+
 .slideshow-btn:active {
   transform: scale(0.95);
 }
@@ -226,6 +236,17 @@ section#news {
 
 .next-btn {
   margin-right: var(--space-4);
+}
+
+// RTL support for navigation buttons
+[dir="rtl"] .prev-btn {
+  margin-left: 0;
+  margin-right: var(--space-4);
+}
+
+[dir="rtl"] .next-btn {
+  margin-right: 0;
+  margin-left: var(--space-4);
 }
 
 .slideshow-indicators {
@@ -291,6 +312,17 @@ section#news {
     margin-right: var(--space-1);
   }
   
+  // RTL adjustments for mobile
+  [dir="rtl"] .prev-btn {
+    margin-left: 0;
+    margin-right: var(--space-1);
+  }
+  
+  [dir="rtl"] .next-btn {
+    margin-right: 0;
+    margin-left: var(--space-1);
+  }
+  
   section#news {
     padding-left: 0;
     padding-right: 0;
@@ -342,6 +374,17 @@ section#news {
   
   .next-btn {
     margin-right: 0;
+  }
+  
+  // RTL adjustments for small mobile
+  [dir="rtl"] .prev-btn {
+    margin-left: 0;
+    margin-right: 0;
+  }
+  
+  [dir="rtl"] .next-btn {
+    margin-right: 0;
+    margin-left: 0;
   }
   
   .slideshow-indicators {
@@ -1167,6 +1210,11 @@ section#news {
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
+// RTL flip for video navigation icons
+.video-slideshow-btn.rtl-flip svg {
+  transform: scaleX(-1);
+}
+
 .video-slideshow-btn:active {
   transform: scale(0.95);
 }
@@ -1184,6 +1232,17 @@ section#news {
   margin-right: 0;
 }
 
+// RTL support for video navigation buttons
+[dir="rtl"] .prev-video-btn {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+[dir="rtl"] .next-video-btn {
+  margin-right: 0;
+  margin-left: 0;
+}
+
 .videos-container {
   position: relative;
   overflow: hidden;
@@ -1197,6 +1256,11 @@ section#news {
   width: auto;
   gap: var(--space-4);
   align-items: center;
+}
+
+// RTL support for videos track
+[dir="rtl"] .videos-track {
+  flex-direction: row-reverse;
 }
 
 .video-slide {
@@ -1572,6 +1636,12 @@ section#news {
   z-index: 10001;
   color: white;
   transition: all 0.3s ease;
+}
+
+// RTL support for video modal close button
+[dir="rtl"] .video-modal-close {
+  right: auto;
+  left: 1rem;
 }
 
 .video-modal-close:hover {

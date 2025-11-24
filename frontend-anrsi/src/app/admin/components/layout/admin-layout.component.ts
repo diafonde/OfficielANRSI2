@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../models/user.model';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, TranslateModule],
   templateUrl: './admin-layout.component.html',
   styleUrls: ['./admin-layout.component.scss']
 })
@@ -39,11 +40,20 @@ export class AdminLayoutComponent implements OnInit {
     if (this.currentUser) {
       return `${this.currentUser.firstName} ${this.currentUser.lastName}`;
     }
-    return 'User';
+    return '';
   }
 
   getUserRole(): string {
-    return this.currentUser?.role || 'user';
+    if (!this.currentUser?.role) {
+      return 'ADMIN_ROLE_USER';
+    }
+    // Return translation key for role names
+    const roleTranslations: { [key: string]: string } = {
+      'admin': 'ADMIN_ROLE_ADMIN',
+      'editor': 'ADMIN_ROLE_EDITOR',
+      'user': 'ADMIN_ROLE_USER'
+    };
+    return roleTranslations[this.currentUser.role] || 'ADMIN_ROLE_USER';
   }
 
   isAdmin(): boolean {

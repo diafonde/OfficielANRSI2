@@ -1,7 +1,17 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Article } from '../models/article.model';
 import { Observable, map, catchError, throwError, of } from 'rxjs';
+
+export interface PaginatedResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+}
 
 interface ArticleTranslationDTO {
   language: string;
@@ -20,8 +30,6 @@ interface ArticleDTO {
   imageUrl: string;
   attachmentUrl?: string;
   images?: string[];
-  category: string;
-  tags: string[];
   featured?: boolean;
   published?: boolean;
   createdAt?: string;
@@ -55,8 +63,6 @@ export class ArticleService {
       imageUrl: this.normalizeImageUrl(dto.imageUrl),
       attachmentUrl: dto.attachmentUrl ? this.normalizeAttachmentUrl(dto.attachmentUrl) : undefined,
       images: dto.images ? dto.images.map(img => this.normalizeImageUrl(img)) : [],
-      category: dto.category || '',
-      tags: dto.tags || [],
       featured: dto.featured || false,
       published: dto.published !== false,
       translations: dto.translations || undefined
@@ -123,9 +129,25 @@ export class ArticleService {
     return attachmentUrl;
   }
 
-  getAllArticles(): Observable<Article[]> {
-    return this.http.get<ArticleDTO[]>(this.apiUrl).pipe(
-      map((dtos) => dtos.map(dto => this.mapToArticle(dto))),
+  getAllArticles(page?: number, size?: number): Observable<Article[] | PaginatedResponse<Article>> {
+    let params = new HttpParams();
+    if (page !== undefined && size !== undefined) {
+      params = params.set('page', page.toString()).set('size', size.toString());
+    }
+    
+    return this.http.get<ArticleDTO[] | PaginatedResponse<ArticleDTO>>(this.apiUrl, { params }).pipe(
+      map((response) => {
+        // Check if it's a paginated response
+        if ('content' in response) {
+          return {
+            ...response,
+            content: response.content.map(dto => this.mapToArticle(dto))
+          } as PaginatedResponse<Article>;
+        } else {
+          // Backward compatibility: return array
+          return (response as ArticleDTO[]).map(dto => this.mapToArticle(dto));
+        }
+      }),
       catchError((error) => {
         console.error('Error fetching articles:', error);
         return throwError(() => error);
@@ -133,8 +155,13 @@ export class ArticleService {
     );
   }
 
-  getFeaturedArticles(): Observable<Article[]> {
-    return this.http.get<ArticleDTO[]>(`${this.apiUrl}/featured`).pipe(
+  getFeaturedArticles(limit?: number): Observable<Article[]> {
+    let params = new HttpParams();
+    if (limit !== undefined && limit > 0) {
+      params = params.set('limit', limit.toString());
+    }
+    
+    return this.http.get<ArticleDTO[]>(`${this.apiUrl}/featured`, { params }).pipe(
       map((dtos) => dtos.map(dto => this.mapToArticle(dto))),
       catchError((error) => {
         console.error('Error fetching featured articles:', error);
@@ -167,6 +194,32 @@ export class ArticleService {
     );
   }
 
+  getNonFeaturedArticles(page?: number, size?: number): Observable<Article[] | PaginatedResponse<Article>> {
+    let params = new HttpParams();
+    if (page !== undefined && size !== undefined) {
+      params = params.set('page', page.toString()).set('size', size.toString());
+    }
+    
+    return this.http.get<ArticleDTO[] | PaginatedResponse<ArticleDTO>>(`${this.apiUrl}/non-featured`, { params }).pipe(
+      map((response) => {
+        // Check if it's a paginated response
+        if ('content' in response) {
+          return {
+            ...response,
+            content: response.content.map(dto => this.mapToArticle(dto))
+          } as PaginatedResponse<Article>;
+        } else {
+          // Backward compatibility: return array
+          return (response as ArticleDTO[]).map(dto => this.mapToArticle(dto));
+        }
+      }),
+      catchError((error) => {
+        console.error('Error fetching non-featured articles:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
   searchArticles(searchTerm: string): Observable<Article[]> {
     return this.http.get<ArticleDTO[]>(`${this.apiUrl}/search`, {
       params: { q: searchTerm }
@@ -174,16 +227,6 @@ export class ArticleService {
       map((dtos) => dtos.map(dto => this.mapToArticle(dto))),
       catchError((error) => {
         console.error('Error searching articles:', error);
-        return throwError(() => error);
-      })
-    );
-  }
-
-  getArticlesByCategory(category: string): Observable<Article[]> {
-    return this.http.get<ArticleDTO[]>(`${this.apiUrl}/category/${encodeURIComponent(category)}`).pipe(
-      map((dtos) => dtos.map(dto => this.mapToArticle(dto))),
-      catchError((error) => {
-        console.error(`Error fetching articles by category ${category}:`, error);
         return throwError(() => error);
       })
     );

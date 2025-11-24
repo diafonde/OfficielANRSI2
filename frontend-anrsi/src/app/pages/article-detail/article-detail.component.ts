@@ -5,7 +5,7 @@ import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Subscription } from 'rxjs';
 import { Article, ArticleTranslation } from '../../models/article.model';
-import { ArticleService } from '../../services/article.service';
+import { ArticleService, PaginatedResponse } from '../../services/article.service';
 
 @Component({
   selector: 'app-article-detail',
@@ -63,15 +63,26 @@ export class ArticleDetailComponent implements OnInit, OnDestroy {
             if (this.article) {
               this.updateTranslatedContent();
               
-              // Find related articles
-              this.articleService.getAllArticles().subscribe((articles: Article[]) => {
-                this.relatedArticles = articles
-                  .filter((a: Article) => a.id !== this.article?.id)
-                  .filter((a: Article) => 
-                    a.category === this.article?.category || 
-                    a.tags.some((tag: string) => this.article?.tags.includes(tag))
-                  )
-                  .slice(0, 3);
+              // Find related articles (load without pagination for backward compatibility)
+              this.articleService.getAllArticles().subscribe({
+                next: (result) => {
+                  let articles: Article[];
+                  
+                  // Handle both paginated and array responses
+                  if ('content' in result) {
+                    articles = (result as PaginatedResponse<Article>).content;
+                  } else {
+                    articles = result as Article[];
+                  }
+                  
+                  this.relatedArticles = articles
+                    .filter((a: Article) => a.id !== this.article?.id)
+                    .slice(0, 3);
+                },
+                error: (error) => {
+                  console.error('Error loading related articles:', error);
+                  this.relatedArticles = [];
+                }
               });
             } else {
               this.articleNotFound = true;

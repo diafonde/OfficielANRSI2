@@ -5,15 +5,14 @@ import mr.gov.anrsi.dto.ArticleDTO;
 import mr.gov.anrsi.dto.ArticleTranslationDTO;
 import mr.gov.anrsi.entity.Article;
 import mr.gov.anrsi.entity.ArticleTranslation;
-import mr.gov.anrsi.entity.Categories;
 import mr.gov.anrsi.entity.Language;
 import mr.gov.anrsi.exception.ArticleNotFoundException;
-import mr.gov.anrsi.exception.CategoryNotFoundException;
 import mr.gov.anrsi.repository.ArticleRepository;
 import mr.gov.anrsi.repository.ArticleTranslationRepository;
-import mr.gov.anrsi.repository.CategoriesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,9 +32,6 @@ public class ArticleService {
     private ArticleRepository articleRepository;
     
     @Autowired
-    private CategoriesRepository categoriesRepository;
-    
-    @Autowired
     private ArticleTranslationRepository translationRepository;
     
     public List<ArticleDTO> getAllArticles() {
@@ -50,6 +46,11 @@ public class ArticleService {
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+    
+    public Page<ArticleDTO> getPublishedArticles(Pageable pageable) {
+        return articleRepository.findByPublishedTrue(pageable)
+                .map(this::convertToDTO);
     }
     
     public ArticleDTO getArticleById(Long id) {
@@ -84,22 +85,14 @@ public class ArticleService {
                 .collect(Collectors.toList());
     }
     
+    public Page<ArticleDTO> getNonFeaturedArticles(Pageable pageable) {
+        return articleRepository.findByFeaturedFalseAndPublishedTrue(pageable)
+                .map(this::convertToDTO);
+    }
+    
     public List<ArticleDTO> searchArticles(String searchTerm) {
         // Search in translations instead of direct article fields
         return translationRepository.findArticlesByTranslationTitleOrContentOrExcerptContainingIgnoreCase(searchTerm)
-                .stream()
-                .filter(article -> Boolean.TRUE.equals(article.getPublished()))
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
-    
-    public List<ArticleDTO> getArticlesByCategory(String category) {
-        // Try to find by slug first, then by name
-        Categories categoryEntity = categoriesRepository.findBySlug(category)
-                .orElseGet(() -> categoriesRepository.findByName(category)
-                        .orElseThrow(() -> new CategoryNotFoundException("Category not found: " + category)));
-        
-        return articleRepository.findByCategory(categoryEntity)
                 .stream()
                 .filter(article -> Boolean.TRUE.equals(article.getPublished()))
                 .map(this::convertToDTO)
@@ -143,12 +136,6 @@ public class ArticleService {
         article.setAttachmentUrl(dto.getAttachmentUrl());
         if (dto.getImages() != null) {
             article.setImages(dto.getImages());
-        }
-        // Convert category string to Categories entity
-        Categories categoryEntity = findOrCreateCategory(dto.getCategory());
-        article.setCategory(categoryEntity);
-        if (dto.getTags() != null) {
-            article.setTags(dto.getTags());
         }
         if (dto.getFeatured() != null) {
             article.setFeatured(dto.getFeatured());
@@ -195,9 +182,6 @@ public class ArticleService {
         dto.setImageUrl(article.getImageUrl());
         dto.setAttachmentUrl(article.getAttachmentUrl());
         dto.setImages(article.getImages());
-        // Convert Categories entity to String (category name)
-        dto.setCategory(article.getCategory() != null ? article.getCategory().getName() : null);
-        dto.setTags(article.getTags());
         dto.setFeatured(article.getFeatured());
         dto.setPublished(article.getPublished());
         dto.setCreatedAt(article.getCreatedAt());
@@ -244,12 +228,6 @@ public class ArticleService {
         article.setAttachmentUrl(dto.getAttachmentUrl());
         if (dto.getImages() != null) {
             article.setImages(dto.getImages());
-        }
-        // Convert category string to Categories entity
-        Categories categoryEntity = findOrCreateCategory(dto.getCategory());
-        article.setCategory(categoryEntity);
-        if (dto.getTags() != null) {
-            article.setTags(dto.getTags());
         }
         article.setFeatured(dto.getFeatured() != null ? dto.getFeatured() : false);
         article.setPublished(dto.getPublished() != null ? dto.getPublished() : true);
@@ -353,32 +331,6 @@ public class ArticleService {
         
         // Save article to ensure state is synchronized
         articleRepository.save(article);
-    }
-    
-    /**
-     * Find category by name or slug, or create a new one if not found.
-     * This method tries to find by slug first, then by name.
-     */
-    private Categories findOrCreateCategory(String categoryName) {
-        if (categoryName == null || categoryName.trim().isEmpty()) {
-            throw new IllegalArgumentException("Category name cannot be null or empty");
-        }
-        
-        // Try to find by slug first
-        return categoriesRepository.findBySlug(categoryName.toLowerCase().replaceAll("\\s+", "-"))
-                .orElseGet(() -> {
-                    // Try to find by name
-                    return categoriesRepository.findByName(categoryName)
-                            .orElseGet(() -> {
-                                // Create new category if not found
-                                Categories newCategory = new Categories();
-                                newCategory.setName(categoryName);
-                                newCategory.setSlug(categoryName.toLowerCase().replaceAll("\\s+", "-"));
-                                newCategory.setDescription("Category: " + categoryName);
-                                newCategory.setImageUrl("");
-                                return categoriesRepository.save(newCategory);
-                            });
-                });
     }
 }
 

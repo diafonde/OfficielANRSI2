@@ -14,7 +14,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
@@ -49,15 +48,6 @@ public class Article {
     @CollectionTable(name = "article_images", joinColumns = @JoinColumn(name = "article_id"))
     @Column(name = "image_url")
     private List<String> images = new ArrayList<>();
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
-    private Categories category;
-    
-    @ElementCollection
-    @CollectionTable(name = "article_tags", joinColumns = @JoinColumn(name = "article_id"))
-    @Column(name = "tag")
-    private List<String> tags = new ArrayList<>();
     
     @OneToMany(mappedBy = "article", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<ArticleTranslation> translations = new ArrayList<>();

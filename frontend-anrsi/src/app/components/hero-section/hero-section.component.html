@@ -5,23 +5,23 @@
          [class.active]="currentSlide === i"
          (click)="onSlideClick(slide, i)">
       <div class="slide-image-container">
-        <img [src]="slide.url" [alt]="slide.title" class="slide-image" (error)="onImageError($event)">
+        <img [src]="slide.url" [alt]="slide.title" class="slide-image" [loading]="i === 0 ? 'eager' : 'lazy'" (error)="onImageError($event)">
       </div>
       <div class="slide-content">
         <h2 class="slide-title">{{ slide.title }}</h2>
         <p class="slide-description" *ngIf="slide.description">{{ slide.description }}</p>
         <a [routerLink]="slide.actionUrl" class="action-btn" *ngIf="slide.actionUrl" (click)="$event.stopPropagation()">
-          {{ slide.actionText || 'Lire la suite' }}
+          {{ slide.actionText || ('Read More' | translate) }}
         </a>
       </div>
     </div>
       
     <div class="slide-controls" *ngIf="slides.length > 1">
       <button class="prev-btn" (click)="prevSlide(); $event.stopPropagation()">
-        <i class="fas fa-chevron-left"></i>
+        <i [class]="isRTL ? 'fas fa-chevron-right' : 'fas fa-chevron-left'"></i>
       </button>
       <button class="next-btn" (click)="nextSlide(); $event.stopPropagation()">
-        <i class="fas fa-chevron-right"></i>
+        <i [class]="isRTL ? 'fas fa-chevron-left' : 'fas fa-chevron-right'"></i>
       </button>
     </div>
 

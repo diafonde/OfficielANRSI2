@@ -3,6 +3,15 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
 
+export interface PageTranslationDTO {
+  id?: number;
+  language: string;
+  title?: string;
+  heroTitle?: string;
+  heroSubtitle?: string;
+  content?: string;
+}
+
 export interface PageDTO {
   id?: number;
   slug: string;
@@ -17,6 +26,7 @@ export interface PageDTO {
   isActive?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
+  translations?: { [key: string]: PageTranslationDTO };
 }
 
 export interface PageCreateDTO {

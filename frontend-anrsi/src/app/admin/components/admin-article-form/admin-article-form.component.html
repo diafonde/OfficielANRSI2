@@ -54,24 +54,6 @@
         </div>
 
         <div class="form-group">
-          <label for="category">Category *</label>
-          <select
-            id="category"
-            formControlName="category"
-            class="form-control"
-            [class.error]="getFieldError('category')"
-          >
-            <option value="">Select a category</option>
-            <option *ngFor="let category of getCategories()" [value]="category">
-              {{ category }}
-            </option>
-          </select>
-          <div class="error-message" *ngIf="getFieldError('category')">
-            {{ getFieldError('category') }}
-          </div>
-        </div>
-
-        <div class="form-group">
           <label for="imageFile">Images *</label>
           <div class="images-container">
             <!-- Existing Images List -->
@@ -164,24 +146,6 @@
           >
           <div class="error-message" *ngIf="getFieldError('publishDate')">
             {{ getFieldError('publishDate') }}
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="tags">Tags *</label>
-          <input
-            type="text"
-            id="tags"
-            formControlName="tags"
-            class="form-control"
-            [class.error]="getFieldError('tags')"
-            placeholder="tag1, tag2, tag3"
-          >
-          <div class="error-message" *ngIf="getFieldError('tags')">
-            {{ getFieldError('tags') }}
-          </div>
-          <div class="form-help">
-            Separate multiple tags with commas
           </div>
         </div>
 

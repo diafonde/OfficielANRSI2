@@ -103,8 +103,19 @@ export class ExpertAnrsiComponent implements OnInit, OnDestroy {
     if (translation && translation.content) {
       try {
         this.content = JSON.parse(translation.content);
-        if (translation.heroTitle) this.page.heroTitle = translation.heroTitle;
-        if (translation.heroSubtitle) this.page.heroSubtitle = translation.heroSubtitle;
+        // Ensure heroTitle and heroSubtitle are in content
+        if (translation.heroTitle) {
+          this.page.heroTitle = translation.heroTitle;
+          if (this.content) {
+            this.content.heroTitle = translation.heroTitle;
+          }
+        }
+        if (translation.heroSubtitle) {
+          this.page.heroSubtitle = translation.heroSubtitle;
+          if (this.content) {
+            this.content.heroSubtitle = translation.heroSubtitle;
+          }
+        }
         if (translation.title) this.page.title = translation.title;
       } catch (e) {
         console.error('Error parsing translated content:', e);
@@ -119,6 +130,13 @@ export class ExpertAnrsiComponent implements OnInit, OnDestroy {
     if (this.page?.content) {
       try {
         this.content = JSON.parse(this.page.content);
+        // Ensure heroTitle and heroSubtitle are in content if they exist in page
+        if (this.content && this.page.heroTitle && !this.content.heroTitle) {
+          this.content.heroTitle = this.page.heroTitle;
+        }
+        if (this.content && this.page.heroSubtitle && !this.content.heroSubtitle) {
+          this.content.heroSubtitle = this.page.heroSubtitle;
+        }
       } catch (e) {
         console.error('Error parsing content:', e);
         // Show empty state - data should come from database via DataInitializer
@@ -128,6 +146,15 @@ export class ExpertAnrsiComponent implements OnInit, OnDestroy {
       // Show empty state - data should come from database via DataInitializer
       this.content = null;
     }
+  }
+
+  // Getters for template
+  get heroTitle(): string {
+    return this.content?.heroTitle || this.page?.heroTitle || '';
+  }
+
+  get heroSubtitle(): string {
+    return this.content?.heroSubtitle || this.page?.heroSubtitle || '';
   }
 
 }

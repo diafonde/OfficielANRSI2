@@ -1,21 +1,21 @@
 <div class="texts-hero">
   <div class="container">
-    <h1>{{ heroTitle || 'Textes Juridiques' }}</h1>
-    <p>{{ heroSubtitle || "Textes juridiques régissant l'Agence Nationale de la Recherche Scientifique et de l'Innovation" }}</p>
+    <h1>{{ heroTitle || ('LEGAL_TEXTS' | translate) }}</h1>
+    <p>{{ heroSubtitle || ('LEGAL_TEXTS_DESCRIPTION' | translate) }}</p>
   </div>
   <div class="hero-overlay"></div>
 </div>
 
 <div class="container" *ngIf="isLoading">
   <div class="loading-container">
-    <div class="loading">Loading...</div>
+    <div class="loading">{{ 'LOADING' | translate }}</div>
   </div>
 </div>
 
 <div class="container" *ngIf="!isLoading">
   <section class="section texts-section">
     <div class="texts-content">
-      <h2>{{ sectionTitle || 'Textes Juridiques' }}</h2>
+      <h2>{{ sectionTitle || ('LEGAL_TEXTS' | translate) }}</h2>
       <div class="texts-list" *ngIf="texts && texts.length > 0">
         <div class="text-item" *ngFor="let text of texts">
           <div class="text-info">
@@ -27,14 +27,13 @@
             (click)="downloadText(text)"
             [disabled]="!text.downloadUrl">
             <span class="download-icon">📥</span>
-            Télécharger
+            {{ 'DOWNLOAD' | translate }}
           </button>
         </div>
       </div>
       <div class="no-texts" *ngIf="!texts || texts.length === 0">
-        <p>Aucun texte juridique disponible pour le moment.</p>
+        <p>{{ 'LEGAL_TEXTS_NO_TEXTS' | translate }}</p>
       </div>
     </div>
   </section>
 </div>
-

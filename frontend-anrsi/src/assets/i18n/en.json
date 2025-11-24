@@ -2,6 +2,7 @@
   "HELLO": "Hello",
   "WELCOME": "Welcome to the National Research Agency",
   "VIDEOS": "Videos",
+  "VIDEOS_ALL_VIDEOS": "All Videos",
   "PHOTOS": "Photos",
   "Accueil": "Home",
   "CATEGORIES": "Research Fields",
@@ -190,5 +191,17 @@
   "STATISTICS_PARTNER_INSTITUTIONS": "Partner Institutions",
   "STATISTICS_PUBLISHED_ARTICLES": "Published Articles",
   "STATISTICS_RESEARCH_FUNDING": "Research Funding",
-  "VIDÉOTHÈQUE": "Video Library"
+  "VIDÉOTHÈQUE": "Video Library",
+  "ARTICLES_ALL_NEWS_TITLE": "All News",
+  "ARTICLES_ALL_NEWS_DESCRIPTION": "Discover all news and events from ANRSI",
+  "ARTICLES_AND_NEWS_TITLE": "Articles and News",
+  "ARTICLES_SEARCH_LABEL": "Search:",
+  "ANNUAL_REPORTS": "Annual Reports",
+  "ANNUAL_REPORTS_DESCRIPTION": "Annual reports of the National Agency for Scientific Research and Innovation",
+  "ANNUAL_REPORTS_YEAR": "Year",
+  "ANNUAL_REPORTS_NO_REPORTS": "No reports available at the moment.",
+  "LEGAL_TEXTS": "Legal Texts",
+  "LEGAL_TEXTS_DESCRIPTION": "Legal texts governing the National Agency for Scientific Research and Innovation",
+  "LEGAL_TEXTS_NO_TEXTS": "No legal texts available at the moment.",
+  "DOWNLOAD": "Download"
 }

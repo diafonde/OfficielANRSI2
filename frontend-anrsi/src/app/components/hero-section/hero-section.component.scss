@@ -30,6 +30,11 @@
   max-width: 100%;
 }
 
+// RTL text alignment
+[dir="rtl"] .slide-title {
+  text-align: right;
+}
+
 .slide-description {
   font-size: clamp(1rem, 1.5vw, 1.2rem);
   color: rgba(255, 255, 255, 0.9);
@@ -67,6 +72,11 @@
   flex-direction: row;
   align-items: stretch;
   pointer-events: none; // Disable clicks on inactive slides
+}
+
+// RTL support for slides
+[dir="rtl"] .slide {
+  flex-direction: row-reverse;
 }
 
 .slide:hover {
@@ -112,6 +122,11 @@
   color: white;
   gap: 20px;
   pointer-events: auto;
+}
+
+// RTL alignment for slide content
+[dir="rtl"] .slide-content {
+  align-items: flex-end;
 }
 
 .slide-content h1 {
@@ -481,15 +496,30 @@
     align-items: center;
     text-align: center;
   }
+  
+  // RTL support for mobile slide content
+  [dir="rtl"] .slide-content {
+    align-items: center;
+  }
 
   .slide-title {
     font-size: clamp(1.5rem, 5vw, 2.5rem);
     text-align: center;
     max-width: 100%;
   }
+  
+  // RTL title alignment (center is fine for mobile)
+  [dir="rtl"] .slide-title {
+    text-align: center;
+  }
 
   .slide-description {
     font-size: clamp(0.9rem, 3vw, 1rem);
+    text-align: center;
+  }
+  
+  // RTL description alignment (center is fine for mobile)
+  [dir="rtl"] .slide-description {
     text-align: center;
   }
 

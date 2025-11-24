@@ -24,8 +24,6 @@ public class ArticleDTO {
     private String imageUrl;
     private String attachmentUrl;
     private List<String> images = new ArrayList<>();
-    private String category;
-    private List<String> tags = new ArrayList<>();
     private Boolean featured;
     private Boolean published;
     private LocalDateTime createdAt;

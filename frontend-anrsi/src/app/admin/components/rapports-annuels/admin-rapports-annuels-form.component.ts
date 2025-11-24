@@ -11,11 +11,19 @@ interface Rapport {
   downloadUrl?: string;
 }
 
-interface RapportsContent {
+interface RapportsLanguageContent {
   heroTitle: string;
   heroSubtitle: string;
   sectionTitle: string;
   rapports: Rapport[];
+}
+
+interface RapportsContent {
+  translations: {
+    fr: RapportsLanguageContent;
+    ar: RapportsLanguageContent;
+    en: RapportsLanguageContent;
+  };
 }
 
 @Component({
@@ -31,6 +39,13 @@ export class AdminRapportsAnnuelsFormComponent implements OnInit {
   isLoading = false;
   errorMessage = '';
   isSaving = false;
+  activeLanguage: 'fr' | 'ar' | 'en' = 'fr';
+
+  languages = [
+    { code: 'fr', name: 'Français', flag: '🇫🇷' },
+    { code: 'ar', name: 'العربية', flag: '🇲🇷' },
+    { code: 'en', name: 'English', flag: '🇺🇸' }
+  ];
 
   constructor(
     private fb: FormBuilder,
@@ -43,26 +58,56 @@ export class AdminRapportsAnnuelsFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Check for language query parameter
+    this.route.queryParams.subscribe(params => {
+      if (params['lang'] && ['fr', 'ar', 'en'].includes(params['lang'])) {
+        this.activeLanguage = params['lang'] as 'fr' | 'ar' | 'en';
+      }
+    });
     this.loadPage();
   }
 
   createForm(): FormGroup {
     return this.fb.group({
-      heroTitle: ['', Validators.required],
-      heroSubtitle: ['', Validators.required],
-      sectionTitle: ['', Validators.required],
+      translations: this.fb.group({
+        fr: this.createLanguageFormGroup(),
+        ar: this.createLanguageFormGroup(),
+        en: this.createLanguageFormGroup()
+      })
+    });
+  }
+
+  private createLanguageFormGroup(): FormGroup {
+    return this.fb.group({
+      heroTitle: [''], // Removed required validator to allow saving incomplete forms
+      heroSubtitle: [''], // Removed required validator to allow saving incomplete forms
+      sectionTitle: [''], // Removed required validator to allow saving incomplete forms
       rapports: this.fb.array([])
     });
   }
 
+  switchLanguage(lang: string): void {
+    if (lang === 'fr' || lang === 'ar' || lang === 'en') {
+      this.activeLanguage = lang as 'fr' | 'ar' | 'en';
+    }
+  }
+
+  getActiveLanguageFormGroup(): FormGroup {
+    return this.form.get(`translations.${this.activeLanguage}`) as FormGroup;
+  }
+
+  getLanguageFormGroup(lang: string): FormGroup {
+    return this.form.get(`translations.${lang}`) as FormGroup;
+  }
+
   get rapports(): FormArray {
-    return this.form.get('rapports') as FormArray;
+    return this.getActiveLanguageFormGroup().get('rapports') as FormArray;
   }
 
   addRapport(rapport?: Rapport): void {
     const group = this.fb.group({
-      year: [rapport?.year || '', Validators.required],
-      title: [rapport?.title || '', Validators.required],
+      year: [rapport?.year || ''], // Removed required validator to allow saving incomplete forms
+      title: [rapport?.title || ''], // Removed required validator to allow saving incomplete forms
       downloadUrl: [rapport?.downloadUrl || '']
     });
     this.rapports.push(group);
@@ -70,6 +115,21 @@ export class AdminRapportsAnnuelsFormComponent implements OnInit {
 
   removeRapport(index: number): void {
     this.rapports.removeAt(index);
+  }
+
+  hasTranslation(lang: string): boolean {
+    const langGroup = this.getLanguageFormGroup(lang);
+    return !!(langGroup.get('heroTitle')?.value || langGroup.get('heroSubtitle')?.value);
+  }
+
+  isLanguageFormValid(lang: string): boolean {
+    const langGroup = this.getLanguageFormGroup(lang);
+    return langGroup.valid;
+  }
+
+  getActiveLanguageName(): string {
+    const lang = this.languages.find(l => l.code === this.activeLanguage);
+    return lang?.name || 'Français';
   }
 
   loadPage(): void {
@@ -102,35 +162,149 @@ export class AdminRapportsAnnuelsFormComponent implements OnInit {
   }
 
   loadDefaultData(): void {
-    this.form.patchValue({
+    // Load default data for all languages
+    ['fr', 'ar', 'en'].forEach(lang => {
+      const langGroup = this.getLanguageFormGroup(lang);
+      
+      if (lang === 'fr') {
+        langGroup.patchValue({
       heroTitle: 'Rapports Annuels',
       heroSubtitle: 'Rapports annuels de l\'Agence Nationale de la Recherche Scientifique et de l\'Innovation',
       sectionTitle: 'Rapports Annuels'
     });
+      } else if (lang === 'ar') {
+        langGroup.patchValue({
+          heroTitle: 'التقارير السنوية',
+          heroSubtitle: 'التقارير السنوية للوكالة الوطنية للبحث العلمي والابتكار',
+          sectionTitle: 'التقارير السنوية'
+        });
+      } else {
+        langGroup.patchValue({
+          heroTitle: 'Annual Reports',
+          heroSubtitle: 'Annual reports of the National Agency for Scientific Research and Innovation',
+          sectionTitle: 'Annual Reports'
+        });
+      }
 
     // Clear existing array
-    while (this.rapports.length) this.rapports.removeAt(0);
+      const rapportsArray = langGroup.get('rapports') as FormArray;
+      while (rapportsArray.length) rapportsArray.removeAt(0);
 
-    // Add default rapports
-    this.addRapport({ year: '2023', title: 'Rapport 2023', downloadUrl: '' });
-    this.addRapport({ year: '2022', title: 'Rapport 2022', downloadUrl: '' });
+      // Add default rapports only for French (can be translated later)
+      if (lang === 'fr') {
+        const defaultRapports = [
+          { year: '2023', title: 'Rapport 2023', downloadUrl: '' },
+          { year: '2022', title: 'Rapport 2022', downloadUrl: '' }
+        ];
+        defaultRapports.forEach(rapport => {
+          const group = this.fb.group({
+            year: [rapport.year], // Removed required validator to allow saving incomplete forms
+            title: [rapport.title], // Removed required validator to allow saving incomplete forms
+            downloadUrl: [rapport.downloadUrl]
+          });
+          rapportsArray.push(group);
+        });
+      }
+    });
   }
 
   populateForm(content: RapportsContent, page: PageDTO): void {
-    this.form.patchValue({
-      heroTitle: content.heroTitle || page.heroTitle || '',
-      heroSubtitle: content.heroSubtitle || page.heroSubtitle || '',
-      sectionTitle: content.sectionTitle || ''
+    // Handle both old format (without translations) and new format (with translations)
+    if (content.translations) {
+      // New format with translations - load each language separately
+      ['fr', 'ar', 'en'].forEach(lang => {
+        const langContent = content.translations[lang as 'fr' | 'ar' | 'en'];
+        const langGroup = this.getLanguageFormGroup(lang);
+        
+        if (langContent) {
+          // Load content for this language
+          langGroup.patchValue({
+            heroTitle: langContent.heroTitle || '',
+            heroSubtitle: langContent.heroSubtitle || '',
+            sectionTitle: langContent.sectionTitle || ''
     });
 
     // Clear existing array
-    while (this.rapports.length) this.rapports.removeAt(0);
+          const rapportsArray = langGroup.get('rapports') as FormArray;
+          while (rapportsArray.length) rapportsArray.removeAt(0);
 
-    // Populate array
-    if (content.rapports && content.rapports.length > 0) {
-      content.rapports.forEach(rapport => this.addRapport(rapport));
+          // Populate array for this language
+          if (langContent.rapports && langContent.rapports.length > 0) {
+            langContent.rapports.forEach(rapport => {
+              const group = this.fb.group({
+                year: [rapport.year], // Removed required validator to allow saving incomplete forms
+                title: [rapport.title], // Removed required validator to allow saving incomplete forms
+                downloadUrl: [rapport.downloadUrl || '']
+              });
+              rapportsArray.push(group);
+            });
+          }
+        } else {
+          // Language not found in translations, initialize with empty/default values
+          langGroup.patchValue({
+            heroTitle: '',
+            heroSubtitle: '',
+            sectionTitle: ''
+          });
+          const rapportsArray = langGroup.get('rapports') as FormArray;
+          while (rapportsArray.length) rapportsArray.removeAt(0);
+        }
+      });
     } else {
-      this.loadDefaultData();
+      // Old format - migrate to new format
+      // Only populate French with old content, leave Arabic and English empty for translation
+      const oldContent = content as any;
+      
+      // Populate French with old content
+      const frGroup = this.getLanguageFormGroup('fr');
+      frGroup.patchValue({
+        heroTitle: oldContent.heroTitle || page.heroTitle || '',
+        heroSubtitle: oldContent.heroSubtitle || page.heroSubtitle || '',
+        sectionTitle: oldContent.sectionTitle || ''
+      });
+      const frRapportsArray = frGroup.get('rapports') as FormArray;
+      while (frRapportsArray.length) frRapportsArray.removeAt(0);
+      if (oldContent.rapports && oldContent.rapports.length > 0) {
+        oldContent.rapports.forEach((rapport: Rapport) => {
+          const group = this.fb.group({
+            year: [rapport.year], // Removed required validator to allow saving incomplete forms
+            title: [rapport.title], // Removed required validator to allow saving incomplete forms
+            downloadUrl: [rapport.downloadUrl || '']
+          });
+          frRapportsArray.push(group);
+        });
+      }
+
+      // Initialize Arabic and English with default/empty values
+      ['ar', 'en'].forEach(lang => {
+        const langGroup = this.getLanguageFormGroup(lang);
+        if (lang === 'ar') {
+          langGroup.patchValue({
+            heroTitle: 'التقارير السنوية',
+            heroSubtitle: 'التقارير السنوية للوكالة الوطنية للبحث العلمي والابتكار',
+            sectionTitle: 'التقارير السنوية'
+          });
+        } else {
+          langGroup.patchValue({
+            heroTitle: 'Annual Reports',
+            heroSubtitle: 'Annual reports of the National Agency for Scientific Research and Innovation',
+            sectionTitle: 'Annual Reports'
+          });
+        }
+        const rapportsArray = langGroup.get('rapports') as FormArray;
+        while (rapportsArray.length) rapportsArray.removeAt(0);
+        // Copy rapports structure from French but leave titles empty for translation
+        if (oldContent.rapports && oldContent.rapports.length > 0) {
+          oldContent.rapports.forEach((rapport: Rapport) => {
+            const group = this.fb.group({
+              year: [rapport.year], // Keep same year - removed required validator to allow saving incomplete forms
+              title: [''], // Empty for translation - removed required validator to allow saving incomplete forms
+              downloadUrl: [rapport.downloadUrl || ''] // Keep same download URLs
+            });
+            rapportsArray.push(group);
+          });
+        }
+      });
     }
   }
 
@@ -165,81 +339,201 @@ export class AdminRapportsAnnuelsFormComponent implements OnInit {
     this.errorMessage = '';
     const rapportGroup = this.rapports.at(index) as FormGroup;
     
+    console.log('Uploading document:', {
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type
+    });
+    
     this.articleService.uploadDocument(file).subscribe({
       next: (response) => {
+        console.log('Upload successful:', response);
         rapportGroup.patchValue({ downloadUrl: response.url });
         this.errorMessage = '';
       },
       error: (error) => {
-        console.error('Upload error:', error);
-        this.errorMessage = error.error?.error || 'Erreur lors du téléchargement du fichier';
+        console.error('Upload error details:', {
+          status: error.status,
+          statusText: error.statusText,
+          message: error.message,
+          error: error.error,
+          url: error.url
+        });
+        
+        let errorMsg = 'Erreur lors du téléchargement du fichier. ';
+        if (error.status === 0) {
+          errorMsg += 'Impossible de se connecter au serveur. Vérifiez que le backend est en cours d\'exécution.';
+        } else if (error.status === 401) {
+          errorMsg += 'Authentification requise. Veuillez vous connecter.';
+        } else if (error.status === 403) {
+          errorMsg += 'Accès refusé. Vous devez être connecté avec un compte ADMIN ou EDITOR.';
+        } else if (error.status === 413 || error.status === 400) {
+          // Handle both 413 (Payload Too Large) and 400 (if backend returns 400 for size)
+          errorMsg = error.error?.error || error.error?.message || 'Le fichier est trop volumineux. Taille maximale: 50MB.';
+        } else if (error.status === 400) {
+          errorMsg += error.error?.error || 'Fichier invalide. Veuillez sélectionner un fichier PDF, DOC ou DOCX.';
+        } else if (error.status >= 500) {
+          errorMsg += 'Erreur serveur: ' + (error.error?.error || error.message || 'Veuillez réessayer plus tard.');
+        } else {
+          errorMsg += error.error?.error || error.error?.message || error.message || 'Veuillez réessayer.';
+        }
+        this.errorMessage = errorMsg;
       }
     });
   }
 
   onSubmit(): void {
-    if (this.form.invalid) {
-      this.errorMessage = 'Veuillez remplir tous les champs requis';
-      return;
-    }
+    // Always save all languages, even if incomplete or empty
+    const translationsToSave: any = {};
+    
+    ['fr', 'ar', 'en'].forEach(lang => {
+      const langGroup = this.getLanguageFormGroup(lang);
+      const langValue = langGroup.value;
+      
+      // Filter out empty rapports (rapports without title or year)
+      const validRapports = (langValue.rapports || []).filter((rapport: any) => 
+        rapport && rapport.title && rapport.title.trim() && rapport.year && rapport.year.trim()
+      );
+      
+      // Always save all languages, even if empty
+      translationsToSave[lang] = {
+        heroTitle: langValue.heroTitle || '',
+        heroSubtitle: langValue.heroSubtitle || '',
+        sectionTitle: langValue.sectionTitle || '',
+        rapports: validRapports
+      };
+    });
 
     this.isSaving = true;
     this.errorMessage = '';
-
-    const formValue = this.form.value;
     
     const content: RapportsContent = {
-      heroTitle: formValue.heroTitle,
-      heroSubtitle: formValue.heroSubtitle,
-      sectionTitle: formValue.sectionTitle,
-      rapports: formValue.rapports || []
+      translations: translationsToSave
     };
 
+    // Use French title as default for page title, fallback to first available language
+    const frGroup = this.getLanguageFormGroup('fr');
+    let pageTitle = frGroup.get('heroTitle')?.value?.trim();
+    let heroTitle = frGroup.get('heroTitle')?.value?.trim() || '';
+    let heroSubtitle = frGroup.get('heroSubtitle')?.value?.trim() || '';
+    
+    // If French is not available, use first available language
+    if (!pageTitle && translationsToSave['ar']?.heroTitle?.trim()) {
+      pageTitle = translationsToSave['ar'].heroTitle.trim();
+      heroTitle = translationsToSave['ar'].heroTitle.trim();
+      heroSubtitle = translationsToSave['ar'].heroSubtitle?.trim() || '';
+    } else if (!pageTitle && translationsToSave['en']?.heroTitle?.trim()) {
+      pageTitle = translationsToSave['en'].heroTitle.trim();
+      heroTitle = translationsToSave['en'].heroTitle.trim();
+      heroSubtitle = translationsToSave['en'].heroSubtitle?.trim() || '';
+    }
+    
+    // Ensure pageTitle is never empty (backend requires non-blank title)
+    pageTitle = pageTitle?.trim() || 'Rapports Annuels';
+    
+    // Ensure heroTitle and heroSubtitle are set (can be empty strings)
+    if (!heroTitle) {
+      heroTitle = pageTitle; // Use pageTitle as fallback
+    }
+
     const updateData: PageUpdateDTO = {
-      title: 'Rapports Annuels',
-      heroTitle: formValue.heroTitle,
-      heroSubtitle: formValue.heroSubtitle,
+      title: pageTitle,
+      heroTitle: heroTitle,
+      heroSubtitle: heroSubtitle,
       content: JSON.stringify(content),
       pageType: 'STRUCTURED',
       isPublished: true,
       isActive: true
     };
 
+    console.log('Saving page with data:', {
+      pageId: this.pageId,
+      updateData: {
+        ...updateData,
+        content: content // Log parsed content, not stringified
+      }
+    });
+
     if (this.pageId) {
       this.pageService.updatePage(this.pageId, updateData).subscribe({
-        next: () => {
+        next: (response) => {
+          console.log('Page updated successfully:', response);
           this.isSaving = false;
           this.router.navigate(['/admin/pages']);
         },
         error: (error) => {
           this.isSaving = false;
-          this.errorMessage = 'Erreur lors de l\'enregistrement de la page';
           console.error('Error saving page:', error);
+          console.error('Error details:', {
+            status: error.status,
+            statusText: error.statusText,
+            message: error.message,
+            error: error.error
+          });
+          
+          let errorMsg = 'Erreur lors de l\'enregistrement de la page. ';
+          if (error.status === 0) {
+            errorMsg += 'Impossible de se connecter au serveur.';
+          } else if (error.status === 400) {
+            errorMsg += error.error?.message || error.error?.error || 'Données invalides.';
+          } else if (error.status === 401) {
+            errorMsg += 'Authentification requise.';
+          } else if (error.status === 403) {
+            errorMsg += 'Accès refusé.';
+          } else if (error.status >= 500) {
+            errorMsg += 'Erreur serveur. Veuillez réessayer plus tard.';
+          } else {
+            errorMsg += error.error?.message || error.error?.error || error.message || 'Veuillez réessayer.';
+          }
+          this.errorMessage = errorMsg;
         }
       });
     } else {
       this.pageService.createPage({
         slug: 'rapports-annuels',
-        title: 'Rapports Annuels',
-        heroTitle: formValue.heroTitle,
-        heroSubtitle: formValue.heroSubtitle,
+        title: pageTitle,
+        heroTitle: heroTitle,
+        heroSubtitle: heroSubtitle,
         content: JSON.stringify(content),
         pageType: 'STRUCTURED',
         isPublished: true,
         isActive: true
       }).subscribe({
-        next: () => {
+        next: (response) => {
+          console.log('Page created successfully:', response);
           this.isSaving = false;
           this.router.navigate(['/admin/pages']);
         },
         error: (error) => {
           this.isSaving = false;
-          this.errorMessage = 'Erreur lors de la création de la page';
           console.error('Error creating page:', error);
+          console.error('Error details:', {
+            status: error.status,
+            statusText: error.statusText,
+            message: error.message,
+            error: error.error
+          });
+          
+          let errorMsg = 'Erreur lors de la création de la page. ';
+          if (error.status === 0) {
+            errorMsg += 'Impossible de se connecter au serveur.';
+          } else if (error.status === 400) {
+            errorMsg += error.error?.message || error.error?.error || 'Données invalides.';
+          } else if (error.status === 401) {
+            errorMsg += 'Authentification requise.';
+          } else if (error.status === 403) {
+            errorMsg += 'Accès refusé.';
+          } else if (error.status >= 500) {
+            errorMsg += 'Erreur serveur. Veuillez réessayer plus tard.';
+          } else {
+            errorMsg += error.error?.message || error.error?.error || error.message || 'Veuillez réessayer.';
+          }
+          this.errorMessage = errorMsg;
         }
       });
     }
   }
+
 
   onCancel(): void {
     this.router.navigate(['/admin/pages']);

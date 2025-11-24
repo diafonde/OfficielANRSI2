@@ -1,0 +1,184 @@
+<div class="contact-messages-page">
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Contact Messages</h1>
+      <p>Manage and respond to contact form submissions</p>
+    </div>
+    <div class="header-stats">
+      <span class="stat-badge unread" *ngIf="getUnreadCount() > 0">
+        <i class="fas fa-envelope"></i>
+        {{ getUnreadCount() }} unread
+      </span>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input
+        type="text"
+        placeholder="Search messages..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearchChange()"
+        class="search-input"
+      >
+    </div>
+    <div class="filter-buttons">
+      <button
+        class="filter-btn"
+        [class.active]="filterStatus === 'all'"
+        (click)="filterStatus = 'all'; onFilterChange()"
+      >
+        All ({{ messages.length }})
+      </button>
+      <button
+        class="filter-btn"
+        [class.active]="filterStatus === 'unread'"
+        (click)="filterStatus = 'unread'; onFilterChange()"
+      >
+        Unread ({{ getUnreadCount() }})
+      </button>
+      <button
+        class="filter-btn"
+        [class.active]="filterStatus === 'read'"
+        (click)="filterStatus = 'read'; onFilterChange()"
+      >
+        Read ({{ messages.length - getUnreadCount() }})
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div class="error-message" *ngIf="errorMessage">
+    <i class="fas fa-exclamation-circle"></i>
+    {{ errorMessage }}
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading" *ngIf="isLoading">
+    <i class="fas fa-spinner fa-spin"></i>
+    Loading messages...
+  </div>
+
+  <!-- Messages List -->
+  <div class="messages-container" *ngIf="!isLoading">
+    <div class="messages-list" *ngIf="filteredMessages.length > 0">
+      <div
+        class="message-item"
+        [class.unread]="!message.isRead"
+        [class.selected]="selectedMessage?.id === message.id"
+        *ngFor="let message of filteredMessages"
+        (click)="viewMessage(message)"
+      >
+        <div class="message-header">
+          <div class="message-info">
+            <h3>{{ message.name }}</h3>
+            <span class="message-email">{{ message.email }}</span>
+          </div>
+          <div class="message-meta">
+            <span class="message-date">{{ formatDate(message.createdAt) }}</span>
+            <span class="read-badge" [class.unread]="!message.isRead">
+              {{ message.isRead ? 'Read' : 'Unread' }}
+            </span>
+          </div>
+        </div>
+        <div class="message-subject">{{ message.subject }}</div>
+        <div class="message-preview">{{ message.message.substring(0, 100) }}{{ message.message.length > 100 ? '...' : '' }}</div>
+        <div class="message-actions" (click)="$event.stopPropagation()">
+          <button
+            class="btn btn-sm btn-outline"
+            *ngIf="!message.isRead"
+            (click)="markAsRead(message)"
+            title="Mark as read"
+          >
+            <i class="fas fa-check"></i>
+            Mark as read
+          </button>
+          <button
+            class="btn btn-sm btn-danger"
+            (click)="deleteMessage(message)"
+            title="Delete message"
+          >
+            <i class="fas fa-trash"></i>
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="filteredMessages.length === 0">
+      <i class="fas fa-inbox"></i>
+      <h3>No messages found</h3>
+      <p *ngIf="filterStatus !== 'all'">Try changing the filter or search term</p>
+      <p *ngIf="filterStatus === 'all'">No contact messages have been submitted yet</p>
+    </div>
+  </div>
+
+  <!-- Message Detail View -->
+  <div class="message-detail-overlay" *ngIf="selectedMessage" (click)="closeMessageView()">
+    <div class="message-detail" (click)="$event.stopPropagation()">
+      <div class="detail-header">
+        <h2>Message Details</h2>
+        <button class="close-btn" (click)="closeMessageView()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="detail-content">
+        <div class="detail-section">
+          <label>From:</label>
+          <div class="detail-value">
+            <strong>{{ selectedMessage.name }}</strong>
+            <span class="email">{{ selectedMessage.email }}</span>
+          </div>
+        </div>
+        <div class="detail-section">
+          <label>Subject:</label>
+          <div class="detail-value">{{ selectedMessage.subject }}</div>
+        </div>
+        <div class="detail-section">
+          <label>Date:</label>
+          <div class="detail-value">{{ formatDate(selectedMessage.createdAt) }}</div>
+        </div>
+        <div class="detail-section">
+          <label>Status:</label>
+          <div class="detail-value">
+            <span class="read-badge" [class.unread]="!selectedMessage.isRead">
+              {{ selectedMessage.isRead ? 'Read' : 'Unread' }}
+            </span>
+          </div>
+        </div>
+        <div class="detail-section">
+          <label>Message:</label>
+          <div class="detail-value message-text">{{ selectedMessage.message }}</div>
+        </div>
+        <div class="detail-actions">
+          <a
+            [href]="'mailto:' + selectedMessage.email + '?subject=Re: ' + selectedMessage.subject"
+            class="btn btn-primary"
+            target="_blank"
+          >
+            <i class="fas fa-reply"></i>
+            Reply via Email
+          </a>
+          <button
+            class="btn btn-outline"
+            *ngIf="!selectedMessage.isRead"
+            (click)="markAsRead(selectedMessage)"
+          >
+            <i class="fas fa-check"></i>
+            Mark as read
+          </button>
+          <button
+            class="btn btn-danger"
+            (click)="deleteMessage(selectedMessage)"
+          >
+            <i class="fas fa-trash"></i>
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

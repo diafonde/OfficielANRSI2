@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { Subscription } from 'rxjs';
 import { PageService, PageDTO } from '../../services/page.service';
 
 interface TextJuridique {
@@ -9,11 +10,19 @@ interface TextJuridique {
   downloadUrl?: string;
 }
 
-interface TextsJuridiquesContent {
+interface TextsJuridiquesLanguageContent {
   heroTitle: string;
   heroSubtitle: string;
   sectionTitle: string;
   texts: TextJuridique[];
+}
+
+interface TextsJuridiquesContent {
+  translations: {
+    fr: TextsJuridiquesLanguageContent;
+    ar: TextsJuridiquesLanguageContent;
+    en: TextsJuridiquesLanguageContent;
+  };
 }
 
 @Component({
@@ -23,90 +32,160 @@ interface TextsJuridiquesContent {
   templateUrl: './texts-juridiques.component.html',
   styleUrls: ['./texts-juridiques.component.scss']
 })
-export class TextsJuridiquesComponent implements OnInit {
+export class TextsJuridiquesComponent implements OnInit, OnDestroy {
   page: PageDTO | null = null;
-  heroTitle: string = '';
-  heroSubtitle: string = '';
-  sectionTitle: string = '';
-  texts: TextJuridique[] = [];
+  content: TextsJuridiquesContent | null = null;
+  displayContent: TextsJuridiquesLanguageContent | null = null;
   isLoading = true;
+  currentLang = 'fr';
+  private langSubscription?: Subscription;
 
-  constructor(private pageService: PageService) {}
-  
-  defaultTexts: TextJuridique[] = [
-    {
-      title: 'Décret n:2020-066/PM/M.E.S.R.S.T.I.C/M.F/ portant création d\'un établissement public à caractère administratif dénommé, Agence nationale de la recherche scientifique et de l\'innovation et fixant les régles de son organisation et de son fonctionnement',
-      downloadUrl: '/uploads/decret-2020-066.pdf'
-    },
-    {
-      title: 'Arrêté conjoint n:001102/MF/MESRSTIC fixant le nomenclature des recettes et dépenses et le montant pour chaque dépense du compte d\'affectation spéciale de la recherche scientifique et l\'innovation.',
-      downloadUrl: '/uploads/arrete-001102.pdf'
-    },
-    {
-      title: 'Décret n: 2015-119 / PM/2015 fixant la composition et le fonctionnement du conseil national de l\'Enseignement Supérieur et de la recherche scientifique (CNESRS).',
-      downloadUrl: '/uploads/decret-2015-119.pdf'
-    },
-    {
-      title: 'Arrêté n:0316 / MESRS, fixant les régles d\'organisation des des sociétés savantes',
-      downloadUrl: '/uploads/arrete-0316.pdf'
-    },
-    {
-      title: 'Décret n: 2020-070/PM portant modification de certaines dispositions du décret n:2006-126 portant statut des enseignants chercheurs universitaires et hospitalo-universitaires modifié par le décret n:2019-115/PM du 11 juin 2019',
-      downloadUrl: '/uploads/decret-2020-070.pdf'
-    },
-    {
-      title: 'Décret n:2017-093/PM/MESRS/CI/2017, portant création de ( l\'autorité mauritanienne d\'Assurance-qualité de l\'enseignement supérieur ) et fixant les régles de son organisation et fonctionnement .',
-      downloadUrl: '/uploads/decret-2017-093.pdf'
-    },
-    {
-      title: 'Arrêté n:0863/ portant création des écoles doctorales à L\'Université de nouakchott AL-Aasriya et fixant leur organisation et leurs régles de fonctionnement',
-      downloadUrl: '/uploads/arrete-0863.pdf'
-    }
-  ];
+  constructor(
+    private pageService: PageService,
+    private translate: TranslateService
+  ) {}
 
   ngOnInit(): void {
+    // Get current language
+    this.currentLang = this.translate.currentLang || this.translate.defaultLang || 'fr';
+    
+    // Subscribe to language changes
+    this.langSubscription = this.translate.onLangChange.subscribe(event => {
+      this.currentLang = event.lang;
+      this.updateTranslatedContent();
+    });
+
     this.loadPage();
+  }
+
+  ngOnDestroy(): void {
+    if (this.langSubscription) {
+      this.langSubscription.unsubscribe();
+    }
+  }
+
+  private updateTranslatedContent(): void {
+    if (!this.page) return;
+    
+    // Try to get translation from page.translations (new system)
+    const translation = this.page.translations?.[this.currentLang];
+    if (translation && translation.content) {
+      try {
+        const parsedContent = JSON.parse(translation.content);
+        this.displayContent = parsedContent;
+        if (translation.heroTitle) this.page.heroTitle = translation.heroTitle;
+        if (translation.heroSubtitle) this.page.heroSubtitle = translation.heroSubtitle;
+        if (translation.title) this.page.title = translation.title;
+        return;
+      } catch (e) {
+        console.error('Error parsing translated content:', e);
+      }
+    }
+    
+    // Fallback to old format if available
+    if (this.content) {
+      const langContent = this.content.translations[this.currentLang as 'fr' | 'ar' | 'en'];
+      this.displayContent = langContent || this.content.translations.fr;
+    } else {
+      this.loadContentFromPage();
+    }
   }
 
   loadPage(): void {
     this.pageService.getPageBySlug('texts-juridiques').subscribe({
       next: (page) => {
         this.page = page;
-        this.parseContent();
+        // Try new translation system first
+        if (page.translations && Object.keys(page.translations).length > 0) {
+          this.updateTranslatedContent();
+        } else if (page.content) {
+          // Fallback to old format
+          try {
+            const parsedContent = JSON.parse(page.content);
+            if (parsedContent.translations) {
+              this.content = parsedContent;
+            } else {
+              const oldContent: TextsJuridiquesLanguageContent = parsedContent;
+              this.content = {
+                translations: {
+                  fr: oldContent,
+                  ar: this.getEmptyLanguageContent(),
+                  en: this.getEmptyLanguageContent()
+                }
+              };
+            }
+            this.updateTranslatedContent();
+          } catch (e) {
+            console.error('Error parsing content:', e);
+            // Show empty state - data should come from database
+            this.content = null;
+            this.displayContent = null;
+          }
+        } else {
+          // Show empty state - data should come from database
+          this.content = null;
+          this.displayContent = null;
+        }
         this.isLoading = false;
       },
       error: (error) => {
         console.error('Error loading page:', error);
-        this.loadDefaultContent();
+        // Show empty state - data should come from database
+        this.content = null;
+        this.displayContent = null;
         this.isLoading = false;
       }
     });
   }
 
-  parseContent(): void {
-    if (!this.page?.content) {
-      this.loadDefaultContent();
-      return;
-    }
-
-    try {
-      const content: TextsJuridiquesContent = JSON.parse(this.page.content);
-      
-      this.heroTitle = content.heroTitle || 'Textes Juridiques';
-      this.heroSubtitle = content.heroSubtitle || 'Textes juridiques régissant l\'Agence Nationale de la Recherche Scientifique et de l\'Innovation';
-      this.sectionTitle = content.sectionTitle || 'Textes Juridiques';
-      this.texts = content.texts || this.defaultTexts;
-    } catch (e) {
-      console.error('Error parsing content:', e);
-      this.loadDefaultContent();
+  loadContentFromPage(): void {
+    if (this.page?.content) {
+      try {
+        const parsedContent = JSON.parse(this.page.content);
+        if (parsedContent.translations) {
+          this.content = parsedContent;
+          this.updateTranslatedContent();
+        } else {
+          const oldContent: TextsJuridiquesLanguageContent = parsedContent;
+          this.displayContent = oldContent;
+        }
+      } catch (e) {
+        console.error('Error parsing content:', e);
+        // Show empty state - data should come from database
+        this.content = null;
+        this.displayContent = null;
+      }
+    } else {
+      // Show empty state - data should come from database
+      this.content = null;
+      this.displayContent = null;
     }
   }
 
-  loadDefaultContent(): void {
-    this.heroTitle = 'Textes Juridiques';
-    this.heroSubtitle = 'Textes juridiques régissant l\'Agence Nationale de la Recherche Scientifique et de l\'Innovation';
-    this.sectionTitle = 'Textes Juridiques';
-    this.texts = this.defaultTexts;
+  private getEmptyLanguageContent(): TextsJuridiquesLanguageContent {
+    return {
+      heroTitle: '',
+      heroSubtitle: '',
+      sectionTitle: '',
+      texts: []
+    };
+  }
+
+  // Getters for template
+  get heroTitle(): string {
+    return this.displayContent?.heroTitle || '';
+  }
+
+  get heroSubtitle(): string {
+    return this.displayContent?.heroSubtitle || '';
+  }
+
+  get sectionTitle(): string {
+    return this.displayContent?.sectionTitle || '';
+  }
+
+  get texts(): TextJuridique[] {
+    return this.displayContent?.texts || [];
   }
 
   downloadText(text: TextJuridique): void {
@@ -115,4 +194,3 @@ export class TextsJuridiquesComponent implements OnInit {
     }
   }
 }
-

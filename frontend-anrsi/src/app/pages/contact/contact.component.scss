@@ -158,6 +158,28 @@
   box-shadow: 0 8px 20px rgba(10, 61, 98, 0.3);
 }
 
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+  padding: var(--space-4);
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  border-radius: 12px;
+  color: #991b1b;
+  border-left: 4px solid #dc2626;
+}
+
+.error-message svg {
+  color: #dc2626;
+  flex-shrink: 0;
+}
+
+.error-message p {
+  margin: 0;
+  font-weight: 500;
+}
+
 .success-message {
   display: flex;
   align-items: center;
@@ -178,6 +200,12 @@
 .success-message p {
   margin: 0;
   font-weight: 500;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
 }
 
 .contact-info {

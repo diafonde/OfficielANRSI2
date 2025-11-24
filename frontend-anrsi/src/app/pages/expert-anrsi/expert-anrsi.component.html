@@ -1,7 +1,7 @@
 <div class="expert-hero">
   <div class="container">
-    <h1>{{ content?.heroTitle || 'Expert à l\'ANRSI' }}</h1>
-    <p>{{ content?.heroSubtitle || 'Rejoignez notre réseau d\'experts scientifiques et technologiques' }}</p>
+    <h1>{{ heroTitle || 'Expert à l\'ANRSI' }}</h1>
+    <p>{{ heroSubtitle || 'Rejoignez notre réseau d\'experts scientifiques et technologiques' }}</p>
   </div>
   <div class="hero-overlay"></div>
 </div>
@@ -16,7 +16,7 @@
   <section class="section expert-section">
     <div class="expert-content">
       <h2>{{ 'EXPERT_BECOME_TITLE' | translate }}</h2>
-      <p class="intro-text">{{ content.introText }}</p>
+      <p class="intro-text" *ngIf="content.introText">{{ content.introText }}</p>
       
       <div class="expert-requirements" *ngIf="content.requirements && content.requirements.length > 0">
         <h3>{{ 'EXPERT_PROFILE_REQUIRED' | translate }}</h3>
@@ -90,3 +90,12 @@
   </section>
 </div>
 
+<div class="container" *ngIf="!isLoading && !content">
+  <section class="section expert-section">
+    <div class="expert-content">
+      <div class="empty-state">
+        <p>{{ ('NO_CONTENT_AVAILABLE' | translate) || 'Aucun contenu disponible pour le moment.' }}</p>
+      </div>
+    </div>
+  </section>
+</div>

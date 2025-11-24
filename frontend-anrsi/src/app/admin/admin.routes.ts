@@ -27,6 +27,7 @@ import { AdminRapportsAnnuelsFormComponent } from './components/rapports-annuels
 import { AdminTextsJuridiquesFormComponent } from './components/texts-juridiques/admin-texts-juridiques-form.component';
 import { AdminPartnersFormComponent } from './components/partners/admin-partners-form.component';
 import { AdminStatisticsComponent } from './components/statistics/admin-statistics.component';
+import { AdminContactMessagesComponent } from './components/contact-messages/admin-contact-messages.component';
 
 
 
@@ -155,6 +156,10 @@ export const adminRoutes: Routes = [
           {
             path: 'statistics',
             component: AdminStatisticsComponent
+          },
+          {
+            path: 'contact-messages',
+            component: AdminContactMessagesComponent
           }
         ]
       }

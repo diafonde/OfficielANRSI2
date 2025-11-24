@@ -18,7 +18,6 @@
 <!-- Article Content -->
 <div class="article-detail-hero" *ngIf="article && !loading" [ngStyle]="{'background-image': 'url(' + (getAllImages()[0] || article.imageUrl) + ')'}">
   <div class="container">
-    <div class="article-category">{{ article.category }}</div>
     <h1>{{ displayTitle || article.title }}</h1>
     <div class="article-meta">
       <div class="article-author">
@@ -46,20 +45,16 @@
     
     <div class="article-images-gallery" *ngIf="getAllImages().length > 0">
       <div class="article-featured-image" *ngIf="getAllImages().length === 1">
-        <img [src]="getAllImages()[0]" [alt]="displayTitle || article.title" class="img-fluid" (error)="onImageError($event)">
+        <img [src]="getAllImages()[0]" [alt]="displayTitle || article.title" class="img-fluid" loading="eager" (error)="onImageError($event)">
       </div>
       <div class="article-images-grid" *ngIf="getAllImages().length > 1">
         <div class="article-image-item" *ngFor="let imageUrl of getAllImages(); let i = index">
-          <img [src]="imageUrl" [alt]="(displayTitle || article.title) + ' - Image ' + (i + 1)" class="img-fluid" (error)="onImageError($event)">
+          <img [src]="imageUrl" [alt]="(displayTitle || article.title) + ' - Image ' + (i + 1)" class="img-fluid" [loading]="i === 0 ? 'eager' : 'lazy'" (error)="onImageError($event)">
         </div>
       </div>
     </div>
     
     <div class="article-text" [innerHTML]="safeContent || displayContent || article.content"></div>
-    
-    <div class="article-tags">
-      <span *ngFor="let tag of article.tags" class="article-tag">{{ tag }}</span>
-    </div>
     
     <div class="article-attachment" *ngIf="article.attachmentUrl">
       <div class="attachment-header">
@@ -111,11 +106,11 @@
     <h2>{{ 'Related Articles' | translate }}</h2>
     <div class="grid grid-3">
       <div class="related-article-card" *ngFor="let relatedArticle of relatedArticles">
-        <img [src]="relatedArticle.imageUrl" [alt]="getTranslatedTitle(relatedArticle)" class="img-fluid">
+        <img [src]="relatedArticle.imageUrl" [alt]="getTranslatedTitle(relatedArticle)" class="img-fluid" loading="lazy">
         <div class="related-article-content">
           <h3><a [routerLink]="['/article', relatedArticle.id]">{{ getTranslatedTitle(relatedArticle) }}</a></h3>
           <div class="related-article-meta">
-            {{ relatedArticle.publishDate | date:'mediumDate' }} | {{ relatedArticle.category }}
+            {{ relatedArticle.publishDate | date:'mediumDate' }}
           </div>
         </div>
       </div>

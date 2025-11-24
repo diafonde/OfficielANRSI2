@@ -1,10 +1,10 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { ArticleCardComponent } from '../../components/article-card/article-card.component';
-import { ArticleService } from '../../services/article.service';
+import { ArticleService, PaginatedResponse } from '../../services/article.service';
 import { Article } from '../../models/article.model';
 
 @Component({
@@ -17,10 +17,18 @@ import { Article } from '../../models/article.model';
 export class ArticlesComponent implements OnInit, OnDestroy {
   articles: Article[] = [];
   filteredArticles: Article[] = [];
-  categories: string[] = [];
-  selectedCategory = '';
   searchTerm = '';
   currentLang = 'fr';
+  
+  // Pagination properties
+  currentPage = 0;
+  pageSize = 12;
+  totalPages = 0;
+  totalElements = 0;
+  loading = false;
+  hasMore = true;
+  initialLoad = true;
+  
   private langSubscription?: Subscription;
 
   constructor(
@@ -38,7 +46,20 @@ export class ArticlesComponent implements OnInit, OnDestroy {
       this.filterArticles();
     });
 
-    this.loadArticles();
+    this.loadArticles(true);
+  }
+  
+  @HostListener('window:scroll', ['$event'])
+  onScroll(): void {
+    if (this.loading || !this.hasMore || this.searchTerm) return;
+    
+    const scrollPosition = window.innerHeight + window.scrollY;
+    const pageHeight = document.documentElement.scrollHeight;
+    
+    // Load more when user scrolls within 300px of bottom
+    if (scrollPosition >= pageHeight - 300) {
+      this.loadMore();
+    }
   }
 
   ngOnDestroy(): void {
@@ -47,22 +68,79 @@ export class ArticlesComponent implements OnInit, OnDestroy {
     }
   }
 
-  loadArticles() {
-    this.articleService.getAllArticles().subscribe(articles => {
-      this.articles = articles;
-      this.filteredArticles = articles;
-      this.extractCategories();
+  loadArticles(reset: boolean = false) {
+    if (this.loading) return;
+    
+    this.loading = true;
+    if (reset) {
+      this.currentPage = 0;
+      this.articles = [];
+      this.filteredArticles = [];
+      this.hasMore = true;
+    }
+
+    const response = this.articleService.getAllArticles(this.currentPage, this.pageSize);
+    
+    response.subscribe({
+      next: (result) => {
+        this.loading = false;
+        this.initialLoad = false;
+        
+        // Check if it's a paginated response
+        if ('content' in result) {
+          const paginatedResult = result as PaginatedResponse<Article>;
+          if (reset) {
+            this.articles = paginatedResult.content;
+          } else {
+            this.articles = [...this.articles, ...paginatedResult.content];
+          }
+          this.totalPages = paginatedResult.totalPages;
+          this.totalElements = paginatedResult.totalElements;
+          this.hasMore = this.currentPage < paginatedResult.totalPages - 1;
+        } else {
+          // Backward compatibility: handle array response
+          const articlesArray = result as Article[];
+          if (reset) {
+            this.articles = articlesArray.sort((a, b) => {
+              const dateA = new Date(a.publishDate).getTime();
+              const dateB = new Date(b.publishDate).getTime();
+              return dateB - dateA;
+            });
+          } else {
+            this.articles = [...this.articles, ...articlesArray].sort((a, b) => {
+              const dateA = new Date(a.publishDate).getTime();
+              const dateB = new Date(b.publishDate).getTime();
+              return dateB - dateA;
+            });
+          }
+          this.hasMore = false; // No pagination info, assume all loaded
+        }
+        
+        this.filteredArticles = this.articles;
+      },
+      error: (error) => {
+        console.error('Error loading articles:', error);
+        this.loading = false;
+        this.initialLoad = false;
+      }
     });
   }
-
-  extractCategories() {
-    this.categories = [...new Set(this.articles.map(article => article.category))].sort();
+  
+  loadMore() {
+    if (this.hasMore && !this.loading && !this.searchTerm) {
+      this.currentPage++;
+      this.loadArticles(false);
+    }
   }
 
   filterArticles() {
+    // If search term is cleared, reload articles with pagination
+    if (!this.searchTerm && this.articles.length === 0) {
+      this.loadArticles(true);
+      return;
+    }
+    
     this.filteredArticles = this.articles.filter(article => {
-      const matchesCategory = !this.selectedCategory || article.category === this.selectedCategory;
-      
       // Get translated content for search
       const translation = this.getTranslation(article, this.currentLang);
       const searchText = this.searchTerm.toLowerCase();
@@ -71,10 +149,9 @@ export class ArticlesComponent implements OnInit, OnDestroy {
         translation.title.toLowerCase().includes(searchText) ||
         translation.excerpt.toLowerCase().includes(searchText) ||
         translation.content.toLowerCase().includes(searchText) ||
-        article.author.toLowerCase().includes(searchText) ||
-        article.tags.some(tag => tag.toLowerCase().includes(searchText));
+        article.author.toLowerCase().includes(searchText);
       
-      return matchesCategory && matchesSearch;
+      return matchesSearch;
     });
   }
 
@@ -96,7 +173,6 @@ export class ArticlesComponent implements OnInit, OnDestroy {
   }
 
   clearFilters() {
-    this.selectedCategory = '';
     this.searchTerm = '';
     this.filteredArticles = this.articles;
   }

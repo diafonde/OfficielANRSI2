@@ -151,8 +151,6 @@ export class ArticleAdminService {
       imageUrl: articleData.imageUrl,
       attachmentUrl: articleData.attachmentUrl || null,
       images: articleData.images || [],
-      category: articleData.category,
-      tags: articleData.tags || [],
       featured: articleData.featured || false,
       published: articleData.published !== false
     };
@@ -218,8 +216,6 @@ export class ArticleAdminService {
       imageUrl: articleData.imageUrl,
       attachmentUrl: articleData.attachmentUrl || null,
       images: articleData.images || [],
-      category: articleData.category,
-      tags: articleData.tags || [],
       featured: articleData.featured || false,
       published: articleData.published !== false
     };

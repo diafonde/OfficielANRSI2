@@ -14,10 +14,30 @@
     <i class="fas fa-spinner fa-spin"></i> Chargement...
   </div>
 
-  <form [formGroup]="form" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+  <form [formGroup]="form" *ngIf="!isLoading">
+    <!-- Language Tabs -->
+    <div class="language-tabs">
+      <button
+        *ngFor="let lang of languages"
+        type="button"
+        class="lang-tab"
+        [class.active]="activeLanguage === lang.code"
+        [class.has-content]="hasTranslation(lang.code)"
+        [class.valid]="isLanguageFormValid(lang.code)"
+        (click)="switchLanguage(lang.code)">
+        <span class="lang-flag">{{ lang.flag }}</span>
+        <span class="lang-name">{{ lang.name }}</span>
+        <span class="lang-status">
+          <i *ngIf="isLanguageFormValid(lang.code)" class="fas fa-check-circle"></i>
+          <i *ngIf="!isLanguageFormValid(lang.code) && hasTranslation(lang.code)" class="fas fa-exclamation-circle"></i>
+        </span>
+      </button>
+    </div>
+
     <!-- Hero Section -->
     <div class="form-section">
-      <h2>Section Hero</h2>
+      <h2>Section Hero - {{ getActiveLanguageName() }}</h2>
+      <div [formGroup]="getActiveLanguageFormGroup()">
       <div class="form-group">
         <label>Titre Hero *</label>
         <input type="text" formControlName="heroTitle" class="form-control" />
@@ -25,21 +45,25 @@
       <div class="form-group">
         <label>Sous-titre Hero *</label>
         <input type="text" formControlName="heroSubtitle" class="form-control" />
+        </div>
       </div>
     </div>
 
     <!-- Content Section -->
     <div class="form-section">
-      <h2>Section Contenu</h2>
+      <h2>Section Contenu - {{ getActiveLanguageName() }}</h2>
+      <div [formGroup]="getActiveLanguageFormGroup()">
       <div class="form-group">
         <label>Titre de la section *</label>
         <input type="text" formControlName="sectionTitle" class="form-control" />
+        </div>
       </div>
     </div>
 
     <!-- Rapports Section -->
     <div class="form-section">
-      <h2>Rapports Annuels</h2>
+      <h2>Rapports Annuels - {{ getActiveLanguageName() }}</h2>
+      <div [formGroup]="getActiveLanguageFormGroup()">
       <div formArrayName="rapports" *ngFor="let rapport of rapports.controls; let i = index">
         <div [formGroupName]="i" class="nested-form-group">
           <div class="form-row">
@@ -60,7 +84,7 @@
             <div class="file-upload-container">
               <input
                 type="file"
-                [id]="'file-' + i"
+                  [id]="'file-' + activeLanguage + '-' + i"
                 accept=".pdf,.doc,.docx"
                 (change)="onFileSelected($event, i)"
                 class="file-input"
@@ -85,11 +109,12 @@
       <button type="button" (click)="addRapport()" class="btn btn-primary">
         <i class="fas fa-plus"></i> Ajouter un rapport
       </button>
+      </div>
     </div>
 
     <div class="form-actions">
       <button type="button" (click)="onCancel()" class="btn btn-secondary">Annuler</button>
-      <button type="submit" class="btn btn-primary" [disabled]="isSaving || form.invalid">
+      <button type="button" (click)="onSubmit()" class="btn btn-primary" [disabled]="isSaving">
         <i class="fas fa-save"></i> {{ isSaving ? 'Enregistrement...' : 'Enregistrer les modifications' }}
       </button>
     </div>

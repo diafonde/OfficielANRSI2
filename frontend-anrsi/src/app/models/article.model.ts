@@ -14,8 +14,6 @@ export interface Article {
   imageUrl: string;
   attachmentUrl?: string;
   images?: string[];
-  category: string;
-  tags: string[];
   language?: 'fr' | 'ar' | 'en';
   translationGroupId?: number;
   translations?: {

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ArticleCardComponent } from '../../components/article-card/article-card.component';
-import { ArticleService } from '../../services/article.service';
+import { ArticleService, PaginatedResponse } from '../../services/article.service';
 import { Article } from '../../models/article.model';
 
 @Component({
@@ -180,9 +180,21 @@ export class ResearchCategoriesComponent implements OnInit {
   constructor(private articleService: ArticleService) {}
   
   ngOnInit(): void {
-    this.articleService.getAllArticles().subscribe((articles: Article[]) => {
-      this.allArticles = articles;
-      this.filterArticles();
+    this.articleService.getAllArticles().subscribe({
+      next: (result) => {
+        // Handle both paginated and array responses
+        if ('content' in result) {
+          this.allArticles = (result as PaginatedResponse<Article>).content;
+        } else {
+          this.allArticles = result as Article[];
+        }
+        this.filterArticles();
+      },
+      error: (error) => {
+        console.error('Error loading articles:', error);
+        this.allArticles = [];
+        this.filterArticles();
+      }
     });
   }
   

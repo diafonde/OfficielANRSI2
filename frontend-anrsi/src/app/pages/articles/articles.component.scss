@@ -153,6 +153,41 @@
   background-color: var(--primary-600);
 }
 
+.loading-indicator {
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+  
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--neutral-200);
+    border-top-color: var(--primary-500);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto var(--space-4);
+  }
+  
+  p {
+    color: var(--neutral-600);
+    font-size: var(--text-sm);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.load-more-container {
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+  
+  .btn {
+    min-width: 200px;
+  }
+}
+
 @media (max-width: 768px) {
   .articles-filters {
     flex-direction: column;

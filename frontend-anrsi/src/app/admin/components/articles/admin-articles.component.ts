@@ -4,11 +4,12 @@ import { RouterLink } from '@angular/router';
 import { Observable, map, BehaviorSubject, combineLatest, of, startWith } from 'rxjs';
 import { ArticleAdminService } from '../../services/article-admin.service';
 import { Article } from '../../../models/article.model';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-admin-articles',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslateModule],
   templateUrl: './admin-articles.component.html',
   styleUrls: ['./admin-articles.component.scss']
 })
@@ -17,7 +18,6 @@ export class AdminArticlesComponent implements OnInit {
   filteredArticles$: Observable<Article[]>;
   paginatedArticles$: Observable<Article[]>;
   searchTerm$ = new BehaviorSubject<string>('');
-  selectedCategory$ = new BehaviorSubject<string>('');
   currentPage$ = new BehaviorSubject<number>(1);
   itemsPerPage = 10;
   totalPages$ = new BehaviorSubject<number>(1);
@@ -34,7 +34,10 @@ export class AdminArticlesComponent implements OnInit {
     return this.totalPages$.value;
   }
 
-  constructor(private articleService: ArticleAdminService) {
+  constructor(
+    private articleService: ArticleAdminService,
+    private translate: TranslateService
+  ) {
     // Use the service's articles$ observable which automatically updates when articles change
     this.articles$ = this.articleService.articles$;
     // Initialize with empty observables, will be set in initializeFiltering
@@ -49,14 +52,13 @@ export class AdminArticlesComponent implements OnInit {
   }
 
   private initializeFiltering(): void {
-    // Create filtered articles observable that reacts to articles, search term, and category
+    // Create filtered articles observable that reacts to articles and search term
     this.filteredArticles$ = combineLatest([
       this.articles$,
-      this.searchTerm$.pipe(startWith('')),
-      this.selectedCategory$.pipe(startWith(''))
+      this.searchTerm$.pipe(startWith(''))
     ]).pipe(
-      map(([articles, searchTerm, selectedCategory]) => {
-        const filtered = this.applyFilters(articles, searchTerm, selectedCategory);
+      map(([articles, searchTerm]) => {
+        const filtered = this.applyFilters(articles, searchTerm);
         const totalPages = Math.max(1, Math.ceil(filtered.length / this.itemsPerPage));
         this.totalPages$.next(totalPages);
         
@@ -82,7 +84,7 @@ export class AdminArticlesComponent implements OnInit {
     );
   }
 
-  private applyFilters(articles: Article[], searchTerm: string, selectedCategory: string): Article[] {
+  private applyFilters(articles: Article[], searchTerm: string): Article[] {
     let filtered = [...articles];
 
     // Apply search filter
@@ -95,31 +97,28 @@ export class AdminArticlesComponent implements OnInit {
       );
     }
 
-    // Apply category filter
-    if (selectedCategory) {
-      filtered = filtered.filter(article =>
-        article.category === selectedCategory
-      );
-    }
-
     return filtered;
   }
 
   deleteArticle(id: number): void {
-    if (confirm('Are you sure you want to delete this article?')) {
-      this.articleService.deleteArticle(id).subscribe({
-        next: (success) => {
-          if (success) {
-            console.log('Article deleted successfully');
-            // The service automatically updates articles$ via BehaviorSubject
+    this.translate.get('ADMIN_ARTICLES_DELETE_CONFIRM').subscribe(confirmMsg => {
+      if (confirm(confirmMsg)) {
+        this.articleService.deleteArticle(id).subscribe({
+          next: (success) => {
+            if (success) {
+              console.log('Article deleted successfully');
+              // The service automatically updates articles$ via BehaviorSubject
+            }
+          },
+          error: (error) => {
+            console.error('Error deleting article:', error);
+            this.translate.get('ADMIN_ARTICLES_DELETE_ERROR').subscribe(errorMsg => {
+              alert(errorMsg);
+            });
           }
-        },
-        error: (error) => {
-          console.error('Error deleting article:', error);
-          alert('Failed to delete article. Please try again.');
-        }
-      });
-    }
+        });
+      }
+    });
   }
 
   toggleFeatured(article: Article): void {
@@ -131,7 +130,9 @@ export class AdminArticlesComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error toggling featured status:', error);
-        alert('Failed to update featured status. Please try again.');
+        this.translate.get('ADMIN_ARTICLES_FEATURED_ERROR').subscribe(errorMsg => {
+          alert(errorMsg);
+        });
       }
     });
   }
@@ -158,12 +159,6 @@ export class AdminArticlesComponent implements OnInit {
     const target = event.target as HTMLInputElement;
     this.searchTerm$.next(target.value.toLowerCase());
     this.currentPage = 1; // Reset to first page on search
-  }
-
-  onCategoryChange(event: Event): void {
-    const target = event.target as HTMLSelectElement;
-    this.selectedCategory$.next(target.value);
-    this.currentPage = 1; // Reset to first page on filter change
   }
 
   goToPage(page: number): void {
@@ -200,11 +195,6 @@ export class AdminArticlesComponent implements OnInit {
     }
 
     return pages;
-  }
-
-  getCategories(): string[] {
-    // This would typically come from a service
-    return ['Research', 'Environment', 'Development', 'Technology', 'Collaboration'];
   }
 
   hasTranslation(article: Article, lang: 'fr' | 'ar' | 'en'): boolean {

@@ -123,8 +123,7 @@ export class AdminArticleFormComponent implements OnInit {
             author: article.author,
             publishDate: this.formatDateForInput(article.publishDate),
             imageUrl: article.imageUrl,
-            category: article.category,
-            tags: article.tags?.join(', ') || '',
+            
             featured: article.featured || false,
             published: article.published !== false
           });

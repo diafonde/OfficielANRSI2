@@ -5,7 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { HeroSectionComponent } from '../../components/hero-section/hero-section.component';
 import { ArticleCardComponent } from '../../components/article-card/article-card.component';
-import { ArticleService } from '../../services/article.service';
+import { ArticleService, PaginatedResponse } from '../../services/article.service';
 import { ANRSIDataService, ANRSIArticle, ANRSIEvent, ANRSIVideo } from '../../services/anrsi-data.service';
 import { Article } from '../../models/article.model';
 import { SafePipe } from '../videos/safe.pipe';
@@ -43,6 +43,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   // Language and page loading
   currentLang = 'fr';
   langSubscription?: Subscription;
+  isRTL = false;
   
   researchAreas = [
     {
@@ -111,9 +112,13 @@ export class HomeComponent implements OnInit, OnDestroy {
     // Get current language
     this.currentLang = this.translate.currentLang || this.translate.defaultLang || 'fr';
     
+    // Check initial RTL state
+    this.isRTL = document.body.dir === 'rtl';
+    
     // Subscribe to language changes
     this.langSubscription = this.translate.onLangChange.subscribe(event => {
       this.currentLang = event.lang;
+      this.isRTL = document.body.dir === 'rtl';
       this.loadVideos();
     });
     
@@ -121,42 +126,29 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.updateSlidesPerView();
     this.updateVideosPerView();
     
-    // Load original articles
-    this.articleService.getFeaturedArticles().subscribe(articles => {
+    // Load critical data first (featured articles)
+    this.articleService.getFeaturedArticles(4).subscribe(articles => {
       this.featuredArticles = articles;
     });
     
-    // Load non-featured articles from backend
-    this.http.get<Article[]>('/api/articles/non-featured').subscribe({
-      next: (articles) => {
-        this.latestArticles = articles.slice(); // Use all non-featured articles
-        
-        // Start slideshow if we can scroll
-        if (this.canScroll()) {
-          this.startSlideshow();
-        }
-      },
-      error: (error) => {
-        console.error('Error loading non-featured articles:', error);
-        // Fallback to recent articles if non-featured endpoint fails
-        this.articleService.getRecentArticles().subscribe(articles => {
-          this.latestArticles = articles.slice();
-          if (this.canScroll()) {
-            this.startSlideshow();
-          }
-        });
-      }
-    });
+    // Load initial batch of non-featured articles (only first page - 6 articles)
+    this.loadArticlesPage(0, 6);
     
-    // Load ANRSI data
-    this.anrsiArticles = this.anrsiDataService.getFeaturedArticles();
-    this.upcomingEvents = this.anrsiDataService.getEvents();
+    // Defer non-critical data loading to improve initial page load
+    setTimeout(() => {
+      // Load ANRSI data (static, can be deferred)
+      this.anrsiArticles = this.anrsiDataService.getFeaturedArticles();
+      this.upcomingEvents = this.anrsiDataService.getEvents();
+    }, 200);
     
-    // Load videos from database
-    this.loadVideos();
+    // Defer videos and partners loading
+    setTimeout(() => {
+      this.loadVideos();
+    }, 300);
     
-    // Load partners from database
-    this.loadPartners();
+    setTimeout(() => {
+      this.loadPartners();
+    }, 400);
     
     // Ensure no auto-slideshow is running - videos will only move when user clicks navigation buttons
     this.stopVideoSlideshow();
@@ -217,6 +209,20 @@ export class HomeComponent implements OnInit, OnDestroy {
   
   getTransformPercentage(): number {
     return 100 / this.slidesPerView;
+  }
+
+  getTransformValue(): string {
+    const percentage = this.currentSlide * this.getTransformPercentage();
+    // In RTL, use positive translateX instead of negative
+    const sign = this.isRTL ? '' : '-';
+    return `translateX(${sign}${percentage}%)`;
+  }
+
+  getVideoTransformValue(): string {
+    const percentage = this.currentVideoSlide * this.getVideoTransformPercentage();
+    // In RTL, use positive translateX instead of negative
+    const sign = this.isRTL ? '' : '-';
+    return `translateX(${sign}${percentage}%)`;
   }
 
   ngOnDestroy(): void {
@@ -600,5 +606,38 @@ export class HomeComponent implements OnInit, OnDestroy {
       { name: 'Japon', logo: 'https://upload.wikimedia.org/wikipedia/commons/9/9e/Flag_of_Japan.svg' },
       { name: 'Sénégal', logo: 'https://upload.wikimedia.org/wikipedia/commons/f/fd/Flag_of_Senegal.svg' },
     ];
+  }
+  
+  loadArticlesPage(page: number, size: number): void {
+    const response = this.articleService.getNonFeaturedArticles(page, size);
+    
+    response.subscribe({
+      next: (result) => {
+        // Check if it's a paginated response
+        if ('content' in result) {
+          const paginatedResult = result as PaginatedResponse<Article>;
+          this.latestArticles = paginatedResult.content;
+        } else {
+          // Backward compatibility: handle array response
+          const articlesArray = result as Article[];
+          this.latestArticles = articlesArray.slice(0, size);
+        }
+        
+        // Start slideshow if we can scroll
+        if (this.canScroll()) {
+          this.startSlideshow();
+        }
+      },
+      error: (error) => {
+        console.error('Error loading non-featured articles:', error);
+        // Fallback to recent articles if non-featured endpoint fails
+        this.articleService.getRecentArticles().subscribe(articles => {
+          this.latestArticles = articles.slice(0, size);
+          if (this.canScroll()) {
+            this.startSlideshow();
+          }
+        });
+      }
+    });
   }
 }

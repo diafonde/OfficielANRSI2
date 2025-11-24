@@ -45,14 +45,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
     
-    @ExceptionHandler(CategoryNotFoundException.class)
-    public ResponseEntity<Map<String, String>> handleCategoryNotFoundException(CategoryNotFoundException ex) {
-        Map<String, String> error = new HashMap<>();
-        error.put("error", ex.getMessage());
-        error.put("status", "NOT_FOUND");
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
-    }
-    
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> handleIllegalArgumentException(IllegalArgumentException ex) {
         Map<String, String> error = new HashMap<>();
@@ -112,6 +104,15 @@ public class GlobalExceptionHandler {
         }
         
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+    
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    public ResponseEntity<Map<String, String>> handleMaxUploadSizeExceededException(org.springframework.web.multipart.MaxUploadSizeExceededException ex) {
+        Map<String, String> error = new HashMap<>();
+        error.put("error", "File size exceeds the maximum allowed size of 50MB. Please select a smaller file.");
+        error.put("status", "PAYLOAD_TOO_LARGE");
+        error.put("message", "The uploaded file is too large. Maximum file size is 50MB.");
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(error);
     }
     
     @ExceptionHandler(Exception.class)

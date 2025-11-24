@@ -33,11 +33,6 @@ public class ArticleCreateDTO {
     
     private List<String> images = new ArrayList<>();
     
-    @NotBlank(message = "Category is required")
-    private String category;
-    
-    private List<String> tags = new ArrayList<>();
-    
     private Boolean featured = false;
     
     private Boolean published = true;

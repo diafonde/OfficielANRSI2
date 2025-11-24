@@ -48,6 +48,14 @@ export class App implements OnInit {
     translate.setDefaultLang('fr');
     translate.use('fr');
     
+    // Set initial RTL state
+    document.body.dir = 'ltr';
+    
+    // Listen to language changes to update RTL
+    translate.onLangChange.subscribe(event => {
+      document.body.dir = event.lang === 'ar' ? 'rtl' : 'ltr';
+    });
+    
     // Check initial route
     this.checkIfAdminRoute();
     

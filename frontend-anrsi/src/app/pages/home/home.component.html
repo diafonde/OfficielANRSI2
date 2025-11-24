@@ -11,12 +11,12 @@
     
     <!-- Slideshow Controls -->
     <div class="slideshow-controls" *ngIf="canScroll()">
-      <button class="slideshow-btn prev-btn" (click)="prevSlide()" aria-label="Previous articles">
+      <button class="slideshow-btn prev-btn" (click)="prevSlide()" aria-label="Previous articles" [class.rtl-flip]="isRTL">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="15 18 9 12 15 6"></polyline>
         </svg>
       </button>
-      <button class="slideshow-btn next-btn" (click)="nextSlide()" aria-label="Next articles">
+      <button class="slideshow-btn next-btn" (click)="nextSlide()" aria-label="Next articles" [class.rtl-flip]="isRTL">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="9 18 15 12 9 6"></polyline>
         </svg>
@@ -25,7 +25,7 @@
     
     <!-- Articles Container -->
     <div class="articles-container">
-      <div class="articles-track" [style.transform]="'translateX(-' + (currentSlide * getTransformPercentage()) + '%)'">
+      <div class="articles-track" [style.transform]="getTransformValue()">
         <div class="articles-slide" *ngFor="let article of latestArticles">
           <app-article-card [article]="article"></app-article-card>
         </div>
@@ -62,12 +62,12 @@
       
       <!-- Navigation Arrows -->
       <div class="video-slideshow-controls" *ngIf="featuredVideos.length > 0">
-        <button class="video-slideshow-btn prev-video-btn" (click)="prevVideoSlide()" aria-label="Previous videos" *ngIf="canScrollVideos()">
+        <button class="video-slideshow-btn prev-video-btn" (click)="prevVideoSlide()" aria-label="Previous videos" *ngIf="canScrollVideos()" [class.rtl-flip]="isRTL">
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
             <polyline points="15 18 9 12 15 6"></polyline>
           </svg>
         </button>
-        <button class="video-slideshow-btn next-video-btn" (click)="nextVideoSlide()" aria-label="Next videos" *ngIf="canScrollVideos()">
+        <button class="video-slideshow-btn next-video-btn" (click)="nextVideoSlide()" aria-label="Next videos" *ngIf="canScrollVideos()" [class.rtl-flip]="isRTL">
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
             <polyline points="9 18 15 12 9 6"></polyline>
           </svg>
@@ -76,7 +76,7 @@
       
       <!-- Videos Container -->
       <div class="videos-container">
-        <div class="videos-track" [style.transform]="'translateX(-' + (currentVideoSlide * getVideoTransformPercentage()) + '%)'">
+        <div class="videos-track" [style.transform]="getVideoTransformValue()">
           <div class="video-slide" 
                *ngFor="let video of featuredVideos; let i = index"
                [class.middle]="i === getMiddleVideoIndex()"
@@ -112,7 +112,7 @@
     
     <div class="videotheque-button-container">
       <a routerLink="/videos" class="btn-videotheque">
-        {{ 'Toutes les vidéos' | translate }}
+        {{ 'VIDEOS_ALL_VIDEOS' | translate }}
       </a>
     </div>
   </div>
