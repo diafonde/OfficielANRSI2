@@ -16,3 +16,4 @@ public interface PagePhotoTranslationRepository extends JpaRepository<PagePhotoT
     List<PagePhotoTranslation> findByPagePhotoId(Long pagePhotoId);
 }
 
+

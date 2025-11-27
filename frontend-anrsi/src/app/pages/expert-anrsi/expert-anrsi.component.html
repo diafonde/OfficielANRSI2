@@ -71,6 +71,10 @@
         <h3>{{ 'EXPERT_HOW_TO_APPLY' | translate }}</h3>
         <div class="application-info">
           <p>{{ content.applicationText }}</p>
+
+          <a href="{{ content.applicationLink }}" target="_blank">{{ content.applicationLink }}</a>
+          <br>
+          <br>
           <div class="contact-info" *ngIf="content.contactInfo && content.contactInfo.length > 0">
             <div class="contact-item" *ngFor="let contact of content.contactInfo">
               <i [class]="contact.icon"></i>

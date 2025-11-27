@@ -58,31 +58,39 @@
         </div>
       </div>
     </div>
-<section>
-<div class="form-section">
-  <h2>{{ getLabel('mediaSection') }} - {{ getActiveLanguageName() }}</h2>
-  <div [formGroup]="getActiveLanguageFormGroup()">
-    <div class="form-group">
-      <label>{{ getLabel('imageUpload') }}</label>
-      <input type="file" (change)="onImageSelected($event, activeLanguage)" accept="image/*" class="form-control-file" />
-      <div *ngIf="getActiveLanguageFormGroup().get('image')?.value">
-        <img [src]="getActiveLanguageFormGroup().get('image')?.value" alt="Uploaded Image" style="max-width: 200px; margin-top: 8px;" />
-        <button type="button" class="btn btn-danger btn-sm" style="margin-left: 10px;" (click)="removeImage(activeLanguage)">
-          {{ getLabel('removeImage') }}
-        </button>
+    <!-- Media Section -->
+    <div class="form-section">
+      <h2>{{ getLabel('mediaSection') }} - {{ getActiveLanguageName() }}</h2>
+      <div [formGroup]="getActiveLanguageFormGroup()">
+        <div formArrayName="media" *ngFor="let mediaItem of media.controls; let i = index">
+          <div [formGroupName]="i" class="nested-form-group">
+            <div class="form-row">
+              <h3 style="flex: 1;">{{ getLabel('mediaSection') }} #{{ i + 1 }}</h3>
+              <button type="button" (click)="removeMedia(i)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
+            </div>
+            <div class="form-group">
+              <label>{{ getLabel('imageUpload') }}</label>
+              <input type="file" (change)="onImageSelected($event, i)" accept="image/*" class="form-control-file" />
+              <div *ngIf="mediaItem.get('image')?.value">
+                <img [src]="mediaItem.get('image')?.value" alt="Uploaded Image" style="max-width: 200px; margin-top: 8px;" />
+                <button type="button" class="btn btn-danger btn-sm" style="margin-left: 10px;" (click)="removeImage(i)">
+                  {{ getLabel('removeImage') }}
+                </button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>{{ getLabel('mediaText') }}</label>
+              <input type="text" formControlName="mediaText" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label>{{ getLabel('mediaLink') }}</label>
+              <input type="text" formControlName="mediaLink" class="form-control" placeholder="https://example.com"/>
+            </div>
+          </div>
+        </div>
+        <button type="button" (click)="addMedia()" class="btn btn-primary">{{ getLabel('addMedia') }}</button>
       </div>
     </div>
-    <div class="form-group">
-      <label>{{ getLabel('mediaText') }}</label>
-      <input type="text" formControlName="mediaText" class="form-control" />
-    </div>
-    <div class="form-group">
-      <label>{{ getLabel('mediaLink') }}</label>
-      <input type="text" formControlName="mediaLink" class="form-control" placeholder="https://example.com"/>
-    </div>
-  </div>
-</div>
-</section>
 
     <!-- Overview -->
     <div class="form-section">

@@ -9,7 +9,13 @@
   color: white;
   margin-top: 0px;
 }
-
+.media-section {
+  hover: {
+    background-color: rgb(0, 255, 115);
+  }
+  text-align: center;
+  margin-bottom: 20px;
+}
 .plateformes-hero .container {
   position: relative;
   z-index: 2;

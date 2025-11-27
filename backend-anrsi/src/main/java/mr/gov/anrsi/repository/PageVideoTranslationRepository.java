@@ -16,3 +16,4 @@ public interface PageVideoTranslationRepository extends JpaRepository<PageVideoT
     List<PageVideoTranslation> findByPageVideoId(Long pageVideoId);
 }
 
+

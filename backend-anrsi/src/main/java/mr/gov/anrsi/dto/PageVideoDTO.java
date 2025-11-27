@@ -19,3 +19,4 @@ public class PageVideoDTO {
     private Map<String, PageVideoTranslationDTO> translations = new HashMap<>();
 }
 
+

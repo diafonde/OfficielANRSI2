@@ -1,0 +1,43 @@
+<div class="useful-websites-hero">
+  <div class="container">
+    <h1>{{ 'SITE_WEB' | translate }}</h1>
+    <p>{{ 'SITE_WEB_DESCRIPTION' | translate }}</p>
+  </div>
+  <div class="hero-overlay"></div>
+</div>
+
+<div class="container" *ngIf="isLoading">
+  <div class="loading-container">
+    <div class="loading">{{ 'LOADING' | translate }}</div>
+  </div>
+</div>
+
+<div class="container" *ngIf="!isLoading">
+  <section class="section useful-websites-section">
+    <div class="table-container" *ngIf="websites.length > 0">
+      <table class="websites-table">
+        <thead>
+          <tr>
+            <th>{{ 'SITE_WEB_TABLE_NAME' | translate }}</th>
+            <th>{{ 'SITE_WEB_TABLE_LINK' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let website of websites">
+            <td class="website-name">{{ website.name }}</td>
+            <td class="website-link">
+              <a [href]="website.url" target="_blank" rel="noopener noreferrer" class="link-button">
+                {{ 'SITE_WEB_VISIT_LINK' | translate }}
+                <i class="fas fa-external-link-alt"></i>
+              </a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="no-websites" *ngIf="!isLoading && websites.length === 0">
+      <p>{{ 'SITE_WEB_NO_WEBSITES' | translate }}</p>
+    </div>
+  </section>
+</div>
+

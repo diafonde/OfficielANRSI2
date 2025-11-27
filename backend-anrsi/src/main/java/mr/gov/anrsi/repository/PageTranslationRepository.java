@@ -17,3 +17,4 @@ public interface PageTranslationRepository extends JpaRepository<PageTranslation
     void deleteByPage(Page page);
 }
 
+

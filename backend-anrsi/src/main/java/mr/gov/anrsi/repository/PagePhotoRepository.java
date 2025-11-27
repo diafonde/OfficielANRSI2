@@ -19,3 +19,4 @@ public interface PagePhotoRepository extends JpaRepository<PagePhoto, Long> {
     void deleteByPage(Page page);
 }
 
+

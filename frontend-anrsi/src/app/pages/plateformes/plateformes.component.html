@@ -18,18 +18,10 @@
       <h2>{{ 'PLATFORM_TECHNOLOGICAL_TITLE' | translate }}</h2>
       <p class="intro-text">{{ content.introText }}</p>
       
-      <section style="border: 1px solid red;"  class="media-section" *ngIf="content?.mediaLink">
-        <div class="form-section">
-          <h2>{{ 'MEDIA_SECTION' | translate }}</h2>
-          <div class="form-group">
-            <label>{{ 'MEDIA_LINK' | translate }}</label>
-            <div class="">
-              <a [href]="content.mediaLink" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
-                {{ 'VIEW_MEDIA' | translate }} <i class="fas fa-external-link-alt"></i>
-              </a>
-            </div>
-          </div>
-        </div>
+      <section style="border: 1px solid rgb(0, 255, 115);"  class="media-section" *ngIf="content?.mediaLink">
+        <a [href]="content.mediaLink" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+          {{ 'VIEW_MEDIA' | translate }} <i class="fas fa-external-link-alt"></i>
+        </a>
       </section>
 
       <div class="plateformes-grid" *ngIf="content.plateformes && content.plateformes.length > 0">

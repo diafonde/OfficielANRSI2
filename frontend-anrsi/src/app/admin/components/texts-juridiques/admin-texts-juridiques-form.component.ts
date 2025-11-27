@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -52,19 +52,12 @@ export class AdminTextsJuridiquesFormComponent implements OnInit {
     private pageService: PageAdminService,
     private articleService: ArticleAdminService,
     private router: Router,
-    private route: ActivatedRoute,
-    private cdr: ChangeDetectorRef
+    private route: ActivatedRoute
   ) {
     this.form = this.createForm();
   }
 
   ngOnInit(): void {
-    // Check for language query parameter
-    this.route.queryParams.subscribe(params => {
-      if (params['lang'] && ['fr', 'ar', 'en'].includes(params['lang'])) {
-        this.activeLanguage = params['lang'] as 'fr' | 'ar' | 'en';
-      }
-    });
     this.loadPage();
   }
 
@@ -80,9 +73,9 @@ export class AdminTextsJuridiquesFormComponent implements OnInit {
 
   private createLanguageFormGroup(): FormGroup {
     return this.fb.group({
-      heroTitle: [''], // Removed required validator to allow saving incomplete forms
-      heroSubtitle: [''], // Removed required validator to allow saving incomplete forms
-      sectionTitle: [''], // Removed required validator to allow saving incomplete forms
+      heroTitle: ['', Validators.required],
+      heroSubtitle: ['', Validators.required],
+      sectionTitle: ['', Validators.required],
       texts: this.fb.array([])
     });
   }
@@ -90,32 +83,6 @@ export class AdminTextsJuridiquesFormComponent implements OnInit {
   switchLanguage(lang: string): void {
     if (lang === 'fr' || lang === 'ar' || lang === 'en') {
       this.activeLanguage = lang as 'fr' | 'ar' | 'en';
-      
-      // Verify form data is available for the switched language
-      const langGroup = this.getLanguageFormGroup(this.activeLanguage);
-      if (langGroup) {
-        const textsArray = langGroup.get('texts') as FormArray;
-        const rawValues = textsArray?.getRawValue() || [];
-        console.log(`Switched to ${this.activeLanguage} tab:`, {
-          heroTitle: langGroup.get('heroTitle')?.value,
-          heroSubtitle: langGroup.get('heroSubtitle')?.value,
-          sectionTitle: langGroup.get('sectionTitle')?.value,
-          textsCount: textsArray?.length || 0,
-          texts: rawValues,
-          firstTextTitle: rawValues[0]?.title || 'N/A',
-          firstTextTitleLength: rawValues[0]?.title?.length || 0
-        });
-        
-        // Ensure the form array is marked as touched/dirty so Angular recognizes it
-        if (textsArray) {
-          textsArray.markAsTouched();
-          textsArray.updateValueAndValidity({ emitEvent: true });
-        }
-      }
-      
-      // Force change detection after switching - use markForCheck for better performance
-      this.cdr.markForCheck();
-      this.cdr.detectChanges();
     }
   }
 
@@ -124,48 +91,23 @@ export class AdminTextsJuridiquesFormComponent implements OnInit {
   }
 
   getLanguageFormGroup(lang: string): FormGroup {
-    const group = this.form.get(`translations.${lang}`) as FormGroup;
-    if (!group) {
-      console.error(`Form group not found for language: ${lang}`);
-      console.error('Form structure:', this.form.value);
-    }
-    return group;
+    return this.form.get(`translations.${lang}`) as FormGroup;
   }
 
   get texts(): FormArray {
     const langGroup = this.getActiveLanguageFormGroup();
-    if (!langGroup) {
-      console.error('Active language form group not found for:', this.activeLanguage);
-      // Return empty array as fallback
-      return this.fb.array([]);
-    }
-    const textsArray = langGroup.get('texts') as FormArray;
-    if (!textsArray) {
-      console.error('Texts array not found for language:', this.activeLanguage);
-      return this.fb.array([]);
-    }
-    return textsArray;
-  }
-  
-  getTextsForLanguage(lang: string): FormArray {
-    const langGroup = this.getLanguageFormGroup(lang);
     if (!langGroup) {
       return this.fb.array([]);
     }
     return langGroup.get('texts') as FormArray;
   }
 
-  addText(text?: TextJuridique): void {
-    const group = this.fb.group({
-      title: [text?.title || ''], // Removed required validator to allow saving incomplete forms
-      description: [text?.description || ''],
-      downloadUrl: [text?.downloadUrl || '']
-    });
-    this.texts.push(group);
-  }
-
-  removeText(index: number): void {
-    this.texts.removeAt(index);
+  getTextsForLanguage(lang: string): FormArray {
+    const langGroup = this.getLanguageFormGroup(lang);
+    if (!langGroup) {
+      return this.fb.array([]);
+    }
+    return langGroup.get('texts') as FormArray;
   }
 
   hasTranslation(lang: string): boolean {
@@ -183,13 +125,26 @@ export class AdminTextsJuridiquesFormComponent implements OnInit {
     return lang?.name || 'Français';
   }
 
+  addText(text?: TextJuridique): void {
+    const group = this.fb.group({
+      title: [text?.title || '', Validators.required],
+      description: [text?.description || ''],
+      downloadUrl: [text?.downloadUrl || '']
+    });
+    this.texts.push(group);
+  }
+
+  removeText(index: number): void {
+    this.texts.removeAt(index);
+  }
+
   loadPage(): void {
     this.isLoading = true;
     this.pageService.getPageBySlug('texts-juridiques').subscribe({
       next: (page) => {
-        console.log('Page loaded from backend:', page);
-        console.log('Page content (raw):', page.content);
+        console.log('Page loaded:', page);
         console.log('Page translations:', page.translations);
+        console.log('Page content:', page.content);
         
         this.pageId = page.id || null;
         
@@ -225,41 +180,21 @@ export class AdminTextsJuridiquesFormComponent implements OnInit {
         // Fallback to main content field if translations don't exist
         if (!contentToUse && page.content) {
           try {
-            const parsedContent: TextsJuridiquesContent = JSON.parse(page.content);
-            console.log('Using main content field, parsed content:', JSON.stringify(parsedContent, null, 2));
-            contentToUse = parsedContent;
+            const parsedContent: any = JSON.parse(page.content);
+            if (parsedContent.translations) {
+              contentToUse = parsedContent;
+              console.log('Using main content field with translations structure');
+            } else {
+              // Old format - will be handled in populateForm
+              contentToUse = parsedContent;
+              console.log('Using old format from main content field');
+            }
           } catch (e) {
             console.error('Error parsing main content:', e);
           }
         }
         
         if (contentToUse) {
-          console.log('Final content to use:', JSON.stringify(contentToUse, null, 2));
-          console.log('Has translations?', !!contentToUse.translations);
-          if (contentToUse.translations) {
-            console.log('Translations keys:', Object.keys(contentToUse.translations));
-            console.log('Arabic translation exists?', !!contentToUse.translations.ar);
-            if (contentToUse.translations.ar) {
-              console.log('Arabic content:', JSON.stringify(contentToUse.translations.ar, null, 2));
-              console.log('Arabic texts count:', contentToUse.translations.ar.texts?.length || 0);
-              if (contentToUse.translations.ar.texts && contentToUse.translations.ar.texts.length > 0) {
-                console.log('Arabic texts details:');
-                contentToUse.translations.ar.texts.forEach((text, index) => {
-                  console.log(`  Arabic text ${index}:`, {
-                    title: text.title,
-                    titleLength: text.title?.length || 0,
-                    hasTitle: !!text.title && text.title.trim().length > 0,
-                    description: text.description,
-                    downloadUrl: text.downloadUrl
-                  });
-                });
-              }
-            }
-            if (contentToUse.translations.en) {
-              console.log('English content:', JSON.stringify(contentToUse.translations.en, null, 2));
-              console.log('English texts count:', contentToUse.translations.en.texts?.length || 0);
-            }
-          }
           this.populateForm(contentToUse, page);
         } else {
           console.log('No content found, loading default data');
@@ -268,6 +203,7 @@ export class AdminTextsJuridiquesFormComponent implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
+        console.error('Error loading page:', error);
         if (error.status === 404) {
           this.loadDefaultData();
         } else {
@@ -279,7 +215,6 @@ export class AdminTextsJuridiquesFormComponent implements OnInit {
   }
 
   loadDefaultData(): void {
-    // Load default data for all languages
     ['fr', 'ar', 'en'].forEach(lang => {
       const langGroup = this.getLanguageFormGroup(lang);
       
@@ -306,210 +241,51 @@ export class AdminTextsJuridiquesFormComponent implements OnInit {
       // Clear existing array
       const textsArray = langGroup.get('texts') as FormArray;
       while (textsArray.length) textsArray.removeAt(0);
-
-      // Add default texts only for French (can be translated later)
-      if (lang === 'fr') {
-        const defaultTexts = [
-          { title: 'Décret n:2020-066/PM/M.E.S.R.S.T.I.C/M.F/ portant création d\'un établissement public à caractère administratif dénommé, Agence nationale de la recherche scientifique et de l\'innovation et fixant les régles de son organisation et de son fonctionnement', downloadUrl: '' },
-          { title: 'Arrêté conjoint n:001102/MF/MESRSTIC fixant le nomenclature des recettes et dépenses et le montant pour chaque dépense du compte d\'affectation spéciale de la recherche scientifique et l\'innovation.', downloadUrl: '' },
-          { title: 'Décret n: 2015-119 / PM/2015 fixant la composition et le fonctionnement du conseil national de l\'Enseignement Supérieur et de la recherche scientifique (CNESRS).', downloadUrl: '' },
-          { title: 'Arrêté n:0316 / MESRS, fixant les régles d\'organisation des des sociétés savantes', downloadUrl: '' },
-          { title: 'Décret n: 2020-070/PM portant modification de certaines dispositions du décret n:2006-126 portant statut des enseignants chercheurs universitaires et hospitalo-universitaires modifié par le décret n:2019-115/PM du 11 juin 2019', downloadUrl: '' },
-          { title: 'Décret n:2017-093/PM/MESRS/CI/2017, portant création de ( l\'autorité mauritanienne d\'Assurance-qualité de l\'enseignement supérieur ) et fixant les régles de son organisation et fonctionnement .', downloadUrl: '' },
-          { title: 'Arrêté n:0863/ portant création des écoles doctorales à L\'Université de nouakchott AL-Aasriya et fixant leur organisation et leurs régles de fonctionnement', downloadUrl: '' }
-        ];
-        defaultTexts.forEach(text => {
-          const group = this.fb.group({
-            title: [text.title], // Removed required validator to allow saving incomplete forms
-            description: [''],
-            downloadUrl: [text.downloadUrl]
-          });
-          textsArray.push(group);
-        });
-      }
     });
   }
 
-  populateForm(content: TextsJuridiquesContent, page: PageDTO): void {
+  populateForm(content: TextsJuridiquesContent | any, page: PageDTO): void {
     console.log('populateForm called with content:', JSON.stringify(content, null, 2));
-    console.log('Page data:', page);
-    console.log('Form structure before population:', this.form.value);
     
-    // Handle both old format (without translations) and new format (with translations)
     if (content.translations) {
+      // New format with translations
       console.log('Loading new format with translations');
-      console.log('Available translation keys:', Object.keys(content.translations));
-      
-      // New format with translations - load each language separately
       ['fr', 'ar', 'en'].forEach(lang => {
         const langContent = content.translations[lang as 'fr' | 'ar' | 'en'];
         const langGroup = this.getLanguageFormGroup(lang);
         
-        if (!langGroup) {
-          console.error(`Form group not found for language: ${lang}`);
-          return;
-        }
-        
-        console.log(`Loading language ${lang}:`, langContent);
-        
         if (langContent) {
-          console.log(`Populating ${lang} form group with:`, {
-            heroTitle: langContent.heroTitle,
-            heroSubtitle: langContent.heroSubtitle,
-            sectionTitle: langContent.sectionTitle,
-            textsCount: langContent.texts?.length || 0
-          });
-          
-          // Load content for this language - use patchValue to update fields
+          console.log(`Populating ${lang} form group with:`, langContent);
           langGroup.patchValue({
             heroTitle: langContent.heroTitle || '',
             heroSubtitle: langContent.heroSubtitle || '',
             sectionTitle: langContent.sectionTitle || ''
-          }, { emitEvent: true }); // Emit events to trigger change detection
-
-          // Clear existing array first
-          const textsArray = langGroup.get('texts') as FormArray;
-          while (textsArray.length > 0) {
-            textsArray.removeAt(0);
-          }
-
-          // Populate array for this language
-          if (langContent.texts && langContent.texts.length > 0) {
-            console.log(`Adding ${langContent.texts.length} texts to ${lang} array`);
-            console.log(`Raw texts data for ${lang}:`, JSON.stringify(langContent.texts, null, 2));
-            
-            langContent.texts.forEach((text, index) => {
-              // Log the raw text object to see exactly what we're getting
-              console.log(`  Text ${index} for ${lang} (raw object):`, text);
-              console.log(`  Text ${index} for ${lang} (stringified):`, JSON.stringify(text));
-              console.log(`  Text ${index} for ${lang} (details):`, {
-                title: text.title,
-                titleType: typeof text.title,
-                titleLength: text.title?.length || 0,
-                titleIsEmpty: !text.title || text.title.trim().length === 0,
-                description: text.description,
-                downloadUrl: text.downloadUrl,
-                fullObject: text
-              });
-              
-              // Ensure title is not null/undefined - preserve the actual value
-              const titleValue = (text.title !== null && text.title !== undefined) ? String(text.title) : '';
-              const descriptionValue = (text.description !== null && text.description !== undefined) ? String(text.description || '') : '';
-              const downloadUrlValue = (text.downloadUrl !== null && text.downloadUrl !== undefined) ? String(text.downloadUrl || '') : '';
-              
-              console.log(`  Creating form group for ${lang} text ${index}:`, {
-                titleValue: titleValue,
-                titleValueLength: titleValue.length,
-                descriptionValue: descriptionValue,
-                downloadUrlValue: downloadUrlValue
-              });
-              
-              const group = this.fb.group({
-                title: [titleValue], // Removed required validator to allow saving incomplete forms
-                description: [descriptionValue],
-                downloadUrl: [downloadUrlValue]
-              });
-              
-              textsArray.push(group);
-              
-              // Verify immediately after adding
-              const addedGroup = textsArray.at(textsArray.length - 1) as FormGroup;
-              const addedTitle = addedGroup.get('title')?.value;
-              console.log(`  Verified added group for ${lang} text ${index}:`, {
-                title: addedTitle,
-                titleType: typeof addedTitle,
-                titleLength: addedTitle?.length || 0,
-                description: addedGroup.get('description')?.value,
-                downloadUrl: addedGroup.get('downloadUrl')?.value
-              });
-              
-              // Double-check: if title is empty but we expected it, log a warning
-              if (!titleValue && lang === 'ar') {
-                console.warn(`  WARNING: Arabic text ${index} has empty title! Expected title from saved data.`);
-              }
-            });
-            
-            // Mark the form array as touched to ensure it's recognized
-            textsArray.markAsTouched();
-            textsArray.updateValueAndValidity();
-            
-            console.log(`${lang} texts array after population:`, textsArray.getRawValue());
-            console.log(`${lang} texts array length:`, textsArray.length);
-          } else {
-            console.log(`No texts found for ${lang}`);
-          }
-          
-          // Immediately verify the form was populated correctly
-          const verifyGroup = this.getLanguageFormGroup(lang);
-          const verifyTextsArray = verifyGroup.get('texts') as FormArray;
-          console.log(`${lang} form group immediately after population:`, {
-            heroTitle: verifyGroup.get('heroTitle')?.value,
-            heroSubtitle: verifyGroup.get('heroSubtitle')?.value,
-            sectionTitle: verifyGroup.get('sectionTitle')?.value,
-            textsCount: verifyTextsArray?.length || 0,
-            textsValues: verifyTextsArray?.getRawValue() || []
           });
-        } else {
-          console.log(`No content found for language ${lang}, initializing with empty values`);
-          // Language not found in translations, initialize with empty/default values
-          langGroup.patchValue({
-            heroTitle: '',
-            heroSubtitle: '',
-            sectionTitle: ''
-          }, { emitEvent: false });
+
+          // Clear existing array
           const textsArray = langGroup.get('texts') as FormArray;
           while (textsArray.length) textsArray.removeAt(0);
+
+          // Populate array
+          if (langContent.texts && langContent.texts.length > 0) {
+            console.log(`Adding ${langContent.texts.length} texts to ${lang} array`);
+            langContent.texts.forEach((text: TextJuridique) => {
+              const group = this.fb.group({
+                title: [text.title || '', Validators.required],
+                description: [text.description || ''],
+                downloadUrl: [text.downloadUrl || '']
+              });
+              textsArray.push(group);
+            });
+          }
+        } else {
+          console.log(`No content found for language ${lang}`);
         }
       });
-      
-      // Final verification - log all form values after population
-      console.log('Form structure after population:', JSON.stringify(this.form.value, null, 2));
-      
-      // Verify each language's form array
-      ['fr', 'ar', 'en'].forEach(lang => {
-        const langGroup = this.getLanguageFormGroup(lang);
-        const textsArray = langGroup.get('texts') as FormArray;
-        const rawValues = textsArray.getRawValue();
-        console.log(`Final verification - ${lang} texts array:`, {
-          length: textsArray.length,
-          values: rawValues,
-          firstTextTitle: rawValues[0]?.title || 'N/A',
-          firstTextTitleLength: rawValues[0]?.title?.length || 0
-        });
-        
-        // Mark the form array as dirty and touched to ensure Angular recognizes it
-        textsArray.markAsDirty();
-        textsArray.markAsTouched();
-        textsArray.updateValueAndValidity({ emitEvent: true });
-      });
-      
-      // Force change detection to ensure UI updates
-      this.cdr.detectChanges();
-      
-      // After a short delay, verify the form is still populated and force another change detection
-      setTimeout(() => {
-        console.log('Form structure after 500ms delay:', JSON.stringify(this.form.value, null, 2));
-        ['fr', 'ar', 'en'].forEach(lang => {
-          const langGroup = this.getLanguageFormGroup(lang);
-          const textsArray = langGroup.get('texts') as FormArray;
-          const rawValues = textsArray.getRawValue();
-          console.log(`Delayed verification - ${lang} texts array:`, {
-            length: textsArray.length,
-            values: rawValues,
-            firstTextTitle: rawValues[0]?.title || 'N/A',
-            firstTextTitleLength: rawValues[0]?.title?.length || 0
-          });
-        });
-        
-        // Force another change detection after delay
-        this.cdr.detectChanges();
-      }, 500);
     } else {
       // Old format - migrate to new format
-      // Only populate French with old content, leave Arabic and English empty for translation
-      const oldContent = content as any;
-      
-      // Populate French with old content
+      console.log('Loading old format, migrating to new format');
+      const oldContent = content;
       const frGroup = this.getLanguageFormGroup('fr');
       frGroup.patchValue({
         heroTitle: oldContent.heroTitle || page.heroTitle || '',
@@ -521,15 +297,14 @@ export class AdminTextsJuridiquesFormComponent implements OnInit {
       if (oldContent.texts && oldContent.texts.length > 0) {
         oldContent.texts.forEach((text: TextJuridique) => {
           const group = this.fb.group({
-            title: [text.title], // Removed required validator to allow saving incomplete forms
+            title: [text.title || '', Validators.required],
             description: [text.description || ''],
             downloadUrl: [text.downloadUrl || '']
           });
           frTextsArray.push(group);
         });
       }
-
-      // Initialize Arabic and English with default/empty values
+      // Initialize Arabic and English with default values
       ['ar', 'en'].forEach(lang => {
         const langGroup = this.getLanguageFormGroup(lang);
         if (lang === 'ar') {
@@ -551,9 +326,9 @@ export class AdminTextsJuridiquesFormComponent implements OnInit {
         if (oldContent.texts && oldContent.texts.length > 0) {
           oldContent.texts.forEach((text: TextJuridique) => {
             const group = this.fb.group({
-              title: [''], // Empty for translation - removed required validator to allow saving incomplete forms
+              title: [''],
               description: [''],
-              downloadUrl: [text.downloadUrl || ''] // Keep same download URLs
+              downloadUrl: [text.downloadUrl || '']
             });
             textsArray.push(group);
           });
@@ -593,88 +368,61 @@ export class AdminTextsJuridiquesFormComponent implements OnInit {
     this.errorMessage = '';
     const textGroup = this.texts.at(index) as FormGroup;
     
-    console.log('Uploading document:', {
-      fileName: file.name,
-      fileSize: file.size,
-      fileType: file.type
-    });
-    
     this.articleService.uploadDocument(file).subscribe({
       next: (response) => {
-        console.log('Upload successful:', response);
-        textGroup.patchValue({ downloadUrl: response.url });
+        const downloadUrl = response.url;
+        
+        // Update downloadUrl for the same index in ALL language tabs
+        // since the document is shared across all translations
+        ['fr', 'ar', 'en'].forEach(lang => {
+          const langTextsArray = this.getTextsForLanguage(lang);
+          if (langTextsArray && langTextsArray.length > index) {
+            const langTextGroup = langTextsArray.at(index) as FormGroup;
+            if (langTextGroup) {
+              const downloadUrlControl = langTextGroup.get('downloadUrl');
+              if (downloadUrlControl) {
+                downloadUrlControl.setValue(downloadUrl, { emitEvent: true });
+                downloadUrlControl.markAsDirty();
+                downloadUrlControl.markAsTouched();
+              }
+            }
+          } else if (langTextsArray) {
+            // If the text doesn't exist in this language yet, create it with the downloadUrl
+            const emptyGroup = this.fb.group({
+              title: [''],
+              description: [''],
+              downloadUrl: [downloadUrl]
+            });
+            langTextsArray.push(emptyGroup);
+          }
+        });
+        
         this.errorMessage = '';
       },
       error: (error) => {
-        console.error('Upload error details:', {
-          status: error.status,
-          statusText: error.statusText,
-          message: error.message,
-          error: error.error,
-          url: error.url
-        });
-        
-        let errorMsg = 'Erreur lors du téléchargement du fichier. ';
-        if (error.status === 0) {
-          errorMsg += 'Impossible de se connecter au serveur. Vérifiez que le backend est en cours d\'exécution.';
-        } else if (error.status === 401) {
-          errorMsg += 'Authentification requise. Veuillez vous connecter.';
-        } else if (error.status === 403) {
-          errorMsg += 'Accès refusé. Vous devez être connecté avec un compte ADMIN ou EDITOR.';
-        } else if (error.status === 413 || error.status === 400) {
-          // Handle both 413 (Payload Too Large) and 400 (if backend returns 400 for size)
-          errorMsg = error.error?.error || error.error?.message || 'Le fichier est trop volumineux. Taille maximale: 50MB.';
-        } else if (error.status === 400) {
-          errorMsg += error.error?.error || 'Fichier invalide. Veuillez sélectionner un fichier PDF, DOC ou DOCX.';
-        } else if (error.status >= 500) {
-          errorMsg += 'Erreur serveur: ' + (error.error?.error || error.message || 'Veuillez réessayer plus tard.');
-        } else {
-          errorMsg += error.error?.error || error.error?.message || error.message || 'Veuillez réessayer.';
-        }
-        this.errorMessage = errorMsg;
+        console.error('Upload error:', error);
+        this.errorMessage = error.error?.error || 'Erreur lors du téléchargement du fichier';
       }
     });
   }
 
   onSubmit(): void {
-    // Always save all languages, even if incomplete or empty
+    this.isSaving = true;
+    this.errorMessage = '';
+
     const translationsToSave: any = {};
-    
-    // First, ensure form is properly structured
-    console.log('Form structure:', this.form.value);
-    console.log('Form valid:', this.form.valid);
     
     ['fr', 'ar', 'en'].forEach(lang => {
       const langGroup = this.getLanguageFormGroup(lang);
-      if (!langGroup) {
-        console.error(`Language form group not found for: ${lang}`);
-        console.error('Available form groups:', Object.keys(this.form.get('translations')?.value || {}));
-        translationsToSave[lang] = {
-          heroTitle: '',
-          heroSubtitle: '',
-          sectionTitle: '',
-          texts: []
-        };
-        return;
-      }
-      
-      // Get the raw form values for this language
       const langValue = langGroup.getRawValue();
-      console.log(`Language ${lang} form values:`, JSON.stringify(langValue, null, 2));
-      
-      // Get texts array directly to ensure we have the latest values
       const textsArray = langGroup.get('texts') as FormArray;
       const textsValues = textsArray ? textsArray.getRawValue() : [];
-      console.log(`Language ${lang} texts array values:`, JSON.stringify(textsValues, null, 2));
       
-      // Filter out empty texts (texts without title)
+      // Filter out empty texts
       const validTexts = textsValues.filter((text: any) => 
         text && text.title && typeof text.title === 'string' && text.title.trim().length > 0
       );
       
-      console.log(`Language ${lang} valid texts (after filter):`, JSON.stringify(validTexts, null, 2));
-      
-      // Always save all languages, even if empty
       translationsToSave[lang] = {
         heroTitle: (langValue.heroTitle || '').trim(),
         heroSubtitle: (langValue.heroSubtitle || '').trim(),
@@ -682,40 +430,16 @@ export class AdminTextsJuridiquesFormComponent implements OnInit {
         texts: validTexts
       };
     });
-    
-    console.log('All translations to save (final):', JSON.stringify(translationsToSave, null, 2));
-
-    this.isSaving = true;
-    this.errorMessage = '';
 
     const content: TextsJuridiquesContent = {
       translations: translationsToSave
     };
 
-    // Use French title as default for page title, fallback to first available language
+    // Use French title as default for page title
     const frGroup = this.getLanguageFormGroup('fr');
-    let pageTitle = frGroup.get('heroTitle')?.value?.trim();
-    let heroTitle = frGroup.get('heroTitle')?.value?.trim() || '';
-    let heroSubtitle = frGroup.get('heroSubtitle')?.value?.trim() || '';
-    
-    // If French is not available, use first available language
-    if (!pageTitle && translationsToSave['ar']?.heroTitle?.trim()) {
-      pageTitle = translationsToSave['ar'].heroTitle.trim();
-      heroTitle = translationsToSave['ar'].heroTitle.trim();
-      heroSubtitle = translationsToSave['ar'].heroSubtitle?.trim() || '';
-    } else if (!pageTitle && translationsToSave['en']?.heroTitle?.trim()) {
-      pageTitle = translationsToSave['en'].heroTitle.trim();
-      heroTitle = translationsToSave['en'].heroTitle.trim();
-      heroSubtitle = translationsToSave['en'].heroSubtitle?.trim() || '';
-    }
-    
-    // Ensure pageTitle is never empty (backend requires non-blank title)
-    pageTitle = pageTitle?.trim() || 'Textes Juridiques';
-    
-    // Ensure heroTitle and heroSubtitle are set (can be empty strings)
-    if (!heroTitle) {
-      heroTitle = pageTitle; // Use pageTitle as fallback
-    }
+    const pageTitle = frGroup.get('heroTitle')?.value?.trim() || 'Textes Juridiques';
+    const heroTitle = frGroup.get('heroTitle')?.value?.trim() || pageTitle;
+    const heroSubtitle = frGroup.get('heroSubtitle')?.value?.trim() || '';
 
     const updateData: PageUpdateDTO = {
       title: pageTitle,
@@ -727,67 +451,16 @@ export class AdminTextsJuridiquesFormComponent implements OnInit {
       isActive: true
     };
 
-    console.log('Saving page with data:', {
-      pageId: this.pageId,
-      updateData: {
-        ...updateData,
-        content: content // Log parsed content, not stringified
-      }
-    });
-
     if (this.pageId) {
       this.pageService.updatePage(this.pageId, updateData).subscribe({
-        next: (response) => {
-          console.log('Page updated successfully:', response);
-          console.log('Response content:', response.content);
-          
-          // Parse and log the saved content to verify it was saved correctly
-          if (response.content) {
-            try {
-              const savedContent = JSON.parse(response.content);
-              console.log('Saved content (parsed):', JSON.stringify(savedContent, null, 2));
-              console.log('Arabic data in saved content:', savedContent.translations?.ar);
-              console.log('English data in saved content:', savedContent.translations?.en);
-            } catch (e) {
-              console.error('Error parsing saved content:', e);
-            }
-          }
-          
+        next: () => {
           this.isSaving = false;
-          this.errorMessage = ''; // Clear any errors
-          
-          // Reload the page to verify the data was saved and can be loaded back
-          console.log('Reloading page to verify saved data...');
-          this.loadPage();
-          
-          // Optional: Show success message (you can add a success message component if needed)
-          // For now, we'll just reload and let the user see the data
+          this.router.navigate(['/admin/pages']);
         },
         error: (error) => {
           this.isSaving = false;
+          this.errorMessage = 'Erreur lors de l\'enregistrement de la page';
           console.error('Error saving page:', error);
-          console.error('Error details:', {
-            status: error.status,
-            statusText: error.statusText,
-            message: error.message,
-            error: error.error
-          });
-          
-          let errorMsg = 'Erreur lors de l\'enregistrement de la page. ';
-          if (error.status === 0) {
-            errorMsg += 'Impossible de se connecter au serveur.';
-          } else if (error.status === 400) {
-            errorMsg += error.error?.message || error.error?.error || 'Données invalides.';
-          } else if (error.status === 401) {
-            errorMsg += 'Authentification requise.';
-          } else if (error.status === 403) {
-            errorMsg += 'Accès refusé.';
-          } else if (error.status >= 500) {
-            errorMsg += 'Erreur serveur. Veuillez réessayer plus tard.';
-          } else {
-            errorMsg += error.error?.message || error.error?.error || error.message || 'Veuillez réessayer.';
-          }
-          this.errorMessage = errorMsg;
         }
       });
     } else {
@@ -801,57 +474,14 @@ export class AdminTextsJuridiquesFormComponent implements OnInit {
         isPublished: true,
         isActive: true
       }).subscribe({
-        next: (response) => {
-          console.log('Page created successfully:', response);
-          console.log('Response content:', response.content);
-          
-          // Parse and log the saved content to verify it was saved correctly
-          if (response.content) {
-            try {
-              const savedContent = JSON.parse(response.content);
-              console.log('Saved content (parsed):', JSON.stringify(savedContent, null, 2));
-              console.log('Arabic data in saved content:', savedContent.translations?.ar);
-              console.log('English data in saved content:', savedContent.translations?.en);
-            } catch (e) {
-              console.error('Error parsing saved content:', e);
-            }
-          }
-          
+        next: () => {
           this.isSaving = false;
-          this.errorMessage = ''; // Clear any errors
-          
-          // Set the pageId so we can reload
-          this.pageId = response.id || null;
-          
-          // Reload the page to verify the data was saved and can be loaded back
-          console.log('Reloading page to verify saved data...');
-          this.loadPage();
+          this.router.navigate(['/admin/pages']);
         },
         error: (error) => {
           this.isSaving = false;
+          this.errorMessage = 'Erreur lors de la création de la page';
           console.error('Error creating page:', error);
-          console.error('Error details:', {
-            status: error.status,
-            statusText: error.statusText,
-            message: error.message,
-            error: error.error
-          });
-          
-          let errorMsg = 'Erreur lors de la création de la page. ';
-          if (error.status === 0) {
-            errorMsg += 'Impossible de se connecter au serveur.';
-          } else if (error.status === 400) {
-            errorMsg += error.error?.message || error.error?.error || 'Données invalides.';
-          } else if (error.status === 401) {
-            errorMsg += 'Authentification requise.';
-          } else if (error.status === 403) {
-            errorMsg += 'Accès refusé.';
-          } else if (error.status >= 500) {
-            errorMsg += 'Erreur serveur. Veuillez réessayer plus tard.';
-          } else {
-            errorMsg += error.error?.message || error.error?.error || error.message || 'Veuillez réessayer.';
-          }
-          this.errorMessage = errorMsg;
         }
       });
     }

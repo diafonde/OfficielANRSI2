@@ -10,3 +10,4 @@ public interface StatisticsRepository extends JpaRepository<Statistics, Long> {
     Statistics findFirstByOrderByIdAsc();
 }
 
+

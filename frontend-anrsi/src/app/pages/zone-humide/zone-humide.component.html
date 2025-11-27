@@ -79,20 +79,65 @@
       </div>
       
 
-      <section class="media-section" *ngIf="content?.image || content?.mediaText || content?.mediaLink">
-        <div class="media-content">
-          <div class="media-image" *ngIf="content.image">
-            <img [src]="content.image" alt="Media Image" />
-          </div>
-          <div class="media-text" *ngIf="content.mediaText">
-            <p>{{ content.mediaText }}</p>
-          </div>
-          <div class="media-link" *ngIf="content.mediaLink">
-            <a [href]="content.mediaLink" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
-              {{ 'VIEW_MORE' | translate }}
-            </a>
-          </div>
-        </div>
+      <!-- Media Section - New format (array) -->
+      <section class="media-section" *ngIf="hasMedia()">
+        <h3>{{ 'MEDIA' | translate }}</h3>
+        <table class="media-table">
+          <thead>
+            <tr>
+              <th *ngIf="hasAnyImage()">{{ 'IMAGE' | translate }}</th>
+              <th *ngIf="hasAnyText()">{{ 'TEXT' | translate }}</th>
+              <th *ngIf="hasAnyLink()">{{ 'LINK' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let mediaItem of getMediaItems()">
+              <td *ngIf="hasAnyImage()" class="media-image">
+                <img *ngIf="mediaItem.image" [src]="mediaItem.image" alt="Media Image" />
+                <span *ngIf="!mediaItem.image" class="no-content">-</span>
+              </td>
+              <td *ngIf="hasAnyText()" class="media-text">
+                <p *ngIf="mediaItem.mediaText">{{ mediaItem.mediaText }}</p>
+                <span *ngIf="!mediaItem.mediaText" class="no-content">-</span>
+              </td>
+              <td *ngIf="hasAnyLink()" class="media-link">
+                <a *ngIf="mediaItem.mediaLink" [href]="mediaItem.mediaLink" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+                  {{ 'VIEW_MORE' | translate }}
+                </a>
+                <span *ngIf="!mediaItem.mediaLink" class="no-content">-</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Media Section - Legacy format (single item) for backward compatibility -->
+      <section class="media-section" *ngIf="hasLegacyMedia()">
+        <h3>{{ 'MEDIA' | translate }}</h3>
+        <table class="media-table">
+          <thead>
+            <tr>
+              <th *ngIf="content?.image">{{ 'IMAGE' | translate }}</th>
+              <th *ngIf="content?.mediaText">{{ 'TEXT' | translate }}</th>
+              <th *ngIf="content?.mediaLink">{{ 'LINK' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td *ngIf="content?.image" class="media-image">
+                <img [src]="content.image" alt="Media Image" />
+              </td>
+              <td *ngIf="content?.mediaText" class="media-text">
+                <p>{{ content.mediaText }}</p>
+              </td>
+              <td *ngIf="content?.mediaLink" class="media-link">
+                <a [href]="content.mediaLink" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+                  {{ 'VIEW_MORE' | translate }}
+                </a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </section>
     </div>
   </section>

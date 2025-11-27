@@ -55,10 +55,18 @@ interface ContactItem {
   value: string;
 }
 
+interface MediaItem {
+  image?: string;
+  mediaText?: string;
+  mediaLink?: string;
+}
+
 interface ZoneHumideContent {
   heroTitle: string;
   heroSubtitle: string;
   introText: string;
+  media?: MediaItem[];
+  // Legacy support for old format
   image?: string;
   mediaText?: string;
   mediaLink?: string;
@@ -185,5 +193,32 @@ export class ZoneHumideComponent implements OnInit, OnDestroy {
       // Show empty state - data should come from database via DataInitializer
       this.content = null;
     }
+  }
+
+  getMediaItems(): MediaItem[] {
+    return this.content?.media || [];
+  }
+
+  hasMedia(): boolean {
+    return !!(this.content?.media && this.content.media.length > 0);
+  }
+
+  hasLegacyMedia(): boolean {
+    return !this.content?.media && !!(this.content?.image || this.content?.mediaText || this.content?.mediaLink);
+  }
+
+  hasAnyImage(): boolean {
+    const items = this.getMediaItems();
+    return items.some(item => !!item.image);
+  }
+
+  hasAnyText(): boolean {
+    const items = this.getMediaItems();
+    return items.some(item => !!item.mediaText);
+  }
+
+  hasAnyLink(): boolean {
+    const items = this.getMediaItems();
+    return items.some(item => !!item.mediaLink);
   }
 }

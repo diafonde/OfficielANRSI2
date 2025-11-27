@@ -28,3 +28,4 @@ public class ContactMessageCreateDTO {
     private Boolean consent;
 }
 
+

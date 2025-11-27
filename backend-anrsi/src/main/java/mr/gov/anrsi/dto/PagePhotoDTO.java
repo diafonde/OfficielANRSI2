@@ -17,3 +17,4 @@ public class PagePhotoDTO {
     private Map<String, PagePhotoTranslationDTO> translations = new HashMap<>();
 }
 
+

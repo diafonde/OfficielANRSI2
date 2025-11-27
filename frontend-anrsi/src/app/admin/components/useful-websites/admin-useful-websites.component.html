@@ -1,0 +1,132 @@
+<div class="admin-useful-websites">
+  <div class="page-header">
+    <h1>{{ 'ADMIN_USEFUL_WEBSITES_TITLE' | translate }}</h1>
+    <p class="page-description">{{ 'ADMIN_USEFUL_WEBSITES_DESCRIPTION' | translate }}</p>
+  </div>
+
+  <div class="loading-container" *ngIf="isLoading">
+    <div class="loading-spinner">
+      <i class="fas fa-spinner fa-spin"></i>
+      <p>{{ 'LOADING' | translate }}</p>
+    </div>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+    <!-- Error Message -->
+    <div class="alert alert-error" *ngIf="errorMessage">
+      <i class="fas fa-exclamation-circle"></i>
+      <span>{{ errorMessage }}</span>
+    </div>
+
+    <!-- Success Message -->
+    <div class="alert alert-success" *ngIf="successMessage">
+      <i class="fas fa-check-circle"></i>
+      <span>{{ successMessage }}</span>
+    </div>
+
+    <!-- Websites List -->
+    <div class="websites-container">
+      <div formArrayName="websites" class="websites-list">
+        <div
+          *ngFor="let website of websitesFormArray.controls; let i = index"
+          [formGroupName]="i"
+          class="website-item"
+        >
+          <div class="website-header">
+            <div class="website-number">{{ i + 1 }}</div>
+            <div class="website-actions">
+              <button
+                type="button"
+                class="btn-icon"
+                (click)="moveUp(i)"
+                [disabled]="i === 0"
+                title="Move up"
+              >
+                <i class="fas fa-arrow-up"></i>
+              </button>
+              <button
+                type="button"
+                class="btn-icon"
+                (click)="moveDown(i)"
+                [disabled]="i === websitesFormArray.length - 1"
+                title="Move down"
+              >
+                <i class="fas fa-arrow-down"></i>
+              </button>
+              <button
+                type="button"
+                class="btn-icon btn-danger"
+                (click)="removeWebsite(i)"
+                title="Delete"
+              >
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="website-form">
+            <div class="form-group">
+              <label [for]="'name-' + i">
+                {{ 'ADMIN_USEFUL_WEBSITES_NAME_LABEL' | translate }}
+                <span class="required">*</span>
+              </label>
+              <input
+                [id]="'name-' + i"
+                type="text"
+                formControlName="name"
+                class="form-control"
+                [class.invalid]="websitesFormArray.at(i).get('name')?.invalid && websitesFormArray.at(i).get('name')?.touched"
+                placeholder="{{ 'ADMIN_USEFUL_WEBSITES_NAME_PLACEHOLDER' | translate }}"
+              />
+              <div class="error-message" *ngIf="websitesFormArray.at(i).get('name')?.invalid && websitesFormArray.at(i).get('name')?.touched">
+                {{ getErrorMessage(websitesFormArray.at(i).get('name')) }}
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label [for]="'url-' + i">
+                {{ 'ADMIN_USEFUL_WEBSITES_URL_LABEL' | translate }}
+                <span class="required">*</span>
+              </label>
+              <input
+                [id]="'url-' + i"
+                type="url"
+                formControlName="url"
+                class="form-control"
+                [class.invalid]="websitesFormArray.at(i).get('url')?.invalid && websitesFormArray.at(i).get('url')?.touched"
+                placeholder="{{ 'ADMIN_USEFUL_WEBSITES_URL_PLACEHOLDER' | translate }}"
+              />
+              <div class="error-message" *ngIf="websitesFormArray.at(i).get('url')?.invalid && websitesFormArray.at(i).get('url')?.touched">
+                {{ getErrorMessage(websitesFormArray.at(i).get('url')) }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add New Website Button -->
+      <div class="add-button-container">
+        <button type="button" class="btn btn-secondary" (click)="addNewWebsite()">
+          <i class="fas fa-plus"></i>
+          {{ 'ADMIN_USEFUL_WEBSITES_ADD' | translate }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" [disabled]="isSaving || form.invalid">
+        <i class="fas fa-save" *ngIf="!isSaving"></i>
+        <i class="fas fa-spinner fa-spin" *ngIf="isSaving"></i>
+        <span *ngIf="!isSaving">{{ 'ADMIN_USEFUL_WEBSITES_SAVE' | translate }}</span>
+        <span *ngIf="isSaving">{{ 'ADMIN_USEFUL_WEBSITES_SAVING' | translate }}</span>
+      </button>
+      <button type="button" class="btn btn-secondary" (click)="loadWebsites()" [disabled]="isSaving">
+        <i class="fas fa-redo"></i>
+        {{ 'ADMIN_USEFUL_WEBSITES_RESET' | translate }}
+      </button>
+    </div>
+  </form>
+</div>
+
+

@@ -55,13 +55,17 @@ interface ContactItem {
   value: string;
 }
 
+interface MediaItem {
+  image?: string;
+  mediaText?: string;
+  mediaLink?: string;
+}
+
 interface ZoneHumideLanguageContent {
   heroTitle: string;
   heroSubtitle: string;
   introText: string;
-  image?: string;
-  mediaText?: string;
-  mediaLink?: string;
+  media: MediaItem[];
   overview: OverviewItem[];
   themes: ThemeItem[];
   programme: ProgrammeDay[];
@@ -134,9 +138,7 @@ export class AdminZoneHumideFormComponent implements OnInit {
       heroTitle: ['', Validators.required],
       heroSubtitle: ['', Validators.required],
       introText: ['', Validators.required],
-      image: [''],
-      mediaText: [''],
-      mediaLink: [''],
+      media: this.fb.array([]),
       overview: this.fb.array([]),
       themes: this.fb.array([]),
       programme: this.fb.array([]),
@@ -386,6 +388,26 @@ export class AdminZoneHumideFormComponent implements OnInit {
     this.contactInfo.removeAt(index);
   }
 
+  // Media FormArray methods
+  get media(): FormArray {
+    return this.getActiveLanguageFormGroup().get('media') as FormArray;
+  }
+
+  addMedia(item?: MediaItem, lang?: string): void {
+    const langGroup = lang ? this.getLanguageFormGroup(lang) : this.getActiveLanguageFormGroup();
+    const media = langGroup.get('media') as FormArray;
+    const group = this.fb.group({
+      image: [item?.image || ''],
+      mediaText: [item?.mediaText || ''],
+      mediaLink: [item?.mediaLink || '']
+    });
+    media.push(group);
+  }
+
+  removeMedia(index: number): void {
+    this.media.removeAt(index);
+  }
+
   loadPage(): void {
     this.isLoading = true;
     this.pageService.getPageBySlug('zone-humide').subscribe({
@@ -466,9 +488,7 @@ export class AdminZoneHumideFormComponent implements OnInit {
       heroTitle: '',
       heroSubtitle: '',
       introText: '',
-      image: '',
-      mediaText: '',
-      mediaLink: '',
+      media: [],
       overview: [],
       themes: [],
       programme: [],
@@ -743,13 +763,26 @@ export class AdminZoneHumideFormComponent implements OnInit {
         langGroup.patchValue({
           heroTitle: langContent.heroTitle || '',
           heroSubtitle: langContent.heroSubtitle || '',
-          introText: langContent.introText || '',
-          image: langContent.image || '',
-          mediaText: langContent.mediaText || '',
-          mediaLink: langContent.mediaLink || ''
+          introText: langContent.introText || ''
         });
 
+        // Handle migration from old format (single media fields to array)
+        if (!langContent.media && (langContent as any).image) {
+          // Old format - migrate to new format
+          const oldContent = langContent as any;
+          if (oldContent.image || oldContent.mediaText || oldContent.mediaLink) {
+            langContent.media = [{
+              image: oldContent.image || '',
+              mediaText: oldContent.mediaText || '',
+              mediaLink: oldContent.mediaLink || ''
+            }];
+          } else {
+            langContent.media = [];
+          }
+        }
+
         // Clear existing arrays
+        const media = langGroup.get('media') as FormArray;
         const overview = langGroup.get('overview') as FormArray;
         const themes = langGroup.get('themes') as FormArray;
         const programme = langGroup.get('programme') as FormArray;
@@ -757,6 +790,7 @@ export class AdminZoneHumideFormComponent implements OnInit {
         const registrationModes = langGroup.get('registrationModes') as FormArray;
         const processSteps = langGroup.get('processSteps') as FormArray;
         const contactInfo = langGroup.get('contactInfo') as FormArray;
+        while (media.length) media.removeAt(0);
         while (overview.length) overview.removeAt(0);
         while (themes.length) themes.removeAt(0);
         while (programme.length) programme.removeAt(0);
@@ -766,6 +800,7 @@ export class AdminZoneHumideFormComponent implements OnInit {
         while (contactInfo.length) contactInfo.removeAt(0);
 
         // Populate arrays
+        langContent.media?.forEach(item => this.addMedia(item, lang));
         langContent.overview?.forEach(item => this.addOverview(item, lang));
         langContent.themes?.forEach(item => this.addTheme(item, lang));
         langContent.programme?.forEach(item => this.addProgrammeDay(item, lang));
@@ -784,6 +819,9 @@ export class AdminZoneHumideFormComponent implements OnInit {
 
     const formValue = this.form.value;
     
+    // Debug: Log media data to verify it's included
+    console.log('Form value media:', formValue.translations[this.activeLanguage]?.media);
+    
     // Build content with translations
     const content: ZoneHumideContent = {
       translations: {
@@ -792,6 +830,9 @@ export class AdminZoneHumideFormComponent implements OnInit {
         en: this.buildLanguageContent(formValue.translations.en)
       }
     };
+    
+    // Debug: Log built content to verify media is included
+    console.log('Built content media:', content.translations[this.activeLanguage]?.media);
 
     // Use French content for hero title/subtitle in page metadata (fallback to first available)
     const frContent = content.translations.fr;
@@ -849,9 +890,11 @@ export class AdminZoneHumideFormComponent implements OnInit {
       heroTitle: langData.heroTitle || '',
       heroSubtitle: langData.heroSubtitle || '',
       introText: langData.introText || '',
-      image: langData.image || '',
-      mediaText: langData.mediaText || '',
-      mediaLink: langData.mediaLink || '',
+      media: (langData.media || []).map((item: any) => ({
+        image: item.image || '',
+        mediaText: item.mediaText || '',
+        mediaLink: item.mediaLink || ''
+      })),
       overview: (langData.overview || []).map((item: any) => ({
         icon: item.icon,
         title: item.title,
@@ -1158,6 +1201,11 @@ export class AdminZoneHumideFormComponent implements OnInit {
         fr: 'Lien Média',
         ar: 'رابط الإعلام',
         en: 'Media Link'
+      },
+      'addMedia': {
+        fr: 'Ajouter un média',
+        ar: 'إضافة وسيط',
+        en: 'Add Media'
       }
     };
 
@@ -1168,22 +1216,56 @@ export class AdminZoneHumideFormComponent implements OnInit {
     this.router.navigate(['/admin/pages']);
   }
 
-  onImageSelected(event: Event, lang: 'fr' | 'ar' | 'en'): void {
+  onImageSelected(event: Event, mediaIndex: number): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
       const file = input.files[0];
       const reader = new FileReader();
       reader.onload = (e: any) => {
-        const langGroup = this.getLanguageFormGroup(lang);
-        langGroup.patchValue({ image: e.target.result });
+        const mediaArray = this.media;
+        const mediaItem = mediaArray.at(mediaIndex) as FormGroup;
+        if (mediaItem) {
+          const imageControl = mediaItem.get('image');
+          if (imageControl) {
+            imageControl.setValue(e.target.result);
+            imageControl.markAsDirty();
+            imageControl.updateValueAndValidity();
+            // Mark the parent form group as dirty
+            mediaItem.markAsDirty();
+            mediaArray.markAsDirty();
+            // Also mark the language form group as dirty
+            this.getActiveLanguageFormGroup().markAsDirty();
+          } else {
+            console.error('Image control not found in media item');
+          }
+        } else {
+          console.error('Media item not found at index:', mediaIndex);
+        }
+      };
+      reader.onerror = (error) => {
+        console.error('Error reading file:', error);
+        this.errorMessage = this.getLabel('errorLoadingPage');
       };
       reader.readAsDataURL(file);
     }
   }
 
-  removeImage(lang: 'fr' | 'ar' | 'en'): void {
-    const langGroup = this.getLanguageFormGroup(lang);
-    langGroup.patchValue({ image: '' });
+  removeImage(mediaIndex: number): void {
+    const mediaArray = this.media;
+    const mediaItem = mediaArray.at(mediaIndex) as FormGroup;
+    if (mediaItem) {
+      const imageControl = mediaItem.get('image');
+      if (imageControl) {
+        imageControl.setValue('');
+        imageControl.markAsDirty();
+        imageControl.updateValueAndValidity();
+        // Mark the parent form group as dirty
+        mediaItem.markAsDirty();
+        mediaArray.markAsDirty();
+        // Also mark the language form group as dirty
+        this.getActiveLanguageFormGroup().markAsDirty();
+      }
+    }
   }
 }
 

@@ -56,6 +56,12 @@
             <span>{{ 'ADMIN_MENU_CONTACT_MESSAGES' | translate }}</span>
           </a>
         </li>
+        <li>
+          <a routerLink="/admin/useful-websites" routerLinkActive="active">
+            <i class="fas fa-link"></i>
+            <span>{{ 'ADMIN_MENU_USEFUL_WEBSITES' | translate }}</span>
+          </a>
+        </li>
         <li *ngIf="isAdmin()">
           <a routerLink="/admin/users" routerLinkActive="active">
             <i class="fas fa-users"></i>

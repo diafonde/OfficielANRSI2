@@ -273,3 +273,4 @@ SELECT
     (SELECT COUNT(*) FROM page_videos) as videos,
     (SELECT COUNT(*) FROM page_photos) as photos;
 
+

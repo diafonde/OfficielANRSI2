@@ -43,6 +43,7 @@ interface ExpertAnrsiLanguageContent {
   processSteps: ProcessStep[];
   benefits: BenefitItem[];
   applicationText: string;
+  applicationLink: string;
   contactInfo: ContactItem[];
   requiredDocuments: string[];
 }
@@ -115,6 +116,7 @@ export class AdminExpertAnrsiFormComponent implements OnInit {
       processSteps: this.fb.array([]),
       benefits: this.fb.array([]),
       applicationText: ['', Validators.required],
+      applicationLink: [''],
       contactInfo: this.fb.array([]),
       requiredDocuments: this.fb.array([])
     });
@@ -352,6 +354,7 @@ export class AdminExpertAnrsiFormComponent implements OnInit {
       processSteps: [],
       benefits: [],
       applicationText: '',
+      applicationLink: '',
       contactInfo: [],
       requiredDocuments: []
     };
@@ -610,7 +613,8 @@ export class AdminExpertAnrsiFormComponent implements OnInit {
           heroTitle: langContent.heroTitle || '',
           heroSubtitle: langContent.heroSubtitle || '',
           introText: langContent.introText || '',
-          applicationText: langContent.applicationText || ''
+          applicationText: langContent.applicationText || '',
+          applicationLink: langContent.applicationLink || ''
         });
 
         // Clear existing arrays
@@ -719,6 +723,7 @@ export class AdminExpertAnrsiFormComponent implements OnInit {
       processSteps: langData.processSteps || [],
       benefits: langData.benefits || [],
       applicationText: langData.applicationText || '',
+      applicationLink: langData.applicationLink || '',
       contactInfo: langData.contactInfo || [],
       requiredDocuments: langData.requiredDocuments || []
     };
@@ -816,6 +821,11 @@ export class AdminExpertAnrsiFormComponent implements OnInit {
         fr: 'Texte de candidature *',
         ar: 'نص التقديم *',
         en: 'Application Text *'
+      },
+      'applicationLink': {
+        fr: 'Lien de candidature',
+        ar: 'رابط التقديم',
+        en: 'Application Link'
       },
       'contactInformation': {
         fr: 'Informations de Contact',

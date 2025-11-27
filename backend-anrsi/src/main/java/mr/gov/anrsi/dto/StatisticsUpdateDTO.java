@@ -14,3 +14,4 @@ public class StatisticsUpdateDTO {
     private Integer researchFunding;
 }
 
+

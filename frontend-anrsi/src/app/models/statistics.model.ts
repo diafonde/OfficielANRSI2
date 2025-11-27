@@ -13,3 +13,4 @@ export interface StatisticsUpdate {
   researchFunding?: number;
 }
 
+

@@ -19,3 +19,4 @@ public interface PageVideoRepository extends JpaRepository<PageVideo, Long> {
     void deleteByPage(Page page);
 }
 
+

@@ -45,6 +45,7 @@ interface ExpertAnrsiContent {
   applicationText: string;
   contactInfo: ContactItem[];
   requiredDocuments: string[];
+  applicationLink: string;
 }
 
 @Component({

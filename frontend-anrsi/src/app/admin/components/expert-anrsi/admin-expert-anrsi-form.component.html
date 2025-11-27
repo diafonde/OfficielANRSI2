@@ -182,6 +182,10 @@
           <textarea formControlName="applicationText" class="form-control" rows="2"></textarea>
         </div>
         <div class="form-group">
+          <label>{{ getLabel('applicationLink') }}</label>
+          <input type="text" formControlName="applicationLink" class="form-control" placeholder="https://example.com/application" />
+        </div>
+        <div class="form-group">
           <label>{{ getLabel('contactInformation') }}</label>
           <div formArrayName="contactInfo" *ngFor="let item of contactInfo.controls; let i = index">
             <div [formGroupName]="i" class="nested-form-group">

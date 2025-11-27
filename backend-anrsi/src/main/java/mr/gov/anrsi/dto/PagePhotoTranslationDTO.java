@@ -15,3 +15,4 @@ public class PagePhotoTranslationDTO {
     private String description;
 }
 
+
