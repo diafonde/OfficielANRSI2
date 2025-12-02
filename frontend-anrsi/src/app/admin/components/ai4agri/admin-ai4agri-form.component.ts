@@ -3,35 +3,21 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { PageAdminService, PageDTO, PageCreateDTO, PageUpdateDTO } from '../../services/page-admin.service';
+import { ArticleAdminService } from '../../services/article-admin.service';
 
-interface WorkshopItem {
-  date: string;
+interface Ai4agriNewsItem {
   title: string;
-  description: string;
-  detailsTitle?: string;
-  detailsItems: string[];
-}
-
-interface BenefitItem {
-  icon: string;
-  title: string;
-  description: string;
-}
-
-interface PartnershipHighlight {
-  icon: string;
-  title: string;
-  description: string;
+  imageUrls?: string[];
+  documentUrls?: string[]; // Array of document URLs (PDFs, DOC, etc.)
+  description?: string;
+  date?: string;
+  url?: string;
 }
 
 interface Ai4agriLanguageContent {
   heroTitle: string;
   heroSubtitle: string;
-  introText: string;
-  workshops: WorkshopItem[];
-  benefits: BenefitItem[];
-  partnershipText: string;
-  partnershipHighlights: PartnershipHighlight[];
+  newsItems: Ai4agriNewsItem[];
 }
 
 interface Ai4agriContent {
@@ -66,6 +52,7 @@ export class AdminAi4agriFormComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private pageService: PageAdminService,
+    private articleService: ArticleAdminService,
     private router: Router,
     private route: ActivatedRoute
   ) {
@@ -95,12 +82,8 @@ export class AdminAi4agriFormComponent implements OnInit {
   private createLanguageFormGroup(): FormGroup {
     return this.fb.group({
       heroTitle: ['', Validators.required],
-      heroSubtitle: ['', Validators.required],
-      introText: ['', Validators.required],
-      workshops: this.fb.array([]),
-      benefits: this.fb.array([]),
-      partnershipText: ['', Validators.required],
-      partnershipHighlights: this.fb.array([])
+      heroSubtitle: [''],
+      newsItems: this.fb.array([])
     });
   }
 
@@ -120,7 +103,8 @@ export class AdminAi4agriFormComponent implements OnInit {
 
   hasTranslation(lang: string): boolean {
     const langGroup = this.getLanguageFormGroup(lang);
-    return langGroup.get('heroTitle')?.value || langGroup.get('heroSubtitle')?.value || false;
+    const newsItems = langGroup.get('newsItems') as FormArray;
+    return langGroup.get('heroTitle')?.value || langGroup.get('heroSubtitle')?.value || newsItems.length > 0 || false;
   }
 
   isLanguageFormValid(lang: string): boolean {
@@ -157,29 +141,24 @@ export class AdminAi4agriFormComponent implements OnInit {
         en: 'Hero Title *'
       },
       'heroSubtitle': {
-        fr: 'Sous-titre Hero *',
-        ar: 'العنوان الفرعي للبطل *',
-        en: 'Hero Subtitle *'
+        fr: 'Sous-titre Hero',
+        ar: 'العنوان الفرعي للبطل',
+        en: 'Hero Subtitle'
       },
-      'introduction': {
-        fr: 'Introduction',
-        ar: 'مقدمة',
-        en: 'Introduction'
+      'newsItems': {
+        fr: 'Actualités AI 4 AGRI',
+        ar: 'أخبار AI 4 AGRI',
+        en: 'AI 4 AGRI News'
       },
-      'introText': {
-        fr: 'Texte d\'introduction *',
-        ar: 'نص المقدمة *',
-        en: 'Intro Text *'
-      },
-      'workshops': {
-        fr: 'Ateliers',
-        ar: 'ورش العمل',
-        en: 'Workshops'
+      'addNewsItem': {
+        fr: 'Ajouter une actualité',
+        ar: 'إضافة خبر',
+        en: 'Add News Item'
       },
       'date': {
-        fr: 'Date *',
-        ar: 'التاريخ *',
-        en: 'Date *'
+        fr: 'Date',
+        ar: 'التاريخ',
+        en: 'Date'
       },
       'title': {
         fr: 'Titre *',
@@ -187,69 +166,24 @@ export class AdminAi4agriFormComponent implements OnInit {
         en: 'Title *'
       },
       'description': {
-        fr: 'Description *',
-        ar: 'الوصف *',
-        en: 'Description *'
+        fr: 'Description',
+        ar: 'الوصف',
+        en: 'Description'
       },
-      'detailsTitle': {
-        fr: 'Titre des détails',
-        ar: 'عنوان التفاصيل',
-        en: 'Details Title'
+      'imageUrl': {
+        fr: 'URL de l\'image',
+        ar: 'رابط الصورة',
+        en: 'Image URL'
       },
-      'detailsItems': {
-        fr: 'Éléments de détails',
-        ar: 'عناصر التفاصيل',
-        en: 'Details Items'
-      },
-      'addDetailItem': {
-        fr: 'Ajouter un élément de détail',
-        ar: 'إضافة عنصر تفاصيل',
-        en: 'Add Detail Item'
-      },
-      'addWorkshop': {
-        fr: 'Ajouter un atelier',
-        ar: 'إضافة ورشة عمل',
-        en: 'Add Workshop'
+      'url': {
+        fr: 'URL du lien "En savoir plus"',
+        ar: 'رابط "المزيد"',
+        en: 'Learn More URL'
       },
       'remove': {
         fr: 'Supprimer',
         ar: 'إزالة',
         en: 'Remove'
-      },
-      'benefits': {
-        fr: 'Avantages',
-        ar: 'الفوائد',
-        en: 'Benefits'
-      },
-      'icon': {
-        fr: 'Icône',
-        ar: 'أيقونة',
-        en: 'Icon'
-      },
-      'addBenefit': {
-        fr: 'Ajouter un avantage',
-        ar: 'إضافة فائدة',
-        en: 'Add Benefit'
-      },
-      'partnershipSection': {
-        fr: 'Section Partenariat',
-        ar: 'قسم الشراكة',
-        en: 'Partnership Section'
-      },
-      'partnershipText': {
-        fr: 'Texte de partenariat *',
-        ar: 'نص الشراكة *',
-        en: 'Partnership Text *'
-      },
-      'partnershipHighlights': {
-        fr: 'Points forts du partenariat',
-        ar: 'أبرز الشراكة',
-        en: 'Partnership Highlights'
-      },
-      'addPartnershipHighlight': {
-        fr: 'Ajouter un point fort du partenariat',
-        ar: 'إضافة نقطة بارزة للشراكة',
-        en: 'Add Partnership Highlight'
       },
       'complete': {
         fr: 'Complet',
@@ -296,78 +230,437 @@ export class AdminAi4agriFormComponent implements OnInit {
     return translations[key]?.[this.activeLanguage] || translations[key]?.fr || key;
   }
 
-  // Workshops FormArray methods
-  get workshops(): FormArray {
-    return this.getActiveLanguageFormGroup().get('workshops') as FormArray;
+  // NewsItems FormArray methods
+  get newsItems(): FormArray {
+    return this.getActiveLanguageFormGroup().get('newsItems') as FormArray;
   }
 
-  addWorkshop(item?: WorkshopItem, lang?: string): void {
+  addNewsItem(item?: Ai4agriNewsItem, lang?: string): void {
     const langGroup = lang ? this.getLanguageFormGroup(lang) : this.getActiveLanguageFormGroup();
-    const workshops = langGroup.get('workshops') as FormArray;
+    const newsItems = langGroup.get('newsItems') as FormArray;
+    const imageUrlsArray = this.fb.array(
+      (item?.imageUrls || []).map(url => this.fb.control(url))
+    );
+    const documentUrlsArray = this.fb.array(
+      (item?.documentUrls || []).map(url => this.fb.control(url))
+    );
     const group = this.fb.group({
-      date: [item?.date || '', Validators.required],
       title: [item?.title || '', Validators.required],
-      description: [item?.description || '', Validators.required],
-      detailsTitle: [item?.detailsTitle || ''],
-      detailsItems: this.fb.array(item?.detailsItems?.map(i => this.fb.control(i)) || [])
+      imageUrls: imageUrlsArray,
+      documentUrls: documentUrlsArray,
+      description: [item?.description || ''],
+      date: [item?.date || ''],
+      url: [item?.url || '']
     });
-    workshops.push(group);
+    newsItems.push(group);
   }
 
-  removeWorkshop(index: number): void {
-    this.workshops.removeAt(index);
+  removeNewsItem(index: number): void {
+    this.newsItems.removeAt(index);
+    // Clean up all image upload states for this news item
+    const baseKey = `${this.activeLanguage}-${index}-`;
+    for (const key of this.imageUploadState.keys()) {
+      if (key.startsWith(baseKey)) {
+        this.imageUploadState.delete(key);
+      }
+    }
+    // Clean up all document upload states for this news item
+    for (const key of this.documentUploadState.keys()) {
+      if (key.startsWith(baseKey)) {
+        this.documentUploadState.delete(key);
+      }
+    }
   }
 
-  getWorkshopDetailsItems(index: number): FormArray {
-    return this.workshops.at(index).get('detailsItems') as FormArray;
+  // Image upload state tracking - now supports multiple images per news item
+  private imageUploadState = new Map<string, {
+    file?: File;
+    preview?: string;
+    isUploading?: boolean;
+    uploadProgress?: number;
+  }>();
+
+  // Document upload state tracking - supports multiple documents per news item
+  private documentUploadState = new Map<string, {
+    file?: File;
+    isUploading?: boolean;
+    uploadProgress?: number;
+  }>();
+
+  getImageUploadState(newsItemIndex: number, imageIndex: number): {
+    file?: File;
+    preview?: string;
+    isUploading?: boolean;
+    uploadProgress?: number;
+  } {
+    const stateKey = `${this.activeLanguage}-${newsItemIndex}-${imageIndex}`;
+    return this.imageUploadState.get(stateKey) || {};
   }
 
-  addWorkshopDetailItem(workshopIndex: number, value = ''): void {
-    this.getWorkshopDetailsItems(workshopIndex).push(this.fb.control(value));
+  getNewsItemImages(newsItemIndex: number): FormArray {
+    const newsItemGroup = this.newsItems.at(newsItemIndex) as FormGroup;
+    return newsItemGroup.get('imageUrls') as FormArray;
   }
 
-  removeWorkshopDetailItem(workshopIndex: number, itemIndex: number): void {
-    this.getWorkshopDetailsItems(workshopIndex).removeAt(itemIndex);
+  addImageUrl(newsItemIndex: number, url: string = ''): void {
+    const imageUrls = this.getNewsItemImages(newsItemIndex);
+    imageUrls.push(this.fb.control(url));
   }
 
-  // Benefits FormArray methods
-  get benefits(): FormArray {
-    return this.getActiveLanguageFormGroup().get('benefits') as FormArray;
+  removeImageUrl(newsItemIndex: number, imageIndex: number): void {
+    const imageUrls = this.getNewsItemImages(newsItemIndex);
+    imageUrls.removeAt(imageIndex);
+    
+    // Clean up upload state
+    const stateKey = `${this.activeLanguage}-${newsItemIndex}-${imageIndex}`;
+    this.imageUploadState.delete(stateKey);
+    
+    // Reindex remaining states
+    this.reindexImageStates(newsItemIndex, imageIndex);
   }
 
-  addBenefit(item?: BenefitItem, lang?: string): void {
-    const langGroup = lang ? this.getLanguageFormGroup(lang) : this.getActiveLanguageFormGroup();
-    const benefits = langGroup.get('benefits') as FormArray;
-    const group = this.fb.group({
-      icon: [item?.icon || '🌱', Validators.required],
-      title: [item?.title || '', Validators.required],
-      description: [item?.description || '', Validators.required]
+  private reindexImageStates(newsItemIndex: number, removedIndex: number): void {
+    const baseKey = `${this.activeLanguage}-${newsItemIndex}-`;
+    const statesToReindex: Array<{oldKey: string, state: any}> = [];
+    
+    for (const [key, state] of this.imageUploadState.entries()) {
+      if (key.startsWith(baseKey)) {
+        const imageIndex = parseInt(key.split('-').pop() || '0');
+        if (imageIndex > removedIndex) {
+          statesToReindex.push({oldKey: key, state});
+        }
+      }
+    }
+    
+    // Delete old keys and add with new indices
+    statesToReindex.forEach(({oldKey, state}) => {
+      this.imageUploadState.delete(oldKey);
+      const newIndex = parseInt(oldKey.split('-').pop() || '0') - 1;
+      const newKey = `${baseKey}${newIndex}`;
+      this.imageUploadState.set(newKey, state);
     });
-    benefits.push(group);
   }
 
-  removeBenefit(index: number): void {
-    this.benefits.removeAt(index);
+  onImageSelected(event: Event, newsItemIndex: number, imageIndex?: number): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const files = Array.from(input.files);
+      
+      // Clear previous errors
+      this.errorMessage = '';
+      
+      // Get starting index
+      const imageUrls = this.getNewsItemImages(newsItemIndex);
+      let startIndex = imageIndex !== undefined ? imageIndex : imageUrls.length;
+      
+      // Pre-create all needed image slots for new images
+      if (imageIndex === undefined) {
+        // Adding new images - ensure we have enough slots
+        const neededSlots = files.length;
+        const currentLength = imageUrls.length;
+        for (let i = 0; i < neededSlots; i++) {
+          if (currentLength + i >= imageUrls.length) {
+            this.addImageUrl(newsItemIndex, '');
+          }
+        }
+      }
+      
+      files.forEach((file, fileIndex) => {
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+          this.errorMessage = 'Veuillez sélectionner uniquement des fichiers image';
+          return;
+        }
+        
+        // Validate file size (10MB)
+        if (file.size > 10 * 1024 * 1024) {
+          this.errorMessage = 'La taille du fichier ne doit pas dépasser 10MB';
+          return;
+        }
+        
+        // Determine image index
+        let imgIndex: number;
+        if (imageIndex !== undefined && fileIndex === 0) {
+          // Replacing existing image
+          imgIndex = imageIndex;
+        } else {
+          // Adding new image(s)
+          imgIndex = startIndex + fileIndex;
+        }
+        
+        const stateKey = `${this.activeLanguage}-${newsItemIndex}-${imgIndex}`;
+        
+        // Update state
+        this.imageUploadState.set(stateKey, {
+          file: file,
+          preview: undefined,
+          isUploading: false,
+          uploadProgress: 0
+        });
+        
+        // Create preview
+        const reader = new FileReader();
+        reader.onload = (e: any) => {
+          const state = this.imageUploadState.get(stateKey);
+          if (state) {
+            state.preview = e.target.result;
+            this.imageUploadState.set(stateKey, state);
+          }
+        };
+        reader.readAsDataURL(file);
+        
+        // Upload file
+        this.uploadImage(file, newsItemIndex, imgIndex);
+      });
+      
+      // Reset file input
+      input.value = '';
+    }
   }
 
-  // Partnership Highlights FormArray methods
-  get partnershipHighlights(): FormArray {
-    return this.getActiveLanguageFormGroup().get('partnershipHighlights') as FormArray;
-  }
-
-  addPartnershipHighlight(item?: PartnershipHighlight, lang?: string): void {
-    const langGroup = lang ? this.getLanguageFormGroup(lang) : this.getActiveLanguageFormGroup();
-    const highlights = langGroup.get('partnershipHighlights') as FormArray;
-    const group = this.fb.group({
-      icon: [item?.icon || '🔬', Validators.required],
-      title: [item?.title || '', Validators.required],
-      description: [item?.description || '', Validators.required]
+  uploadImage(file: File, newsItemIndex: number, imageIndex: number): void {
+    const stateKey = `${this.activeLanguage}-${newsItemIndex}-${imageIndex}`;
+    const state = this.imageUploadState.get(stateKey);
+    if (!state) return;
+    
+    state.isUploading = true;
+    state.uploadProgress = 0;
+    this.imageUploadState.set(stateKey, state);
+    this.errorMessage = '';
+    
+    this.articleService.uploadImage(file).subscribe({
+      next: (response) => {
+        const imageUrls = this.getNewsItemImages(newsItemIndex);
+        
+        // Ensure the control exists at this index
+        while (imageUrls.length <= imageIndex) {
+          imageUrls.push(this.fb.control(''));
+        }
+        
+        // Set the URL value and mark as dirty/touched
+        const control = imageUrls.at(imageIndex);
+        if (control) {
+          control.setValue(response.url, { emitEvent: true });
+          control.markAsDirty();
+          control.markAsTouched();
+          control.updateValueAndValidity({ emitEvent: true });
+          
+          // Also update the FormArray to ensure changes are detected
+          imageUrls.updateValueAndValidity({ emitEvent: true });
+          
+          console.log(`Image uploaded and saved to form at index ${imageIndex}:`, response.url);
+          console.log(`FormArray length: ${imageUrls.length}, Value:`, imageUrls.value);
+        } else {
+          console.error(`Failed to set image URL at index ${imageIndex}`);
+        }
+        
+        state.isUploading = false;
+        state.uploadProgress = 100;
+        state.file = undefined; // Clear file after successful upload
+        this.imageUploadState.set(stateKey, state);
+        this.errorMessage = '';
+      },
+      error: (error) => {
+        console.error('Upload error:', error);
+        state.isUploading = false;
+        state.uploadProgress = 0;
+        this.imageUploadState.set(stateKey, state);
+        this.errorMessage = error.error?.error || 'Erreur lors du téléchargement de l\'image';
+      }
     });
-    highlights.push(group);
   }
 
-  removePartnershipHighlight(index: number): void {
-    this.partnershipHighlights.removeAt(index);
+  removeImage(newsItemIndex: number, imageIndex: number): void {
+    this.removeImageUrl(newsItemIndex, imageIndex);
+  }
+
+  getNewsItemImageUrl(newsItemIndex: number, imageIndex: number): string | null {
+    const imageUrls = this.getNewsItemImages(newsItemIndex);
+    return imageUrls.at(imageIndex)?.value || null;
+  }
+
+  // Document handling methods
+  getNewsItemDocuments(newsItemIndex: number): FormArray {
+    const newsItemGroup = this.newsItems.at(newsItemIndex) as FormGroup;
+    return newsItemGroup.get('documentUrls') as FormArray;
+  }
+
+  addDocumentUrl(newsItemIndex: number, url: string = ''): void {
+    const documentUrls = this.getNewsItemDocuments(newsItemIndex);
+    documentUrls.push(this.fb.control(url));
+  }
+
+  removeDocumentUrl(newsItemIndex: number, documentIndex: number): void {
+    const documentUrls = this.getNewsItemDocuments(newsItemIndex);
+    documentUrls.removeAt(documentIndex);
+    
+    // Clean up upload state
+    const stateKey = `${this.activeLanguage}-${newsItemIndex}-${documentIndex}`;
+    this.documentUploadState.delete(stateKey);
+    
+    // Reindex remaining states
+    this.reindexDocumentStates(newsItemIndex, documentIndex);
+  }
+
+  reindexDocumentStates(newsItemIndex: number, removedIndex: number): void {
+    const baseKey = `${this.activeLanguage}-${newsItemIndex}-`;
+    const newStates = new Map<string, any>();
+    
+    for (const [key, value] of this.documentUploadState.entries()) {
+      if (key.startsWith(baseKey)) {
+        const parts = key.split('-');
+        const oldIndex = parseInt(parts[parts.length - 1]);
+        if (oldIndex > removedIndex) {
+          const newIndex = oldIndex - 1;
+          const newKey = `${baseKey}${newIndex}`;
+          newStates.set(newKey, value);
+        } else if (oldIndex < removedIndex) {
+          newStates.set(key, value);
+        }
+        // Skip the removed index
+      } else {
+        newStates.set(key, value);
+      }
+    }
+    
+    this.documentUploadState = newStates;
+  }
+
+  getDocumentUploadState(newsItemIndex: number, documentIndex: number): {
+    file?: File;
+    isUploading?: boolean;
+    uploadProgress?: number;
+  } {
+    const stateKey = `${this.activeLanguage}-${newsItemIndex}-${documentIndex}`;
+    return this.documentUploadState.get(stateKey) || {};
+  }
+
+  getNewsItemDocumentUrl(newsItemIndex: number, documentIndex: number): string | null {
+    const documentUrls = this.getNewsItemDocuments(newsItemIndex);
+    return documentUrls.at(documentIndex)?.value || null;
+  }
+
+  onDocumentSelected(event: Event, newsItemIndex: number, documentIndex?: number): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    
+    const files = Array.from(input.files);
+    const documentUrls = this.getNewsItemDocuments(newsItemIndex);
+    const startIndex = documentUrls.length;
+    
+    files.forEach((file, fileIndex) => {
+      // Validate file type
+      const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+      if (!validTypes.includes(file.type) && !file.name.match(/\.(pdf|doc|docx|xls|xlsx)$/i)) {
+        this.errorMessage = `Type de fichier non supporté: ${file.name}. Formats acceptés: PDF, DOC, DOCX, XLS, XLSX`;
+        return;
+      }
+      
+      // Validate file size (50MB max)
+      if (file.size > 50 * 1024 * 1024) {
+        this.errorMessage = `Fichier trop volumineux: ${file.name}. Taille maximale: 50MB`;
+        return;
+      }
+      
+      // Determine document index
+      let docIndex: number;
+      if (documentIndex !== undefined && fileIndex === 0) {
+        // Replacing existing document
+        docIndex = documentIndex;
+      } else {
+        // Adding new document(s)
+        docIndex = startIndex + fileIndex;
+      }
+      
+      const stateKey = `${this.activeLanguage}-${newsItemIndex}-${docIndex}`;
+      
+      // Update state
+      this.documentUploadState.set(stateKey, {
+        file: file,
+        isUploading: false,
+        uploadProgress: 0
+      });
+      
+      // Upload file
+      this.uploadDocument(file, newsItemIndex, docIndex);
+    });
+    
+    // Reset file input
+    input.value = '';
+  }
+
+  uploadDocument(file: File, newsItemIndex: number, documentIndex: number): void {
+    const stateKey = `${this.activeLanguage}-${newsItemIndex}-${documentIndex}`;
+    const state = this.documentUploadState.get(stateKey);
+    if (!state) return;
+    
+    state.isUploading = true;
+    state.uploadProgress = 0;
+    this.documentUploadState.set(stateKey, state);
+    this.errorMessage = '';
+    
+    // Simulate progress
+    const progressInterval = setInterval(() => {
+      if (state.uploadProgress! < 90) {
+        state.uploadProgress = (state.uploadProgress || 0) + 10;
+        this.documentUploadState.set(stateKey, state);
+      }
+    }, 200);
+    
+    this.articleService.uploadDocument(file).subscribe({
+      next: (response) => {
+        clearInterval(progressInterval);
+        const documentUrls = this.getNewsItemDocuments(newsItemIndex);
+        
+        // Ensure the control exists at this index
+        while (documentUrls.length <= documentIndex) {
+          documentUrls.push(this.fb.control(''));
+        }
+        
+        // Set the URL value and mark as dirty/touched
+        const control = documentUrls.at(documentIndex);
+        if (control) {
+          control.setValue(response.url, { emitEvent: true });
+          control.markAsDirty();
+          control.markAsTouched();
+          control.updateValueAndValidity({ emitEvent: true });
+          
+          // Also update the FormArray to ensure changes are detected
+          documentUrls.updateValueAndValidity({ emitEvent: true });
+          
+          console.log(`Document uploaded and saved to form at index ${documentIndex}:`, response.url);
+        }
+        
+        state.isUploading = false;
+        state.uploadProgress = 100;
+        state.file = undefined; // Clear file after successful upload
+        this.documentUploadState.set(stateKey, state);
+        this.errorMessage = '';
+      },
+      error: (error) => {
+        clearInterval(progressInterval);
+        console.error('Document upload error:', error);
+        state.isUploading = false;
+        state.uploadProgress = 0;
+        this.documentUploadState.set(stateKey, state);
+        this.errorMessage = error.error?.error || 'Erreur lors du téléchargement du document';
+      }
+    });
+  }
+
+  removeDocument(newsItemIndex: number, documentIndex: number): void {
+    this.removeDocumentUrl(newsItemIndex, documentIndex);
+  }
+
+  getDocumentFileName(url: string): string {
+    if (!url) return '';
+    const parts = url.split('/');
+    return parts[parts.length - 1];
+  }
+
+  getImageUrlControl(newsItemIndex: number, imageIndex: number): any {
+    const imageUrls = this.getNewsItemImages(newsItemIndex);
+    return imageUrls.at(imageIndex);
   }
 
   loadPage(): void {
@@ -385,17 +678,15 @@ export class AdminAi4agriFormComponent implements OnInit {
               // Check if Arabic data is empty and load defaults
               const arGroup = this.getLanguageFormGroup('ar');
               const arHeroTitle = arGroup.get('heroTitle')?.value;
-              const arWorkshops = arGroup.get('workshops') as FormArray;
-              const arBenefits = arGroup.get('benefits') as FormArray;
-              if ((!arHeroTitle || arHeroTitle.trim() === '') && arWorkshops.length === 0 && arBenefits.length === 0) {
+              const arNewsItems = arGroup.get('newsItems') as FormArray;
+              if ((!arHeroTitle || arHeroTitle.trim() === '') && arNewsItems.length === 0) {
                 this.loadDefaultArabicData();
               }
               // Check if English data is empty and load defaults
               const enGroup = this.getLanguageFormGroup('en');
               const enHeroTitle = enGroup.get('heroTitle')?.value;
-              const enWorkshops = enGroup.get('workshops') as FormArray;
-              const enBenefits = enGroup.get('benefits') as FormArray;
-              if ((!enHeroTitle || enHeroTitle.trim() === '') && enWorkshops.length === 0 && enBenefits.length === 0) {
+              const enNewsItems = enGroup.get('newsItems') as FormArray;
+              if ((!enHeroTitle || enHeroTitle.trim() === '') && enNewsItems.length === 0) {
                 this.loadDefaultEnglishData();
               }
             } else {
@@ -437,11 +728,7 @@ export class AdminAi4agriFormComponent implements OnInit {
     return {
       heroTitle: '',
       heroSubtitle: '',
-      introText: '',
-      workshops: [],
-      benefits: [],
-      partnershipText: '',
-      partnershipHighlights: []
+      newsItems: []
     };
   }
 
@@ -450,47 +737,32 @@ export class AdminAi4agriFormComponent implements OnInit {
     const frGroup = this.getLanguageFormGroup('fr');
     frGroup.patchValue({
       heroTitle: 'AI 4 AGRI',
-      heroSubtitle: 'Intelligence Artificielle pour l\'Agriculture de Précision',
-      introText: 'L\'ANRSI organise des ateliers internationaux sur l\'application de l\'Intelligence Artificielle dans l\'agriculture de précision pour la sécurité alimentaire.',
-      partnershipText: 'L\'ANRSI collabore avec des institutions internationales et des experts en IA pour développer des solutions innovantes pour l\'agriculture mauritanienne.'
+      heroSubtitle: ''
     });
 
-    // Add default workshops for French
-    this.addWorkshop({
-      date: '13-15 Février 2024',
+    // Add default news items for French
+    this.addNewsItem({
       title: 'Ouverture de l\'atelier international sur les applications de l\'IA dans l\'agriculture',
       description: 'Atelier International sur "L\'application de l\'Intelligence Artificielle dans l\'agriculture de précision pour la sécurité alimentaire"',
-      detailsTitle: 'Programme AI 4 AGRI 13-15 Février 2024',
-      detailsItems: [
-        'Présentations sur l\'IA agricole',
-        'Échantillons de présentations',
-        'Démonstrations pratiques',
-        'Réseautage et collaboration'
-      ]
+      date: '13 February 2024',
+      url: '#'
     }, 'fr');
-    this.addWorkshop({
-      date: 'Février 2024',
-      title: 'AI 4 Agri - Initiative Continue',
-      description: 'Programme continu de développement et d\'application de l\'IA dans le secteur agricole mauritanien.',
-      detailsTitle: 'Objectifs du Programme',
-      detailsItems: [
-        'Moderniser l\'agriculture grâce à l\'IA',
-        'Améliorer la productivité agricole',
-        'Renforcer la sécurité alimentaire',
-        'Former les agriculteurs aux nouvelles technologies'
-      ]
+    this.addNewsItem({
+      title: 'Program of the AI 4 AGRI 13 to 15 Feb 2024',
+      description: 'Samples of the Presentations',
+      date: '10 February 2024',
+      url: '#'
     }, 'fr');
-
-    // Add default benefits for French
-    this.addBenefit({ icon: '🌱', title: 'Agriculture de Précision', description: 'Optimisation des ressources et augmentation des rendements grâce à l\'analyse de données précises.' }, 'fr');
-    this.addBenefit({ icon: '📊', title: 'Analyse Prédictive', description: 'Prédiction des conditions météorologiques et des maladies pour une meilleure planification.' }, 'fr');
-    this.addBenefit({ icon: '🤖', title: 'Automatisation', description: 'Robotisation des tâches agricoles pour améliorer l\'efficacité et réduire les coûts.' }, 'fr');
-    this.addBenefit({ icon: '🌍', title: 'Développement Durable', description: 'Promotion d\'une agriculture respectueuse de l\'environnement et durable.' }, 'fr');
-
-    // Add default partnership highlights for French
-    this.addPartnershipHighlight({ icon: '🔬', title: 'Recherche et Développement', description: 'Collaboration avec des centres de recherche internationaux spécialisés en IA agricole.' }, 'fr');
-    this.addPartnershipHighlight({ icon: '🎓', title: 'Formation et Éducation', description: 'Programmes de formation pour les agriculteurs et les professionnels du secteur.' }, 'fr');
-    this.addPartnershipHighlight({ icon: '🤝', title: 'Coopération Internationale', description: 'Échange d\'expertise et de technologies avec des partenaires internationaux.' }, 'fr');
+    this.addNewsItem({
+      title: 'Atelier International sur "L\'application de l\'Intelligence Artificielle dans l\'agriculture de précision pour la sécurité alimentaire »',
+      date: '8 February 2024',
+      url: '#'
+    }, 'fr');
+    this.addNewsItem({
+      title: 'AI 4 Agri',
+      date: '7 February 2024',
+      url: '#'
+    }, 'fr');
 
     // Load default Arabic and English data
     this.loadDefaultArabicData();
@@ -501,54 +773,22 @@ export class AdminAi4agriFormComponent implements OnInit {
     // Check if Arabic data already exists to avoid duplicates
     const arGroup = this.getLanguageFormGroup('ar');
     const heroTitle = arGroup.get('heroTitle')?.value;
-    const existingWorkshops = arGroup.get('workshops') as FormArray;
-    const existingBenefits = arGroup.get('benefits') as FormArray;
+    const existingNewsItems = arGroup.get('newsItems') as FormArray;
 
-    // Only load if Arabic data is empty (no hero title and no workshops/benefits items)
-    if ((!heroTitle || heroTitle.trim() === '') && existingWorkshops.length === 0 && existingBenefits.length === 0) {
+    // Only load if Arabic data is empty (no hero title and no news items)
+    if ((!heroTitle || heroTitle.trim() === '') && existingNewsItems.length === 0) {
       arGroup.patchValue({
         heroTitle: 'الذكاء الاصطناعي للزراعة',
-        heroSubtitle: 'الذكاء الاصطناعي للزراعة الدقيقة',
-        introText: 'تنظم ANRSI ورش عمل دولية حول تطبيقات الذكاء الاصطناعي في الزراعة الدقيقة لضمان الأمن الغذائي.',
-        partnershipText: 'تتعاون ANRSI مع المؤسسات الدولية وخبراء الذكاء الاصطناعي لتطوير حلول مبتكرة للزراعة في موريتانيا.'
+        heroSubtitle: ''
       });
 
-      // Add default workshops for Arabic
-      this.addWorkshop({
-        date: '13-15 فبراير 2024',
+      // Add default news items for Arabic
+      this.addNewsItem({
         title: 'افتتاح ورشة العمل الدولية حول تطبيقات الذكاء الاصطناعي في الزراعة',
         description: 'ورشة عمل دولية حول "تطبيقات الذكاء الاصطناعي في الزراعة الدقيقة لضمان الأمن الغذائي"',
-        detailsTitle: 'برنامج AI 4 AGRI 13-15 فبراير 2024',
-        detailsItems: [
-          'عرض محاضرات حول الذكاء الاصطناعي الزراعي',
-          'نماذج من العروض التقديمية',
-          'عروض عملية',
-          'بناء شبكة علاقات وتعاون'
-        ]
+        date: '13 فبراير 2024',
+        url: '#'
       }, 'ar');
-      this.addWorkshop({
-        date: 'فبراير 2024',
-        title: 'AI 4 Agri - المبادرة المستمرة',
-        description: 'برنامج مستمر لتطوير وتطبيق الذكاء الاصطناعي في قطاع الزراعة الموريتانية.',
-        detailsTitle: 'أهداف البرنامج',
-        detailsItems: [
-          'تحديث الزراعة من خلال الذكاء الاصطناعي',
-          'تحسين الإنتاجية الزراعية',
-          'تعزيز الأمن الغذائي',
-          'تدريب المزارعين على التقنيات الجديدة'
-        ]
-      }, 'ar');
-
-      // Add default benefits for Arabic
-      this.addBenefit({ icon: '🌱', title: 'الزراعة الدقيقة', description: 'تحسين استخدام الموارد وزيادة الإنتاجية من خلال تحليل البيانات الدقيقة.' }, 'ar');
-      this.addBenefit({ icon: '📊', title: 'التحليلات التنبؤية', description: 'التنبؤ بالظروف الجوية والأمراض للمحاصيل لتحسين التخطيط.' }, 'ar');
-      this.addBenefit({ icon: '🤖', title: 'الأتمتة', description: 'استخدام الروبوتات في المهام الزراعية لتحسين الكفاءة وتقليل التكاليف.' }, 'ar');
-      this.addBenefit({ icon: '🌍', title: 'التنمية المستدامة', description: 'تشجيع الزراعة الصديقة للبيئة والمستدامة.' }, 'ar');
-
-      // Add default partnership highlights for Arabic
-      this.addPartnershipHighlight({ icon: '🔬', title: 'البحث والتطوير', description: 'التعاون مع مراكز بحث دولية متخصصة في الذكاء الاصطناعي الزراعي.' }, 'ar');
-      this.addPartnershipHighlight({ icon: '🎓', title: 'التدريب والتعليم', description: 'برامج تدريبية للمزارعين والمتخصصين في القطاع.' }, 'ar');
-      this.addPartnershipHighlight({ icon: '🤝', title: 'التعاون الدولي', description: 'تبادل الخبرات والتقنيات مع الشركاء الدوليين.' }, 'ar');
     }
   }
 
@@ -556,54 +796,22 @@ export class AdminAi4agriFormComponent implements OnInit {
     // Check if English data already exists to avoid duplicates
     const enGroup = this.getLanguageFormGroup('en');
     const heroTitle = enGroup.get('heroTitle')?.value;
-    const existingWorkshops = enGroup.get('workshops') as FormArray;
-    const existingBenefits = enGroup.get('benefits') as FormArray;
+    const existingNewsItems = enGroup.get('newsItems') as FormArray;
 
-    // Only load if English data is empty (no hero title and no workshops/benefits items)
-    if ((!heroTitle || heroTitle.trim() === '') && existingWorkshops.length === 0 && existingBenefits.length === 0) {
+    // Only load if English data is empty (no hero title and no news items)
+    if ((!heroTitle || heroTitle.trim() === '') && existingNewsItems.length === 0) {
       enGroup.patchValue({
         heroTitle: 'AI 4 AGRI',
-        heroSubtitle: 'Artificial Intelligence for Precision Agriculture',
-        introText: 'ANRSI organizes international workshops on the application of Artificial Intelligence in precision agriculture for food security.',
-        partnershipText: 'ANRSI collaborates with international institutions and AI experts to develop innovative solutions for Mauritanian agriculture.'
+        heroSubtitle: ''
       });
 
-      // Add default workshops for English
-      this.addWorkshop({
-        date: '13-15 February 2024',
+      // Add default news items for English
+      this.addNewsItem({
         title: 'Opening of the International Workshop on AI Applications in Agriculture',
         description: 'International Workshop on "Application of Artificial Intelligence in Precision Agriculture for Food Security"',
-        detailsTitle: 'AI 4 AGRI Program 13-15 February 2024',
-        detailsItems: [
-          'Presentations on agricultural AI',
-          'Sample presentations',
-          'Practical demonstrations',
-          'Networking and collaboration'
-        ]
+        date: '13 February 2024',
+        url: '#'
       }, 'en');
-      this.addWorkshop({
-        date: 'February 2024',
-        title: 'AI 4 Agri - Ongoing Initiative',
-        description: 'Ongoing program for the development and application of AI in the Mauritanian agricultural sector.',
-        detailsTitle: 'Program Objectives',
-        detailsItems: [
-          'Modernize agriculture through AI',
-          'Improve agricultural productivity',
-          'Strengthen food security',
-          'Train farmers in new technologies'
-        ]
-      }, 'en');
-
-      // Add default benefits for English
-      this.addBenefit({ icon: '🌱', title: 'Precision Agriculture', description: 'Optimize resources and increase yields through precise data analysis.' }, 'en');
-      this.addBenefit({ icon: '📊', title: 'Predictive Analytics', description: 'Forecast weather conditions and crop diseases for better planning.' }, 'en');
-      this.addBenefit({ icon: '🤖', title: 'Automation', description: 'Robotic agricultural tasks to improve efficiency and reduce costs.' }, 'en');
-      this.addBenefit({ icon: '🌍', title: 'Sustainable Development', description: 'Promote environmentally friendly and sustainable agriculture.' }, 'en');
-
-      // Add default partnership highlights for English
-      this.addPartnershipHighlight({ icon: '🔬', title: 'Research & Development', description: 'Collaboration with international research centers specialized in agricultural AI.' }, 'en');
-      this.addPartnershipHighlight({ icon: '🎓', title: 'Training & Education', description: 'Training programs for farmers and sector professionals.' }, 'en');
-      this.addPartnershipHighlight({ icon: '🤝', title: 'International Cooperation', description: 'Exchange of expertise and technology with international partners.' }, 'en');
     }
   }
 
@@ -615,24 +823,15 @@ export class AdminAi4agriFormComponent implements OnInit {
         const langGroup = this.getLanguageFormGroup(lang);
         langGroup.patchValue({
           heroTitle: langContent.heroTitle || '',
-          heroSubtitle: langContent.heroSubtitle || '',
-          introText: langContent.introText || '',
-          partnershipText: langContent.partnershipText || ''
+          heroSubtitle: langContent.heroSubtitle || ''
         });
 
         // Clear existing arrays
-        const workshops = langGroup.get('workshops') as FormArray;
-        const benefits = langGroup.get('benefits') as FormArray;
-        const highlights = langGroup.get('partnershipHighlights') as FormArray;
-        
-        while (workshops.length) workshops.removeAt(0);
-        while (benefits.length) benefits.removeAt(0);
-        while (highlights.length) highlights.removeAt(0);
+        const newsItems = langGroup.get('newsItems') as FormArray;
+        while (newsItems.length) newsItems.removeAt(0);
 
         // Populate arrays
-        langContent.workshops?.forEach(item => this.addWorkshop(item, lang));
-        langContent.benefits?.forEach(item => this.addBenefit(item, lang));
-        langContent.partnershipHighlights?.forEach(item => this.addPartnershipHighlight(item, lang));
+        langContent.newsItems?.forEach(item => this.addNewsItem(item, lang));
       }
     });
   }
@@ -642,27 +841,74 @@ export class AdminAi4agriFormComponent implements OnInit {
     this.isSaving = true;
     this.errorMessage = '';
 
-    const formValue = this.form.value;
+    // Use getRawValue() for each language group separately to ensure FormArrays are properly captured
+    // This is the same approach used in agence-medias form
+    const translationsData: any = {};
+    
+    ['fr', 'ar', 'en'].forEach(lang => {
+      const langGroup = this.getLanguageFormGroup(lang);
+      const langValue = langGroup.getRawValue();
+      translationsData[lang] = langValue;
+      
+      // Debug: Log imageUrls FormArrays directly
+      const newsItems = langGroup.get('newsItems') as FormArray;
+      console.log(`Language ${lang} - NewsItems count:`, newsItems.length);
+      newsItems.controls.forEach((item: any, i: number) => {
+        const imageUrls = item.get('imageUrls') as FormArray;
+        if (imageUrls) {
+          const imageUrlsValue = imageUrls.getRawValue();
+          console.log(`  NewsItem ${i} (${item.get('title')?.value}):`, {
+            imageUrls_length: imageUrls.length,
+            imageUrls_value: imageUrlsValue,
+            imageUrls_type: typeof imageUrlsValue,
+            isArray: Array.isArray(imageUrlsValue),
+            rawValue: imageUrlsValue
+          });
+        } else {
+          console.log(`  NewsItem ${i} (${item.get('title')?.value}): No imageUrls FormArray found`);
+        }
+      });
+    });
+    
+    // Debug: Log translations data
+    console.log('Translations data (getRawValue per language):', JSON.stringify(translationsData, null, 2));
     
     // Build content with translations (will save empty strings for incomplete languages)
     const content: Ai4agriContent = {
       translations: {
-        fr: this.buildLanguageContent(formValue.translations.fr),
-        ar: this.buildLanguageContent(formValue.translations.ar),
-        en: this.buildLanguageContent(formValue.translations.en)
+        fr: this.buildLanguageContent(translationsData.fr),
+        ar: this.buildLanguageContent(translationsData.ar),
+        en: this.buildLanguageContent(translationsData.en)
       }
     };
+    
+    // Debug: Log built content to verify imageUrls are included
+    console.log('Built content with imageUrls:', JSON.stringify(content, null, 2));
 
     // Use French content for hero title/subtitle in page metadata (fallback to first available)
     const frContent = content.translations.fr;
     const heroTitle = frContent.heroTitle || content.translations.ar.heroTitle || content.translations.en.heroTitle || 'AI 4 AGRI';
     const heroSubtitle = frContent.heroSubtitle || content.translations.ar.heroSubtitle || content.translations.en.heroSubtitle || '';
 
+    // Final verification: Check that imageUrls are present in the content
+    const frNewsItems = content.translations.fr.newsItems || [];
+    console.log('Final verification - French newsItems:', frNewsItems.length);
+    frNewsItems.forEach((item: any, index: number) => {
+      console.log(`  NewsItem ${index} (${item.title}):`, {
+        hasImageUrls: !!item.imageUrls,
+        imageUrls_count: item.imageUrls?.length || 0,
+        imageUrls: item.imageUrls
+      });
+    });
+    
+    const contentJson = JSON.stringify(content);
+    console.log('Final JSON being sent to backend (first 500 chars):', contentJson.substring(0, 500));
+    
     const updateData: PageUpdateDTO = {
       title: 'AI 4 AGRI',
       heroTitle: heroTitle,
       heroSubtitle: heroSubtitle,
-      content: JSON.stringify(content),
+      content: contentJson,
       pageType: 'STRUCTURED',
       isPublished: true,
       isActive: true
@@ -686,7 +932,7 @@ export class AdminAi4agriFormComponent implements OnInit {
         title: 'AI 4 AGRI',
         heroTitle: heroTitle,
         heroSubtitle: heroSubtitle,
-        content: JSON.stringify(content),
+        content: contentJson,
         pageType: 'STRUCTURED',
         isPublished: true,
         isActive: true
@@ -705,21 +951,61 @@ export class AdminAi4agriFormComponent implements OnInit {
   }
 
   private buildLanguageContent(langData: any): Ai4agriLanguageContent {
-    return {
+    const result = {
       heroTitle: langData.heroTitle || '',
       heroSubtitle: langData.heroSubtitle || '',
-      introText: langData.introText || '',
-      workshops: (langData.workshops || []).map((item: any) => ({
-        date: item.date,
-        title: item.title,
-        description: item.description,
-        detailsTitle: item.detailsTitle,
-        detailsItems: item.detailsItems || []
-      })),
-      benefits: langData.benefits || [],
-      partnershipText: langData.partnershipText || '',
-      partnershipHighlights: langData.partnershipHighlights || []
+      newsItems: (langData.newsItems || []).map((item: any, index: number) => {
+        // Extract imageUrls from FormArray - it should be an array of strings
+        let imageUrls: string[] = [];
+        
+        console.log(`Building newsItem ${index}:`, {
+          title: item.title,
+          imageUrls_raw: item.imageUrls,
+          imageUrls_type: typeof item.imageUrls,
+          isArray: Array.isArray(item.imageUrls),
+          imageUrl: item.imageUrl
+        });
+        
+        if (item.imageUrls && Array.isArray(item.imageUrls)) {
+          // Filter out empty/null values and ensure they're strings
+          imageUrls = item.imageUrls
+            .filter((url: any) => url && typeof url === 'string' && url.trim().length > 0)
+            .map((url: string) => url.trim());
+          console.log(`  -> Filtered imageUrls for item ${index}:`, imageUrls);
+        } else if (item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.trim().length > 0) {
+          // Support old format (single imageUrl string)
+          imageUrls = [item.imageUrl.trim()];
+          console.log(`  -> Using old format imageUrl for item ${index}:`, imageUrls);
+        } else {
+          console.log(`  -> No images found for item ${index}`);
+        }
+        
+        // Extract documentUrls from FormArray - it should be an array of strings
+        let documentUrls: string[] = [];
+        
+        if (item.documentUrls && Array.isArray(item.documentUrls)) {
+          // Filter out empty/null values and ensure they're strings
+          documentUrls = item.documentUrls
+            .filter((url: any) => url && typeof url === 'string' && url.trim().length > 0)
+            .map((url: string) => url.trim());
+        } else if (item.documentUrl && typeof item.documentUrl === 'string' && item.documentUrl.trim().length > 0) {
+          // Support old format (single documentUrl string)
+          documentUrls = [item.documentUrl.trim()];
+        }
+        
+        return {
+          title: item.title || '',
+          imageUrls: imageUrls,
+          documentUrls: documentUrls,
+          description: item.description || '',
+          date: item.date || '',
+          url: item.url || ''
+        };
+      })
     };
+    
+    console.log('Built language content:', JSON.stringify(result, null, 2));
+    return result;
   }
 
   onCancel(): void {

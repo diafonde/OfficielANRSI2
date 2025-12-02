@@ -139,7 +139,7 @@ export class AdminAgenceMediasFormComponent implements OnInit {
     return this.fb.group({
       heroTitle: ['', Validators.required],
       heroSubtitle: ['', Validators.required],
-      introText: ['', Validators.required],
+      introText: [''],
       mediaLinks: this.fb.array([]),
       articleLinks: this.fb.array([]),
       mediaOverview: this.fb.array([]),
@@ -419,21 +419,27 @@ export class AdminAgenceMediasFormComponent implements OnInit {
             // Check if it's the new format with translations
             if (parsedContent.translations) {
               const content: AgenceMediasContent = parsedContent;
+              
+              // Check if Arabic data is empty in the database content BEFORE populating
+              const arContent = content.translations.ar;
+              const isArabicEmpty = (!arContent.heroTitle || arContent.heroTitle.trim() === '') &&
+                                   (!arContent.mediaLinks || arContent.mediaLinks.length === 0) &&
+                                   (!arContent.mediaOverview || arContent.mediaOverview.length === 0);
+              
+              // Check if English data is empty in the database content BEFORE populating
+              const enContent = content.translations.en;
+              const isEnglishEmpty = (!enContent.heroTitle || enContent.heroTitle.trim() === '') &&
+                                     (!enContent.mediaLinks || enContent.mediaLinks.length === 0) &&
+                                     (!enContent.mediaOverview || enContent.mediaOverview.length === 0);
+              
+              // Populate form with data from database
               this.populateForm(content);
-              // Check if Arabic data is empty in the form and load defaults if needed
-              const arGroup = this.getLanguageFormGroup('ar');
-              const arHeroTitle = arGroup.get('heroTitle')?.value;
-              const arMediaLinks = arGroup.get('mediaLinks') as FormArray;
-              const arMediaOverview = arGroup.get('mediaOverview') as FormArray;
-              if ((!arHeroTitle || arHeroTitle.trim() === '') && arMediaLinks.length === 0 && arMediaOverview.length === 0) {
+              
+              // Only load defaults if the database content was actually empty
+              if (isArabicEmpty) {
                 this.loadDefaultArabicData();
               }
-              // Check if English data is empty in the form and load defaults if needed
-              const enGroup = this.getLanguageFormGroup('en');
-              const enHeroTitle = enGroup.get('heroTitle')?.value;
-              const enMediaLinks = enGroup.get('mediaLinks') as FormArray;
-              const enMediaOverview = enGroup.get('mediaOverview') as FormArray;
-              if ((!enHeroTitle || enHeroTitle.trim() === '') && enMediaLinks.length === 0 && enMediaOverview.length === 0) {
+              if (isEnglishEmpty) {
                 this.loadDefaultEnglishData();
               }
             } else {
@@ -869,16 +875,41 @@ export class AdminAgenceMediasFormComponent implements OnInit {
         while (socialMedia.length) socialMedia.removeAt(0);
         while (contactInfo.length) contactInfo.removeAt(0);
 
-        // Populate arrays
-        langContent.mediaLinks?.forEach(item => this.addMediaLink(item, lang));
-        langContent.articleLinks?.forEach(item => this.addArticleLink(item, lang));
-        langContent.mediaOverview?.forEach(item => this.addMediaOverview(item, lang));
-        langContent.recentCoverage?.forEach(item => this.addCoverageItem(item, lang));
-        langContent.mediaTypes?.forEach(item => this.addMediaType(item, lang));
-        langContent.pressReleases?.forEach(item => this.addPressRelease(item, lang));
-        langContent.mediaKit?.forEach(item => this.addMediaKitItem(item, lang));
-        langContent.socialMedia?.forEach(item => this.addSocialPlatform(item, lang));
-        langContent.contactInfo?.forEach(item => this.addContactItem(item, lang));
+        // Debug: Log what we're loading
+        console.log(`Loading ${lang} mediaLinks:`, langContent.mediaLinks);
+
+        // Populate arrays - ensure we handle both array and undefined/null cases
+        if (langContent.mediaLinks && Array.isArray(langContent.mediaLinks)) {
+          langContent.mediaLinks.forEach(item => {
+            if (item && (item.label || item.url)) {
+              this.addMediaLink(item, lang);
+            }
+          });
+        }
+        if (langContent.articleLinks && Array.isArray(langContent.articleLinks)) {
+          langContent.articleLinks.forEach(item => this.addArticleLink(item, lang));
+        }
+        if (langContent.mediaOverview && Array.isArray(langContent.mediaOverview)) {
+          langContent.mediaOverview.forEach(item => this.addMediaOverview(item, lang));
+        }
+        if (langContent.recentCoverage && Array.isArray(langContent.recentCoverage)) {
+          langContent.recentCoverage.forEach(item => this.addCoverageItem(item, lang));
+        }
+        if (langContent.mediaTypes && Array.isArray(langContent.mediaTypes)) {
+          langContent.mediaTypes.forEach(item => this.addMediaType(item, lang));
+        }
+        if (langContent.pressReleases && Array.isArray(langContent.pressReleases)) {
+          langContent.pressReleases.forEach(item => this.addPressRelease(item, lang));
+        }
+        if (langContent.mediaKit && Array.isArray(langContent.mediaKit)) {
+          langContent.mediaKit.forEach(item => this.addMediaKitItem(item, lang));
+        }
+        if (langContent.socialMedia && Array.isArray(langContent.socialMedia)) {
+          langContent.socialMedia.forEach(item => this.addSocialPlatform(item, lang));
+        }
+        if (langContent.contactInfo && Array.isArray(langContent.contactInfo)) {
+          langContent.contactInfo.forEach(item => this.addContactItem(item, lang));
+        }
       }
     });
   }
@@ -888,16 +919,29 @@ export class AdminAgenceMediasFormComponent implements OnInit {
     this.isSaving = true;
     this.errorMessage = '';
 
-    const formValue = this.form.value;
+    // Use getRawValue() to ensure FormArrays are properly captured
+    // Also explicitly get FormArray values for each language to ensure they're captured
+    const translationsData: any = {};
+    
+    ['fr', 'ar', 'en'].forEach(lang => {
+      const langGroup = this.getLanguageFormGroup(lang);
+      const langValue = langGroup.getRawValue();
+      translationsData[lang] = langValue;
+    });
     
     // Build content with translations
     const content: AgenceMediasContent = {
       translations: {
-        fr: this.buildLanguageContent(formValue.translations.fr),
-        ar: this.buildLanguageContent(formValue.translations.ar),
-        en: this.buildLanguageContent(formValue.translations.en)
+        fr: this.buildLanguageContent(translationsData.fr),
+        ar: this.buildLanguageContent(translationsData.ar),
+        en: this.buildLanguageContent(translationsData.en)
       }
     };
+
+    // Debug: Log what we're saving
+    console.log('Saving mediaLinks (fr):', content.translations.fr.mediaLinks);
+    console.log('Saving mediaLinks (ar):', content.translations.ar.mediaLinks);
+    console.log('Saving mediaLinks (en):', content.translations.en.mediaLinks);
 
     // Use French content for hero title/subtitle in page metadata (fallback to first available)
     const frContent = content.translations.fr;
@@ -951,14 +995,19 @@ export class AdminAgenceMediasFormComponent implements OnInit {
   }
 
   private buildLanguageContent(langData: any): AgenceMediasLanguageContent {
+    // Filter out empty media links and ensure proper structure
+    const mediaLinks = (langData.mediaLinks || [])
+      .filter((item: any) => item && (item.label || item.url))
+      .map((item: any) => ({
+        label: item.label || '',
+        url: item.url || ''
+      }));
+
     return {
       heroTitle: langData.heroTitle || '',
       heroSubtitle: langData.heroSubtitle || '',
       introText: langData.introText || '',
-      mediaLinks: (langData.mediaLinks || []).map((item: any) => ({
-        label: item.label,
-        url: item.url
-      })),
+      mediaLinks: mediaLinks,
       articleLinks: (langData.articleLinks || []).map((item: any) => ({
         title: item.title,
         url: item.url
@@ -1065,6 +1114,16 @@ export class AdminAgenceMediasFormComponent implements OnInit {
         fr: 'Ajouter un lien article',
         ar: 'إضافة رابط مقال',
         en: 'Add Article Link'
+      },
+      'noArticleLinks': {
+        fr: 'Aucun lien d\'article ajouté pour le moment. Cliquez sur le bouton ci-dessous pour en ajouter un.',
+        ar: 'لم تتم إضافة روابط مقالات بعد. انقر على الزر أدناه لإضافة واحد.',
+        en: 'No article links added yet. Click the button below to add one.'
+      },
+      'noMediaLinks': {
+        fr: 'Aucun lien média ajouté pour le moment. Cliquez sur le bouton ci-dessous pour en ajouter un.',
+        ar: 'لم تتم إضافة روابط إعلام بعد. انقر على الزر أدناه لإضافة واحد.',
+        en: 'No media links added yet. Click the button below to add one.'
       },
       'mediaOverviewSection': {
         fr: 'Aperçu des Médias',

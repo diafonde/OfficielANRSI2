@@ -100,7 +100,46 @@ export class ExpertAnrsiComponent implements OnInit, OnDestroy {
 
   updateTranslatedContent(): void {
     if (!this.page) return;
+
+    // First, try to get from page.content (where admin form saves the translations structure)
+    if (this.page.content) {
+      try {
+        const parsedContent = JSON.parse(this.page.content);
+        // Check if it's the new format with translations
+        if (parsedContent.translations) {
+          // Extract content for current language, fallback to French
+          const langContent = parsedContent.translations[this.currentLang] 
+            || parsedContent.translations['fr'] 
+            || parsedContent.translations['ar'] 
+            || parsedContent.translations['en'];
+          
+          if (langContent) {
+            this.content = langContent;
+            
+            // Update page title and hero from the language content
+            if (langContent.heroTitle) {
+              this.page.heroTitle = langContent.heroTitle;
+              if (this.content) {
+                this.content.heroTitle = langContent.heroTitle;
+              }
+            }
+            if (langContent.heroSubtitle) {
+              this.page.heroSubtitle = langContent.heroSubtitle;
+              if (this.content) {
+                this.content.heroSubtitle = langContent.heroSubtitle;
+              }
+            }
+            return;
+          }
+        }
+      } catch (e) {
+        console.error('Error parsing page.content:', e);
+      }
+    }
+
+    // Fallback: Try to get translation for current language from page.translations
     const translation = this.page.translations?.[this.currentLang];
+    
     if (translation && translation.content) {
       try {
         this.content = JSON.parse(translation.content);
@@ -123,6 +162,7 @@ export class ExpertAnrsiComponent implements OnInit, OnDestroy {
         this.loadContentFromPage();
       }
     } else {
+      // Final fallback
       this.loadContentFromPage();
     }
   }
@@ -130,13 +170,37 @@ export class ExpertAnrsiComponent implements OnInit, OnDestroy {
   loadContentFromPage(): void {
     if (this.page?.content) {
       try {
-        this.content = JSON.parse(this.page.content);
-        // Ensure heroTitle and heroSubtitle are in content if they exist in page
-        if (this.content && this.page.heroTitle && !this.content.heroTitle) {
-          this.content.heroTitle = this.page.heroTitle;
-        }
-        if (this.content && this.page.heroSubtitle && !this.content.heroSubtitle) {
-          this.content.heroSubtitle = this.page.heroSubtitle;
+        const parsedContent = JSON.parse(this.page.content);
+        // Check if it's the new format with translations
+        if (parsedContent.translations) {
+          // Extract content for current language, fallback to French
+          const langContent = parsedContent.translations[this.currentLang] 
+            || parsedContent.translations['fr'] 
+            || parsedContent.translations['ar'] 
+            || parsedContent.translations['en'];
+          
+          if (langContent) {
+            this.content = langContent;
+            // Ensure heroTitle and heroSubtitle are in content if they exist in page
+            if (this.content && this.page.heroTitle && !this.content.heroTitle) {
+              this.content.heroTitle = this.page.heroTitle;
+            }
+            if (this.content && this.page.heroSubtitle && !this.content.heroSubtitle) {
+              this.content.heroSubtitle = this.page.heroSubtitle;
+            }
+          } else {
+            this.content = null;
+          }
+        } else {
+          // Old format - single language
+          this.content = parsedContent;
+          // Ensure heroTitle and heroSubtitle are in content if they exist in page
+          if (this.content && this.page.heroTitle && !this.content.heroTitle) {
+            this.content.heroTitle = this.page.heroTitle;
+          }
+          if (this.content && this.page.heroSubtitle && !this.content.heroSubtitle) {
+            this.content.heroSubtitle = this.page.heroSubtitle;
+          }
         }
       } catch (e) {
         console.error('Error parsing content:', e);

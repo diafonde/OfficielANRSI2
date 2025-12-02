@@ -60,8 +60,6 @@ export class AdminArticleFormComponent implements OnInit {
       publishDate: ['', [Validators.required]],
       imageUrl: ['', [Validators.required]], // First image will be used as featured image
       images: [[]], // Array of image URLs
-      category: ['', [Validators.required]],
-      tags: ['', [Validators.required]],
       featured: [false],
       published: [true],
       attachmentUrl: [''], // Optional attachment URL
@@ -564,9 +562,7 @@ export class AdminArticleFormComponent implements OnInit {
     }
     
     if (this.articleForm.get('author')?.valid && 
-        this.articleForm.get('publishDate')?.valid &&
-        this.articleForm.get('category')?.valid &&
-        this.articleForm.get('tags')?.valid) {
+        this.articleForm.get('publishDate')?.valid) {
       
       this.isLoading = true;
       this.errorMessage = '';
@@ -603,8 +599,6 @@ export class AdminArticleFormComponent implements OnInit {
         publishDate: publishDate,
         imageUrl: formValue.imageUrl || (imageUrls.length > 0 ? imageUrls[0] : ''),
         images: imageUrls,
-        category: formValue.category,
-        tags: formValue.tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag),
         featured: formValue.featured || false,
         published: formValue.published !== false,
         attachmentUrl: formValue.attachmentUrl || null,
@@ -715,9 +709,6 @@ export class AdminArticleFormComponent implements OnInit {
     return d.toISOString().split('T')[0];
   }
 
-  getCategories(): string[] {
-    return ['Research', 'Environment', 'Development', 'Technology', 'Collaboration'];
-  }
 
   getActiveLanguageName(): string {
     const lang = this.languages.find(l => l.code === this.activeLanguage);

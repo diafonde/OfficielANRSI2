@@ -90,12 +90,20 @@ export class AdminPlateformesFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Check for language query parameter
+    // Check for language query parameter from snapshot first
+    const langParam = this.route.snapshot.queryParams['lang'];
+    if (langParam && ['fr', 'ar', 'en'].includes(langParam)) {
+      this.activeLanguage = langParam as 'fr' | 'ar' | 'en';
+    }
+    
+    // Subscribe to query params for future changes
     this.route.queryParams.subscribe(params => {
       if (params['lang'] && ['fr', 'ar', 'en'].includes(params['lang'])) {
         this.activeLanguage = params['lang'] as 'fr' | 'ar' | 'en';
       }
     });
+    
+    // Load page after initial setup
     this.loadPage();
   }
 
@@ -131,7 +139,12 @@ export class AdminPlateformesFormComponent implements OnInit {
   }
 
   getActiveLanguageFormGroup(): FormGroup {
-    return this.form.get(`translations.${this.activeLanguage}`) as FormGroup;
+    const group = this.form.get(`translations.${this.activeLanguage}`) as FormGroup;
+    if (!group) {
+      console.warn(`Form group for language ${this.activeLanguage} not found, using 'fr' as fallback`);
+      return this.form.get(`translations.fr`) as FormGroup;
+    }
+    return group;
   }
 
   getLanguageFormGroup(lang: string): FormGroup {
@@ -313,58 +326,72 @@ export class AdminPlateformesFormComponent implements OnInit {
   }
 
   loadPage(): void {
+    // Prevent multiple simultaneous loads
+    if (this.isLoading) {
+      return;
+    }
+    
     this.isLoading = true;
+    this.errorMessage = '';
+    
     this.pageService.getPageBySlug('plateformes').subscribe({
       next: (page) => {
-        this.pageId = page.id || null;
-        if (page.content) {
-          try {
-            const parsedContent = JSON.parse(page.content);
-            // Check if it's the new format with translations
-            if (parsedContent.translations) {
-              const content: PlateformesContent = parsedContent;
-              this.populateForm(content);
-              // Check if Arabic data is empty in the form and load defaults if needed
-              const arGroup = this.getLanguageFormGroup('ar');
-              const arHeroTitle = arGroup.get('heroTitle')?.value;
-              const arPlateformes = arGroup.get('plateformes') as FormArray;
-              const arAccessModes = arGroup.get('accessModes') as FormArray;
-              if ((!arHeroTitle || arHeroTitle.trim() === '') && arPlateformes.length === 0 && arAccessModes.length === 0) {
+        try {
+          this.pageId = page.id || null;
+          if (page.content) {
+            try {
+              const parsedContent = JSON.parse(page.content);
+              // Check if it's the new format with translations
+              if (parsedContent.translations) {
+                const content: PlateformesContent = parsedContent;
+                this.populateForm(content);
+                // Check if Arabic data is empty in the form and load defaults if needed
+                const arGroup = this.getLanguageFormGroup('ar');
+                const arHeroTitle = arGroup.get('heroTitle')?.value;
+                const arPlateformes = arGroup.get('plateformes') as FormArray;
+                const arAccessModes = arGroup.get('accessModes') as FormArray;
+                if ((!arHeroTitle || arHeroTitle.trim() === '') && arPlateformes.length === 0 && arAccessModes.length === 0) {
+                  this.loadDefaultArabicData();
+                }
+                // Check if English data is empty in the form and load defaults if needed
+                const enGroup = this.getLanguageFormGroup('en');
+                const enHeroTitle = enGroup.get('heroTitle')?.value;
+                const enPlateformes = enGroup.get('plateformes') as FormArray;
+                const enAccessModes = enGroup.get('accessModes') as FormArray;
+                if ((!enHeroTitle || enHeroTitle.trim() === '') && enPlateformes.length === 0 && enAccessModes.length === 0) {
+                  this.loadDefaultEnglishData();
+                }
+              } else {
+                // Old format - migrate to new format
+                const oldContent: PlateformesLanguageContent = parsedContent;
+                const content: PlateformesContent = {
+                  translations: {
+                    fr: oldContent,
+                    ar: this.getEmptyLanguageContent(),
+                    en: this.getEmptyLanguageContent()
+                  }
+                };
+                this.populateForm(content);
+                // Load default Arabic and English data since they're empty
                 this.loadDefaultArabicData();
-              }
-              // Check if English data is empty in the form and load defaults if needed
-              const enGroup = this.getLanguageFormGroup('en');
-              const enHeroTitle = enGroup.get('heroTitle')?.value;
-              const enPlateformes = enGroup.get('plateformes') as FormArray;
-              const enAccessModes = enGroup.get('accessModes') as FormArray;
-              if ((!enHeroTitle || enHeroTitle.trim() === '') && enPlateformes.length === 0 && enAccessModes.length === 0) {
                 this.loadDefaultEnglishData();
               }
-            } else {
-              // Old format - migrate to new format
-              const oldContent: PlateformesLanguageContent = parsedContent;
-              const content: PlateformesContent = {
-                translations: {
-                  fr: oldContent,
-                  ar: this.getEmptyLanguageContent(),
-                  en: this.getEmptyLanguageContent()
-                }
-              };
-              this.populateForm(content);
-              // Load default Arabic and English data since they're empty
-              this.loadDefaultArabicData();
-              this.loadDefaultEnglishData();
+            } catch (e) {
+              console.error('Error parsing content:', e);
+              this.loadDefaultData();
             }
-          } catch (e) {
-            console.error('Error parsing content:', e);
+          } else {
             this.loadDefaultData();
           }
-        } else {
+        } catch (error) {
+          console.error('Error processing page data:', error);
           this.loadDefaultData();
+        } finally {
+          this.isLoading = false;
         }
-        this.isLoading = false;
       },
       error: (error) => {
+        console.error('Error loading page:', error);
         if (error.status === 404) {
           this.loadDefaultData();
         } else {

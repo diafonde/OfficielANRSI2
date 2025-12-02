@@ -20,7 +20,13 @@ export class TopBarComponent implements OnInit, OnDestroy {
   constructor(public translate: TranslateService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
-    // Component initialization
+    // Get saved language from localStorage
+    const savedLang = localStorage.getItem('preferred_language') || 'fr';
+    if (['fr', 'ar', 'en'].includes(savedLang)) {
+      this.currentLang = savedLang;
+      this.translate.use(savedLang);
+      document.body.dir = savedLang === 'ar' ? 'rtl' : 'ltr';
+    }
   }
 
   ngOnDestroy() {
@@ -76,6 +82,7 @@ export class TopBarComponent implements OnInit, OnDestroy {
     this.currentLang = lang;
     this.translate.use(lang);
     document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    localStorage.setItem('preferred_language', lang); // Save to localStorage
     this.isLangDropdownOpen = false;
   }
 

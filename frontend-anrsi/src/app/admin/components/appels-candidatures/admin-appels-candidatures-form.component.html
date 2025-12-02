@@ -16,22 +16,40 @@
 
   <form [formGroup]="form" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
     <!-- Language Tabs -->
-    <div class="language-tabs">
-      <button
-        *ngFor="let lang of languages"
-        type="button"
-        class="lang-tab"
-        [class.active]="activeLanguage === lang.code"
-        [class.has-content]="hasTranslation(lang.code)"
-        [class.valid]="isLanguageFormValid(lang.code)"
-        (click)="switchLanguage(lang.code)">
-        <span class="lang-flag">{{ lang.flag }}</span>
-        <span class="lang-name">{{ lang.name }}</span>
-        <span class="lang-status">
-          <i *ngIf="isLanguageFormValid(lang.code)" class="fas fa-check-circle"></i>
-          <i *ngIf="!isLanguageFormValid(lang.code) && hasTranslation(lang.code)" class="fas fa-exclamation-circle"></i>
-        </span>
-      </button>
+    <div class="language-tabs-container">
+      <div class="language-tabs">
+        <button
+          *ngFor="let lang of languages"
+          type="button"
+          class="lang-tab"
+          [class.active]="activeLanguage === lang.code"
+          [class.has-content]="hasTranslation(lang.code)"
+          [class.valid]="isLanguageFormValid(lang.code)"
+          (click)="switchLanguage(lang.code)">
+          <span class="lang-flag">{{ lang.flag }}</span>
+          <span class="lang-name">{{ lang.name }}</span>
+          <span class="lang-status">
+            <i *ngIf="isLanguageFormValid(lang.code)" class="fas fa-check-circle" title="Complet"></i>
+            <i *ngIf="!isLanguageFormValid(lang.code) && hasTranslation(lang.code)" class="fas fa-exclamation-circle" title="Incomplet"></i>
+          </span>
+        </button>
+      </div>
+      <div class="translation-helpers" *ngIf="activeLanguage !== 'fr'">
+        <button 
+          type="button" 
+          class="btn btn-sm btn-secondary"
+          (click)="copyFromFrench()"
+          title="Copier le contenu du français vers {{ getActiveLanguageName() }}">
+          <i class="fas fa-copy"></i> Copier depuis le français
+        </button>
+      </div>
+    </div>
+    <div class="translation-info" *ngIf="activeLanguage !== 'fr'">
+      <i class="fas fa-info-circle"></i>
+      <span>
+        <strong>Mode traduction :</strong> Vous éditez actuellement la version {{ getActiveLanguageName() }}. 
+        Tous les champs que vous remplissez seront affichés lorsque les visiteurs sélectionnent cette langue sur le site.
+      </span>
     </div>
     <!-- Hero Section -->
     <div class="form-section">
@@ -40,222 +58,182 @@
         <div class="form-group">
           <label>{{ getLabel('heroTitle') }}</label>
           <input type="text" formControlName="heroTitle" class="form-control" />
-        </div>
-        <div class="form-group">
-          <label>{{ getLabel('heroSubtitle') }}</label>
-          <input type="text" formControlName="heroSubtitle" class="form-control" />
-        </div>
-      </div>
-    </div>
-
-    <!-- Intro Text -->
-    <div class="form-section">
-      <h2>{{ getLabel('introSection') }} - {{ getActiveLanguageName() }}</h2>
-      <div [formGroup]="getActiveLanguageFormGroup()">
-        <div class="form-group">
-          <label>{{ getLabel('introText') }}</label>
-          <textarea formControlName="introText" class="form-control" rows="4"></textarea>
+          <small class="form-text text-muted">Titre principal affiché dans le hero</small>
         </div>
       </div>
     </div>
 
     <!-- Appels -->
     <div class="form-section">
-      <h2>{{ getLabel('appelsSection') }} - {{ getActiveLanguageName() }}</h2>
+      <div class="section-header">
+        <h2>{{ getLabel('appelsSection') }} - {{ getActiveLanguageName() }}</h2>
+        <div class="import-section">
+          <input 
+            type="file" 
+            id="json-import-input" 
+            accept=".json,application/json" 
+            multiple 
+            (change)="onJsonFilesSelected($event)"
+            style="display: none;"
+            #jsonFileInput
+          />
+          <button 
+            type="button" 
+            class="btn btn-info" 
+            (click)="jsonFileInput.click()"
+            title="Importer des fichiers JSON">
+            <i class="fas fa-file-import"></i> Importer des fichiers JSON
+          </button>
+        </div>
+      </div>
+      <p class="section-description">Gérez les appels à candidatures affichés sur la page publique</p>
       <div [formGroup]="getActiveLanguageFormGroup()">
         <div formArrayName="appels" *ngFor="let appel of appels.controls; let i = index">
-          <div [formGroupName]="i" class="nested-form-group">
-            <div class="form-row">
-              <div class="form-group">
-                <label>{{ getLabel('status') }}</label>
-                <select formControlName="status" class="form-control">
-                  <option value="active">Active</option>
-                  <option value="upcoming">Upcoming</option>
-                  <option value="closed">Closed</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>{{ getLabel('title') }}</label>
-                <input type="text" formControlName="title" class="form-control" />
-              </div>
-              <button type="button" (click)="removeAppel(i)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
+          <div [formGroupName]="i" class="nested-form-group appel-card">
+            <div class="card-header">
+              <h3>Appel #{{ i + 1 }}</h3>
+              <button type="button" (click)="removeAppel(i)" class="btn btn-danger btn-sm">
+                <i class="fas fa-trash"></i> {{ getLabel('remove') }}
+              </button>
             </div>
+            
             <div class="form-group">
-              <label>{{ getLabel('description') }}</label>
-              <textarea formControlName="description" class="form-control" rows="3"></textarea>
+              <label>{{ getLabel('title') }} <span class="required">*</span></label>
+              <input 
+                type="text" 
+                formControlName="title" 
+                class="form-control" 
+                [placeholder]="activeLanguage === 'fr' ? 'Ex: Appel à candidatures : Prime de publication 2025' : (activeLanguage === 'ar' ? 'مثال: دعوة للتقديم: جائزة النشر 2025' : 'Ex: Call for applications: Publication Prize 2025')" />
             </div>
+            
             <div class="form-group">
-              <label>{{ getLabel('details') }}</label>
-              <div formArrayName="details" *ngFor="let detail of getAppelDetails(i).controls; let j = index">
-                <div [formGroupName]="j" class="form-row">
-                  <input type="text" formControlName="label" class="form-control" placeholder="Label" />
-                  <input type="text" formControlName="value" class="form-control" placeholder="Value" />
-                  <button type="button" (click)="removeAppelDetail(i, j)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
+              <label>{{ getLabel('description') }} <span class="required">*</span></label>
+              <textarea 
+                formControlName="description" 
+                class="form-control" 
+                rows="4" 
+                [placeholder]="activeLanguage === 'fr' ? 'Description de l\'appel à candidatures...' : (activeLanguage === 'ar' ? 'وصف دعوة التقديم...' : 'Description of the call for applications...')"></textarea>
+            </div>
+            
+            <div class="form-group">
+              <label>Image</label>
+              <div class="image-upload-container">
+                <input
+                  type="file"
+                  [id]="'imageFile-' + activeLanguage + '-' + i"
+                  accept="image/*"
+                  (change)="onImageSelected($event, i)"
+                  class="file-input"
+                >
+                <div class="image-preview" *ngIf="getImageUploadState(i).preview || getAppelImageUrl(i)">
+                  <img [src]="getImageUploadState(i).preview || getAppelImageUrl(i)" alt="Preview" class="preview-image">
+                  <button type="button" class="remove-image" (click)="removeImage(i)" title="Remove image">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+                <div class="file-upload-placeholder" *ngIf="!getImageUploadState(i).preview && !getAppelImageUrl(i) && !getImageUploadState(i).file">
+                  <i class="fas fa-cloud-upload-alt"></i>
+                  <span>Cliquez pour télécharger une image</span>
+                  <small>PNG, JPG, GIF jusqu'à 10MB</small>
+                </div>
+                <div class="upload-progress" *ngIf="getImageUploadState(i).isUploading">
+                  <div class="progress-bar">
+                    <div class="progress-fill" [style.width.%]="getImageUploadState(i).uploadProgress || 0"></div>
+                  </div>
+                  <span>Téléchargement... {{ getImageUploadState(i).uploadProgress || 0 }}%</span>
+                </div>
+                <div class="image-url-input" *ngIf="getAppelImageUrl(i) && !getImageUploadState(i).isUploading">
+                  <input type="text" formControlName="imageUrl" class="form-control" placeholder="Ou entrez une URL d'image" />
                 </div>
               </div>
-              <button type="button" (click)="addAppelDetail(i)" class="btn btn-secondary btn-sm">{{ getLabel('addDetail') }}</button>
+              <small class="form-text text-muted">Téléchargez une image ou entrez une URL d'image pour cet appel</small>
             </div>
+            
             <div class="form-group">
-              <label>{{ getLabel('actions') }}</label>
-              <div formArrayName="actions" *ngFor="let action of getAppelActions(i).controls; let j = index">
-                <div [formGroupName]="j" class="form-row">
-                  <input type="text" formControlName="text" class="form-control" placeholder="Button Text" />
-                  <input type="file" (change)="onFileSelected($event, i, j)" class="form-control" />
-                  <select formControlName="type" class="form-control">
-                    <option value="primary">Primary</option>
-                    <option value="outline">Outline</option>
-                  </select>
-                  <button type="button" (click)="removeAppelAction(i, j)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
+              <label>Date de publication</label>
+              <div formArrayName="details">
+                <div *ngFor="let detail of getAppelDetails(i).controls; let j = index">
+                  <div [formGroupName]="j" class="form-row">
+                    <input type="text" formControlName="label" class="form-control" placeholder="Label (ex: Date)" />
+                    <input type="text" formControlName="value" class="form-control" placeholder="Valeur (ex: 24 October 2025)" />
+                    <button type="button" (click)="removeAppelDetail(i, j)" class="btn btn-danger btn-sm">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
                 </div>
+                <button type="button" (click)="addDateDetail(i)" class="btn btn-secondary btn-sm">
+                  <i class="fas fa-plus"></i> Ajouter une date
+                </button>
               </div>
-              <button type="button" (click)="addAppelAction(i)" class="btn btn-secondary btn-sm">{{ getLabel('addAction') }}</button>
+              <small class="form-text text-muted">Pour afficher la date, ajoutez un détail avec le label "Date" ou "date" et la valeur au format "DD Month YYYY" (ex: 24 October 2025)</small>
             </div>
-          </div>
-        </div>
-        <button type="button" (click)="addAppel()" class="btn btn-primary">{{ getLabel('addAppel') }}</button>
-      </div>
-    </div>
-
-    <!-- Categories -->
-    <div class="form-section">
-      <h2>{{ getLabel('categoriesSection') }} - {{ getActiveLanguageName() }}</h2>
-      <div [formGroup]="getActiveLanguageFormGroup()">
-        <div formArrayName="categories" *ngFor="let category of categories.controls; let i = index">
-          <div [formGroupName]="i" class="nested-form-group">
-            <div class="form-row">
-              <div class="form-group">
-                <label>{{ getLabel('icon') }}</label>
-                <input type="text" formControlName="icon" class="form-control" placeholder="🌱" />
-              </div>
-              <div class="form-group">
-                <label>{{ getLabel('title') }}</label>
-                <input type="text" formControlName="title" class="form-control" />
-              </div>
-              <button type="button" (click)="removeCategory(i)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
-            </div>
+            
             <div class="form-group">
-              <label>{{ getLabel('items') }}</label>
-              <div formArrayName="items" *ngFor="let itemCtrl of getCategoryItems(i).controls; let j = index">
-                <div class="form-row">
-                  <input type="text" [formControlName]="j" class="form-control" />
-                  <button type="button" (click)="removeCategoryItem(i, j)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
+              <label>Lien "En savoir plus" <span class="required">*</span></label>
+              <div formArrayName="actions">
+                <div *ngFor="let action of getAppelActions(i).controls; let j = index">
+                  <div [formGroupName]="j" class="action-item">
+                    <div class="action-input-row">
+                      <input type="text" formControlName="url" class="form-control" placeholder="URL (ex: /article/123 ou https://example.com)" />
+                      <input type="hidden" formControlName="text" [value]="'En savoir plus'" />
+                      <input type="hidden" formControlName="type" [value]="'primary'" />
+                      <button type="button" (click)="removeAppelAction(i, j)" class="btn btn-danger btn-sm" *ngIf="getAppelActions(i).length > 1">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+                    <div class="document-upload-container">
+                      <input
+                        type="file"
+                        [id]="'documentFile-' + activeLanguage + '-' + i + '-' + j"
+                        accept=".pdf,.doc,.docx,.xls,.xlsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                        (change)="onDocumentSelected($event, i, j)"
+                        class="file-input"
+                        style="display: none;"
+                        #documentFileInput
+                      />
+                      <div class="document-upload-options">
+                        <button 
+                          type="button" 
+                          class="btn btn-sm btn-outline-primary"
+                          (click)="documentFileInput.click()"
+                          [disabled]="getDocumentUploadState(i, j).isUploading">
+                          <i class="fas fa-file-upload"></i> 
+                          <span *ngIf="!getDocumentUploadState(i, j).isUploading">Télécharger un document</span>
+                          <span *ngIf="getDocumentUploadState(i, j).isUploading">Téléchargement...</span>
+                        </button>
+                        <span class="document-info" *ngIf="getDocumentUploadState(i, j).fileName && !getDocumentUploadState(i, j).isUploading">
+                          <i class="fas fa-file"></i> {{ getDocumentUploadState(i, j).fileName }}
+                        </span>
+                        <span class="document-url" *ngIf="getActionUrl(i, j) && !getDocumentUploadState(i, j).isUploading">
+                          <i class="fas fa-link"></i> Document téléchargé
+                          <button type="button" class="btn btn-sm btn-link text-danger" (click)="removeDocument(i, j)" title="Supprimer le document">
+                            <i class="fas fa-times"></i>
+                          </button>
+                        </span>
+                      </div>
+                      <div class="upload-progress" *ngIf="getDocumentUploadState(i, j).isUploading">
+                        <div class="progress-bar">
+                          <div class="progress-fill" [style.width.%]="getDocumentUploadState(i, j).uploadProgress || 0"></div>
+                        </div>
+                        <span>Téléchargement... {{ getDocumentUploadState(i, j).uploadProgress || 0 }}%</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+                <button type="button" (click)="addAppelAction(i)" class="btn btn-secondary btn-sm" *ngIf="getAppelActions(i).length === 0">
+                  <i class="fas fa-plus"></i> Ajouter un lien
+                </button>
               </div>
-              <button type="button" (click)="addCategoryItem(i)" class="btn btn-secondary btn-sm">{{ getLabel('addItem') }}</button>
+              <small class="form-text text-muted">Entrez une URL ou téléchargez un document (PDF, Word, Excel - max 50MB)</small>
             </div>
           </div>
         </div>
-        <button type="button" (click)="addCategory()" class="btn btn-primary">{{ getLabel('addCategory') }}</button>
+        <button type="button" (click)="addAppel()" class="btn btn-primary">
+          <i class="fas fa-plus"></i> {{ getLabel('addAppel') }}
+        </button>
       </div>
     </div>
 
-    <!-- Process Steps -->
-    <div class="form-section">
-      <h2>{{ getLabel('processStepsSection') }} - {{ getActiveLanguageName() }}</h2>
-      <div [formGroup]="getActiveLanguageFormGroup()">
-        <div formArrayName="processSteps" *ngFor="let step of processSteps.controls; let i = index">
-          <div [formGroupName]="i" class="nested-form-group">
-            <div class="form-row">
-              <div class="form-group">
-                <label>{{ getLabel('stepNumber') }}</label>
-                <input type="number" formControlName="number" class="form-control" />
-              </div>
-              <div class="form-group">
-                <label>{{ getLabel('title') }}</label>
-                <input type="text" formControlName="title" class="form-control" />
-              </div>
-              <button type="button" (click)="removeProcessStep(i)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
-            </div>
-            <div class="form-group">
-              <label>{{ getLabel('description') }}</label>
-              <textarea formControlName="description" class="form-control" rows="2"></textarea>
-            </div>
-          </div>
-        </div>
-        <button type="button" (click)="addProcessStep()" class="btn btn-primary">{{ getLabel('addProcessStep') }}</button>
-      </div>
-    </div>
-
-    <!-- Criteria -->
-    <div class="form-section">
-      <h2>{{ getLabel('criteriaSection') }} - {{ getActiveLanguageName() }}</h2>
-      <div [formGroup]="getActiveLanguageFormGroup()">
-        <div formArrayName="criteria" *ngFor="let item of criteria.controls; let i = index">
-          <div [formGroupName]="i" class="nested-form-group">
-            <div class="form-row">
-              <div class="form-group">
-                <label>{{ getLabel('icon') }}</label>
-                <input type="text" formControlName="icon" class="form-control" placeholder="🔬" />
-              </div>
-              <div class="form-group">
-                <label>{{ getLabel('title') }}</label>
-                <input type="text" formControlName="title" class="form-control" />
-              </div>
-              <button type="button" (click)="removeCriteria(i)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
-            </div>
-            <div class="form-group">
-              <label>{{ getLabel('description') }}</label>
-              <textarea formControlName="description" class="form-control" rows="2"></textarea>
-            </div>
-          </div>
-        </div>
-        <button type="button" (click)="addCriteria()" class="btn btn-primary">{{ getLabel('addCriteria') }}</button>
-      </div>
-    </div>
-
-    <!-- Support Services -->
-    <div class="form-section">
-      <h2>{{ getLabel('supportServicesSection') }} - {{ getActiveLanguageName() }}</h2>
-      <div [formGroup]="getActiveLanguageFormGroup()">
-        <div formArrayName="supportServices" *ngFor="let item of supportServices.controls; let i = index">
-          <div [formGroupName]="i" class="nested-form-group">
-            <div class="form-row">
-              <div class="form-group">
-                <label>{{ getLabel('icon') }}</label>
-                <input type="text" formControlName="icon" class="form-control" placeholder="📋" />
-              </div>
-              <div class="form-group">
-                <label>{{ getLabel('title') }}</label>
-                <input type="text" formControlName="title" class="form-control" />
-              </div>
-              <button type="button" (click)="removeSupportService(i)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
-            </div>
-            <div class="form-group">
-              <label>{{ getLabel('description') }}</label>
-              <textarea formControlName="description" class="form-control" rows="2"></textarea>
-            </div>
-          </div>
-        </div>
-        <button type="button" (click)="addSupportService()" class="btn btn-primary">{{ getLabel('addSupportService') }}</button>
-      </div>
-    </div>
-
-    <!-- Contact Info -->
-    <div class="form-section">
-      <h2>{{ getLabel('contactInfoSection') }} - {{ getActiveLanguageName() }}</h2>
-      <div [formGroup]="getActiveLanguageFormGroup()">
-        <div formArrayName="contactInfo" *ngFor="let item of contactInfo.controls; let i = index">
-          <div [formGroupName]="i" class="nested-form-group">
-            <div class="form-row">
-              <div class="form-group">
-                <label>{{ getLabel('iconFontAwesome') }}</label>
-                <input type="text" formControlName="icon" class="form-control" placeholder="fas fa-envelope" />
-              </div>
-              <div class="form-group">
-                <label>{{ getLabel('label') }}</label>
-                <input type="text" formControlName="label" class="form-control" />
-              </div>
-              <button type="button" (click)="removeContactItem(i)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
-            </div>
-            <div class="form-group">
-              <label>{{ getLabel('value') }}</label>
-              <input type="text" formControlName="value" class="form-control" />
-            </div>
-          </div>
-        </div>
-        <button type="button" (click)="addContactItem()" class="btn btn-primary">{{ getLabel('addContactItem') }}</button>
-      </div>
-    </div>
 
     <div class="form-actions">
       <div class="translation-summary">

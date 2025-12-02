@@ -1,7 +1,6 @@
 <div class="ai4agri-hero">
   <div class="container">
     <h1>{{ displayContent?.heroTitle || 'AI 4 AGRI' }}</h1>
-    <p>{{ displayContent?.heroSubtitle || 'Intelligence Artificielle pour l\'Agriculture de Précision' }}</p>
   </div>
   <div class="hero-overlay"></div>
 </div>
@@ -14,48 +13,80 @@
 
 <div class="container" *ngIf="!isLoading && displayContent">
   <section class="section ai4agri-section">
-    <div class="ai4agri-content">
-      <h2>{{ 'WORKSHOPS_TITLE' | translate }}</h2>
-      <p class="intro-text">{{ displayContent.introText }}</p>
+    <div class="breadcrumb">
+      <a routerLink="/">Accueil</a>
+      <span>»</span>
+      <span>AI 4 AGRI</span>
+    </div>
+    
+    <h2 class="page-title">AI 4 AGRI</h2>
+    
+    <div class="ai4agri-news-list" *ngIf="displayContent.newsItems && displayContent.newsItems.length > 0">
+      <article class="news-article" *ngFor="let newsItem of displayContent.newsItems; let i = index">
+        <!-- Display multiple images or single image (backward compatibility) -->
       
-      <div class="workshops-timeline" *ngIf="displayContent.workshops && displayContent.workshops.length > 0">
-        <div class="workshop-item" *ngFor="let workshop of displayContent.workshops">
-          <div class="workshop-date">{{ workshop.date }}</div>
-          <div class="workshop-content">
-            <h3>{{ workshop.title }}</h3>
-            <p>{{ workshop.description }}</p>
-            <div class="workshop-details" *ngIf="workshop.detailsItems && workshop.detailsItems.length > 0">
-              <h4 *ngIf="workshop.detailsTitle">{{ workshop.detailsTitle }}</h4>
-              <ul>
-                <li *ngFor="let item of workshop.detailsItems">{{ item }}</li>
-              </ul>
+        <h3 class="article-title">{{ newsItem.title }}</h3>
+        
+        <!-- Description with truncation -->
+        <div class="article-description-container" *ngIf="newsItem.description">
+          <p 
+            class="article-description" 
+            [class.truncated]="!isExpanded(i)"
+            [class.expanded]="isExpanded(i)">
+            {{ newsItem.description }}
+          </p>
+        </div>
+        
+        <!-- Read more button - show if description is long OR if there are images -->
+        <div class="read-more-container" *ngIf="needsTruncation(newsItem.description, newsItem)">
+          <button 
+            class="read-more-btn"
+            (click)="toggleExpand(i)"
+            [attr.aria-expanded]="isExpanded(i)">
+            {{ isExpanded(i) ? 'Lire moins' : 'Lire tout' }}
+          </button>
+        </div>
+        
+        <div class="article-meta">
+          <span class="article-date" *ngIf="getNewsDate(newsItem)">
+            {{ getNewsDate(newsItem) }}
+          </span>
+        </div>
+        <div class="article-actions" *ngIf="newsItem.url">
+          <a 
+            [href]="newsItem.url" 
+            class="learn-more-link"
+            [target]="newsItem.url.startsWith('http') ? '_blank' : '_self'"
+            [rel]="newsItem.url.startsWith('http') ? 'noopener noreferrer' : null">
+            En savoir plus à propos de {{ newsItem.title }}
+          </a>
+        </div>
+        <!-- Images shown only when expanded -->
+        <ng-container *ngIf="getNewsItemImages(newsItem).length > 0 && isExpanded(i)">
+          <div class="article-images">
+            <div class="article-image" *ngFor="let imageUrl of getNewsItemImages(newsItem); trackBy: trackByImageUrl">
+              <img [src]="imageUrl" [alt]="newsItem.title" (error)="onImageError($event)" loading="lazy" />
             </div>
           </div>
-        </div>
-      </div>
-      
-      <div class="ai-benefits" *ngIf="displayContent.benefits && displayContent.benefits.length > 0">
-        <h3>{{ 'BENEFITS_TITLE' | translate }}</h3>
-        <div class="benefits-grid">
-          <div class="benefit-item" *ngFor="let benefit of displayContent.benefits">
-            <div class="benefit-icon">{{ benefit.icon }}</div>
-            <h4>{{ benefit.title }}</h4>
-            <p>{{ benefit.description }}</p>
-          </div>
-        </div>
-      </div>
-      
-      <div class="partnership-section" *ngIf="displayContent.partnershipHighlights && displayContent.partnershipHighlights.length > 0">
-        <h3>{{ 'PARTNERSHIP_TITLE' | translate }}</h3>
-        <p>{{ displayContent.partnershipText }}</p>
+        </ng-container>
         
-        <div class="partnership-highlights">
-          <div class="highlight-item" *ngFor="let highlight of displayContent.partnershipHighlights">
-            <h4>{{ highlight.icon }} {{ highlight.title }}</h4>
-            <p>{{ highlight.description }}</p>
+        <!-- Documents shown only when expanded -->
+        <ng-container *ngIf="getNewsItemDocuments(newsItem).length > 0 && isExpanded(i)">
+          <div class="article-documents">
+            <div class="document-item" *ngFor="let documentUrl of getNewsItemDocuments(newsItem)">
+              <a [href]="documentUrl" target="_blank" rel="noopener noreferrer" class="document-link">
+                <i [class]="getDocumentIconClass(documentUrl)"></i>
+                <span class="document-name">{{ getDocumentFileName(documentUrl) }}</span>
+                <i class="fas fa-external-link-alt document-external-icon"></i>
+              </a>
+            </div>
           </div>
-        </div>
-      </div>
+        </ng-container>
+      </article>
+    </div>
+    
+    <div class="no-news" *ngIf="!displayContent.newsItems || displayContent.newsItems.length === 0">
+      <p>Aucune actualité disponible pour le moment.</p>
     </div>
   </section>
 </div>

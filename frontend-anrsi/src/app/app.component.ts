@@ -46,14 +46,19 @@ export class App implements OnInit {
   ) {
     translate.addLangs(['fr', 'ar', 'en']);
     translate.setDefaultLang('fr');
-    translate.use('fr');
     
-    // Set initial RTL state
-    document.body.dir = 'ltr';
+    // Get saved language from localStorage or default to 'fr'
+    const savedLang = localStorage.getItem('preferred_language') || 'fr';
+    const langToUse = ['fr', 'ar', 'en'].includes(savedLang) ? savedLang : 'fr';
+    translate.use(langToUse);
     
-    // Listen to language changes to update RTL
+    // Set initial RTL state based on saved language
+    document.body.dir = langToUse === 'ar' ? 'rtl' : 'ltr';
+    
+    // Listen to language changes to update RTL and save preference
     translate.onLangChange.subscribe(event => {
       document.body.dir = event.lang === 'ar' ? 'rtl' : 'ltr';
+      localStorage.setItem('preferred_language', event.lang);
     });
     
     // Check initial route

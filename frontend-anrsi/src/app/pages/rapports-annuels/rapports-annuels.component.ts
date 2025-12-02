@@ -67,6 +67,21 @@ export class RapportsAnnuelsComponent implements OnInit, OnDestroy {
   private updateTranslatedContent(): void {
     if (!this.page) return;
     
+    // If we have reconstructed content, use it
+    if (this.content) {
+      const langContent = this.content.translations[this.currentLang as 'fr' | 'ar' | 'en'];
+      this.displayContent = langContent || this.content.translations.fr;
+      
+      // Update page title/subtitle from current language if available
+      const translation = this.page.translations?.[this.currentLang];
+      if (translation) {
+        if (translation.heroTitle) this.page.heroTitle = translation.heroTitle;
+        if (translation.heroSubtitle) this.page.heroSubtitle = translation.heroSubtitle;
+        if (translation.title) this.page.title = translation.title;
+      }
+      return;
+    }
+    
     // Try to get translation from page.translations (new system)
     const translation = this.page.translations?.[this.currentLang];
     if (translation && translation.content) {
@@ -82,22 +97,44 @@ export class RapportsAnnuelsComponent implements OnInit, OnDestroy {
       }
     }
     
-    // Fallback to old format if available
-    if (this.content) {
-      const langContent = this.content.translations[this.currentLang as 'fr' | 'ar' | 'en'];
-      this.displayContent = langContent || this.content.translations.fr;
-    } else {
-      this.loadContentFromPage();
-    }
+    // Fallback to load from page.content
+    this.loadContentFromPage();
   }
 
   loadPage(): void {
     this.pageService.getPageBySlug('rapports-annuels').subscribe({
       next: (page) => {
         this.page = page;
-        // Try new translation system first
+        
+        // Check if we have translations from the normalized structure
         if (page.translations && Object.keys(page.translations).length > 0) {
-          this.updateTranslatedContent();
+          // Reconstruct content from translations (same as admin form does)
+          const reconstructedTranslations: any = {};
+          
+          ['fr', 'ar', 'en'].forEach(lang => {
+            const translation = page.translations![lang];
+            if (translation && translation.content) {
+              try {
+                const langContent = JSON.parse(translation.content);
+                reconstructedTranslations[lang] = langContent;
+              } catch (e) {
+                console.error(`Error parsing ${lang} translation content:`, e);
+              }
+            }
+          });
+          
+          if (Object.keys(reconstructedTranslations).length > 0) {
+            this.content = {
+              translations: reconstructedTranslations
+            };
+            this.updateTranslatedContent();
+          } else if (page.content) {
+            // Fallback to main content field
+            this.loadContentFromPage();
+          } else {
+            this.content = null;
+            this.displayContent = null;
+          }
         } else if (page.content) {
           // Fallback to old format
           try {

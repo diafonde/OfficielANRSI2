@@ -48,116 +48,185 @@
       </div>
     </div>
 
-    <!-- Intro Text -->
+    <!-- News Items -->
     <div class="form-section">
-      <h2>{{ getLabel('introduction') }} - {{ getActiveLanguageName() }}</h2>
+      <h2>{{ getLabel('newsItems') }} - {{ getActiveLanguageName() }}</h2>
+      <p class="section-description">Gérez les actualités AI 4 AGRI affichées sur la page publique</p>
       <div [formGroup]="getActiveLanguageFormGroup()">
-        <div class="form-group">
-          <label>{{ getLabel('introText') }}</label>
-          <textarea formControlName="introText" class="form-control" rows="4"></textarea>
-        </div>
-      </div>
-    </div>
-
-    <!-- Workshops -->
-    <div class="form-section">
-      <h2>{{ getLabel('workshops') }} - {{ getActiveLanguageName() }}</h2>
-      <div [formGroup]="getActiveLanguageFormGroup()">
-        <div formArrayName="workshops" *ngFor="let workshop of workshops.controls; let i = index">
-          <div [formGroupName]="i" class="nested-form-group">
-            <div class="form-row">
-              <div class="form-group">
-                <label>{{ getLabel('date') }}</label>
-                <input type="text" formControlName="date" class="form-control" placeholder="13-15 Février 2024" />
-              </div>
-              <div class="form-group">
-                <label>{{ getLabel('title') }}</label>
-                <input type="text" formControlName="title" class="form-control" />
-              </div>
-              <button type="button" (click)="removeWorkshop(i)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
+        <div formArrayName="newsItems" *ngFor="let newsItem of newsItems.controls; let i = index">
+          <div [formGroupName]="i" class="nested-form-group news-item-card">
+            <div class="card-header">
+              <h3>Actualité #{{ i + 1 }}</h3>
+              <button type="button" (click)="removeNewsItem(i)" class="btn btn-danger btn-sm">
+                <i class="fas fa-trash"></i> {{ getLabel('remove') }}
+              </button>
             </div>
+            
+            <div class="form-group">
+              <label>{{ getLabel('title') }} <span class="required">*</span></label>
+              <input type="text" formControlName="title" class="form-control" placeholder="Ex: Ouverture de l'atelier international..." />
+            </div>
+            
             <div class="form-group">
               <label>{{ getLabel('description') }}</label>
-              <textarea formControlName="description" class="form-control" rows="3"></textarea>
+              <textarea formControlName="description" class="form-control" rows="3" placeholder="Description de l'actualité..."></textarea>
             </div>
+            
             <div class="form-group">
-              <label>{{ getLabel('detailsTitle') }}</label>
-              <input type="text" formControlName="detailsTitle" class="form-control" />
-            </div>
-            <div class="form-group">
-              <label>{{ getLabel('detailsItems') }}</label>
-              <div formArrayName="detailsItems" *ngFor="let itemCtrl of getWorkshopDetailsItems(i).controls; let j = index">
-                <div class="form-row">
-                  <input type="text" [formControlName]="j" class="form-control" />
-                  <button type="button" (click)="removeWorkshopDetailItem(i, j)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
+              <label>Images</label>
+              
+              <!-- Existing Images -->
+              <div class="images-list" *ngIf="getNewsItemImages(i).length > 0">
+                <div class="image-item" *ngFor="let imageUrlCtrl of getNewsItemImages(i).controls; let imgIdx = index">
+                  <div class="image-upload-container">
+                    <input
+                      type="file"
+                      [id]="'imageFile-' + activeLanguage + '-' + i + '-' + imgIdx"
+                      accept="image/*"
+                      (change)="onImageSelected($event, i, imgIdx)"
+                      class="file-input"
+                    >
+                    <div class="image-preview" *ngIf="getImageUploadState(i, imgIdx).preview || getNewsItemImageUrl(i, imgIdx)">
+                      <img [src]="getImageUploadState(i, imgIdx).preview || getNewsItemImageUrl(i, imgIdx)" alt="Preview" class="preview-image">
+                      <button type="button" class="remove-image" (click)="removeImage(i, imgIdx)" title="Remove image">
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                    <div class="file-upload-placeholder" *ngIf="!getImageUploadState(i, imgIdx).preview && !getNewsItemImageUrl(i, imgIdx) && !getImageUploadState(i, imgIdx).file">
+                      <i class="fas fa-cloud-upload-alt"></i>
+                      <span>Cliquez pour télécharger une image</span>
+                      <small>PNG, JPG, GIF jusqu'à 10MB</small>
+                    </div>
+                    <div class="upload-progress" *ngIf="getImageUploadState(i, imgIdx).isUploading">
+                      <div class="progress-bar">
+                        <div class="progress-fill" [style.width.%]="getImageUploadState(i, imgIdx).uploadProgress || 0"></div>
+                      </div>
+                      <span>Téléchargement... {{ getImageUploadState(i, imgIdx).uploadProgress || 0 }}%</span>
+                    </div>
+                    <div class="image-url-input" *ngIf="getNewsItemImageUrl(i, imgIdx) && !getImageUploadState(i, imgIdx).isUploading">
+                      <input type="text" [formControl]="$any(imageUrlCtrl)" class="form-control" placeholder="Ou entrez une URL d'image" />
+                    </div>
+                  </div>
                 </div>
               </div>
-              <button type="button" (click)="addWorkshopDetailItem(i)" class="btn btn-secondary btn-sm">{{ getLabel('addDetailItem') }}</button>
+              
+              <!-- Add New Image Button -->
+              <div class="add-image-container">
+                <input
+                  type="file"
+                  [id]="'addImageFile-' + activeLanguage + '-' + i"
+                  accept="image/*"
+                  multiple
+                  (change)="onImageSelected($event, i)"
+                  class="file-input"
+                >
+                <div class="file-upload-placeholder add-more" *ngIf="getNewsItemImages(i).length > 0">
+                  <i class="fas fa-plus-circle"></i>
+                  <span>Cliquez pour ajouter plus d'images</span>
+                  <small>Vous pouvez sélectionner plusieurs fichiers</small>
+                </div>
+                <div class="file-upload-placeholder" *ngIf="getNewsItemImages(i).length === 0">
+                  <i class="fas fa-cloud-upload-alt"></i>
+                  <span>Cliquez pour télécharger des images</span>
+                  <small>PNG, JPG, GIF jusqu'à 10MB chacun. Vous pouvez sélectionner plusieurs fichiers.</small>
+                </div>
+              </div>
+              
+              <!-- Add URL Button -->
+              <button type="button" class="btn btn-secondary btn-sm" (click)="addImageUrl(i)" style="margin-top: var(--space-2);">
+                <i class="fas fa-link"></i> Ajouter une image via URL
+              </button>
+              
+              <small class="form-text text-muted">Téléchargez des images ou entrez des URLs d'images pour cette actualité</small>
+            </div>
+            
+            <!-- Documents Section -->
+            <div class="form-group">
+              <label>Documents (PDF, DOC, DOCX, XLS, XLSX)</label>
+              <div class="documents-list">
+                <div class="document-item" *ngFor="let documentUrlCtrl of getNewsItemDocuments(i).controls; let docIdx = index">
+                  <div class="document-upload-container">
+                    <input
+                      type="file"
+                      [id]="'documentFile-' + activeLanguage + '-' + i + '-' + docIdx"
+                      accept=".pdf,.doc,.docx,.xls,.xlsx"
+                      (change)="onDocumentSelected($event, i, docIdx)"
+                      class="file-input"
+                    >
+                    <div class="file-upload-placeholder" *ngIf="!getNewsItemDocumentUrl(i, docIdx) && !getDocumentUploadState(i, docIdx).isUploading">
+                      <i class="fas fa-file-upload"></i>
+                      <span>Cliquez pour télécharger un document</span>
+                      <small>PDF, DOC, DOCX, XLS, XLSX jusqu'à 50MB</small>
+                    </div>
+                    <div class="document-info" *ngIf="getNewsItemDocumentUrl(i, docIdx) && !getDocumentUploadState(i, docIdx).isUploading">
+                      <i class="fas fa-file-pdf"></i>
+                      <span>{{ getDocumentFileName(getNewsItemDocumentUrl(i, docIdx) || '') }}</span>
+                      <a [href]="getNewsItemDocumentUrl(i, docIdx)" target="_blank" class="btn btn-sm btn-link">
+                        <i class="fas fa-external-link-alt"></i> Voir
+                      </a>
+                      <button type="button" class="btn btn-sm btn-danger remove-document" (click)="removeDocument(i, docIdx)">
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                    <div class="upload-progress" *ngIf="getDocumentUploadState(i, docIdx).isUploading">
+                      <div class="progress-bar">
+                        <div class="progress-fill" [style.width.%]="getDocumentUploadState(i, docIdx).uploadProgress || 0"></div>
+                      </div>
+                      <span>Téléchargement... {{ getDocumentUploadState(i, docIdx).uploadProgress || 0 }}%</span>
+                    </div>
+                    <div class="document-url-input" *ngIf="getNewsItemDocumentUrl(i, docIdx) && !getDocumentUploadState(i, docIdx).isUploading">
+                      <input type="text" [formControl]="$any(documentUrlCtrl)" class="form-control" placeholder="Ou entrez une URL de document" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Add New Document Button -->
+              <div class="add-document-container">
+                <input
+                  type="file"
+                  [id]="'addDocumentFile-' + activeLanguage + '-' + i"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx"
+                  multiple
+                  (change)="onDocumentSelected($event, i)"
+                  class="file-input"
+                >
+                <div class="file-upload-placeholder add-more" *ngIf="getNewsItemDocuments(i).length > 0">
+                  <i class="fas fa-plus-circle"></i>
+                  <span>Cliquez pour ajouter plus de documents</span>
+                  <small>Vous pouvez sélectionner plusieurs fichiers</small>
+                </div>
+                <div class="file-upload-placeholder" *ngIf="getNewsItemDocuments(i).length === 0">
+                  <i class="fas fa-file-upload"></i>
+                  <span>Cliquez pour télécharger des documents</span>
+                  <small>PDF, DOC, DOCX, XLS, XLSX jusqu'à 50MB chacun. Vous pouvez sélectionner plusieurs fichiers.</small>
+                </div>
+              </div>
+              
+              <!-- Add URL Button -->
+              <button type="button" class="btn btn-secondary btn-sm" (click)="addDocumentUrl(i)" style="margin-top: var(--space-2);">
+                <i class="fas fa-link"></i> Ajouter un document via URL
+              </button>
+              
+              <small class="form-text text-muted">Téléchargez des documents ou entrez des URLs de documents pour cette actualité</small>
+            </div>
+            
+            <div class="form-group">
+              <label>{{ getLabel('date') }}</label>
+              <input type="text" formControlName="date" class="form-control" placeholder="Ex: 13 February 2024" />
+              <small class="form-text text-muted">Date de publication au format "DD Month YYYY" (ex: 13 February 2024)</small>
+            </div>
+            
+            <div class="form-group">
+              <label>{{ getLabel('url') }}</label>
+              <input type="text" formControlName="url" class="form-control" placeholder="URL (ex: /article/123 ou https://example.com)" />
+              <small class="form-text text-muted">URL vers la page de détails ou document PDF pour le lien "En savoir plus"</small>
             </div>
           </div>
         </div>
-        <button type="button" (click)="addWorkshop()" class="btn btn-primary">{{ getLabel('addWorkshop') }}</button>
-      </div>
-    </div>
-
-    <!-- Benefits -->
-    <div class="form-section">
-      <h2>{{ getLabel('benefits') }} - {{ getActiveLanguageName() }}</h2>
-      <div [formGroup]="getActiveLanguageFormGroup()">
-        <div formArrayName="benefits" *ngFor="let benefit of benefits.controls; let i = index">
-          <div [formGroupName]="i" class="nested-form-group">
-            <div class="form-row">
-              <div class="form-group">
-                <label>{{ getLabel('icon') }}</label>
-                <input type="text" formControlName="icon" class="form-control" placeholder="🌱" />
-              </div>
-              <div class="form-group">
-                <label>{{ getLabel('title') }}</label>
-                <input type="text" formControlName="title" class="form-control" />
-              </div>
-              <button type="button" (click)="removeBenefit(i)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
-            </div>
-            <div class="form-group">
-              <label>{{ getLabel('description') }}</label>
-              <textarea formControlName="description" class="form-control" rows="2"></textarea>
-            </div>
-          </div>
-        </div>
-        <button type="button" (click)="addBenefit()" class="btn btn-primary">{{ getLabel('addBenefit') }}</button>
-      </div>
-    </div>
-
-    <!-- Partnership Section -->
-    <div class="form-section">
-      <h2>{{ getLabel('partnershipSection') }} - {{ getActiveLanguageName() }}</h2>
-      <div [formGroup]="getActiveLanguageFormGroup()">
-        <div class="form-group">
-          <label>{{ getLabel('partnershipText') }}</label>
-          <textarea formControlName="partnershipText" class="form-control" rows="3"></textarea>
-        </div>
-        <div class="form-group">
-          <label>{{ getLabel('partnershipHighlights') }}</label>
-          <div formArrayName="partnershipHighlights" *ngFor="let highlight of partnershipHighlights.controls; let i = index">
-            <div [formGroupName]="i" class="nested-form-group">
-              <div class="form-row">
-                <div class="form-group">
-                  <label>{{ getLabel('icon') }}</label>
-                  <input type="text" formControlName="icon" class="form-control" placeholder="🔬" />
-                </div>
-                <div class="form-group">
-                  <label>{{ getLabel('title') }}</label>
-                  <input type="text" formControlName="title" class="form-control" />
-                </div>
-                <button type="button" (click)="removePartnershipHighlight(i)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
-              </div>
-              <div class="form-group">
-                <label>{{ getLabel('description') }}</label>
-                <textarea formControlName="description" class="form-control" rows="2"></textarea>
-              </div>
-            </div>
-          </div>
-          <button type="button" (click)="addPartnershipHighlight()" class="btn btn-primary">{{ getLabel('addPartnershipHighlight') }}</button>
-        </div>
+        <button type="button" (click)="addNewsItem()" class="btn btn-primary">
+          <i class="fas fa-plus"></i> {{ getLabel('addNewsItem') }}
+        </button>
       </div>
     </div>
 

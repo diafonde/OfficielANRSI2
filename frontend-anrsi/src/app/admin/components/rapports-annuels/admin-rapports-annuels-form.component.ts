@@ -104,6 +104,14 @@ export class AdminRapportsAnnuelsFormComponent implements OnInit {
     return this.getActiveLanguageFormGroup().get('rapports') as FormArray;
   }
 
+  getRapportsForLanguage(lang: string): FormArray {
+    const langGroup = this.getLanguageFormGroup(lang);
+    if (!langGroup) {
+      return this.fb.array([]);
+    }
+    return langGroup.get('rapports') as FormArray;
+  }
+
   addRapport(rapport?: Rapport): void {
     const group = this.fb.group({
       year: [rapport?.year || ''], // Removed required validator to allow saving incomplete forms
@@ -337,18 +345,45 @@ export class AdminRapportsAnnuelsFormComponent implements OnInit {
 
   uploadDocument(file: File, index: number): void {
     this.errorMessage = '';
-    const rapportGroup = this.rapports.at(index) as FormGroup;
     
     console.log('Uploading document:', {
       fileName: file.name,
       fileSize: file.size,
-      fileType: file.type
+      fileType: file.type,
+      activeLanguage: this.activeLanguage,
+      index: index
     });
     
     this.articleService.uploadDocument(file).subscribe({
       next: (response) => {
+        const downloadUrl = response.url;
         console.log('Upload successful:', response);
-        rapportGroup.patchValue({ downloadUrl: response.url });
+        
+        // Update downloadUrl for the same index in ALL language tabs
+        // since the document is shared across all translations
+        ['fr', 'ar', 'en'].forEach(lang => {
+          const langRapportsArray = this.getRapportsForLanguage(lang);
+          if (langRapportsArray && langRapportsArray.length > index) {
+            const langRapportGroup = langRapportsArray.at(index) as FormGroup;
+            if (langRapportGroup) {
+              const downloadUrlControl = langRapportGroup.get('downloadUrl');
+              if (downloadUrlControl) {
+                downloadUrlControl.setValue(downloadUrl, { emitEvent: true });
+                downloadUrlControl.markAsDirty();
+                downloadUrlControl.markAsTouched();
+              }
+            }
+          } else if (langRapportsArray) {
+            // If the rapport doesn't exist in this language yet, create it with the downloadUrl
+            const emptyGroup = this.fb.group({
+              year: [''],
+              title: [''],
+              downloadUrl: [downloadUrl]
+            });
+            langRapportsArray.push(emptyGroup);
+          }
+        });
+        
         this.errorMessage = '';
       },
       error: (error) => {
@@ -388,18 +423,31 @@ export class AdminRapportsAnnuelsFormComponent implements OnInit {
     
     ['fr', 'ar', 'en'].forEach(lang => {
       const langGroup = this.getLanguageFormGroup(lang);
-      const langValue = langGroup.value;
+      const langValue = langGroup.getRawValue();
+      const rapportsArray = langGroup.get('rapports') as FormArray;
+      const rapportsValues = rapportsArray ? rapportsArray.getRawValue() : [];
       
       // Filter out empty rapports (rapports without title or year)
-      const validRapports = (langValue.rapports || []).filter((rapport: any) => 
-        rapport && rapport.title && rapport.title.trim() && rapport.year && rapport.year.trim()
+      const validRapports = rapportsValues.filter((rapport: any) => 
+        rapport && rapport.title && typeof rapport.title === 'string' && rapport.title.trim().length > 0 
+        && rapport.year && typeof rapport.year === 'string' && rapport.year.trim().length > 0
       );
+      
+      // Log for debugging
+      console.log(`Saving ${lang} language:`, {
+        rapportsCount: validRapports.length,
+        rapports: validRapports.map((r: any) => ({
+          year: r.year,
+          title: r.title,
+          downloadUrl: r.downloadUrl
+        }))
+      });
       
       // Always save all languages, even if empty
       translationsToSave[lang] = {
-        heroTitle: langValue.heroTitle || '',
-        heroSubtitle: langValue.heroSubtitle || '',
-        sectionTitle: langValue.sectionTitle || '',
+        heroTitle: (langValue.heroTitle || '').trim(),
+        heroSubtitle: (langValue.heroSubtitle || '').trim(),
+        sectionTitle: (langValue.sectionTitle || '').trim(),
         rapports: validRapports
       };
     });

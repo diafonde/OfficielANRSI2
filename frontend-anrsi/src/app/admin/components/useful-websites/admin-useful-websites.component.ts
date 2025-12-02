@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { firstValueFrom } from 'rxjs';
 import { UsefulWebsitesAdminService, UsefulWebsite } from '../../services/useful-websites-admin.service';
 
 @Component({
@@ -229,17 +230,17 @@ export class AdminUsefulWebsitesComponent implements OnInit {
     // Save all websites
     const savePromises = websitesToSave.map((website: any) => {
       if (website.id) {
-        return this.usefulWebsitesService.update(website.id, {
+        return firstValueFrom(this.usefulWebsitesService.update(website.id, {
           name: website.name,
           url: website.url,
           order: website.order
-        }).toPromise();
+        }));
       } else {
-        return this.usefulWebsitesService.create({
+        return firstValueFrom(this.usefulWebsitesService.create({
           name: website.name,
           url: website.url,
           order: website.order
-        }).toPromise();
+        }));
       }
     });
 
