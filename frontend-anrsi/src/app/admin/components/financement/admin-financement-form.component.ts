@@ -179,6 +179,49 @@ export class AdminFinancementFormComponent implements OnInit {
     this.pageService.getPageBySlug('financement').subscribe({
       next: (page) => {
         this.pageId = page.id || null;
+        
+        // First, try to get from page.translations (new system)
+        if (page.translations && Object.keys(page.translations).length > 0) {
+          try {
+            const content: FinancementContent = {
+              translations: {
+                fr: this.getEmptyLanguageContent(),
+                ar: this.getEmptyLanguageContent(),
+                en: this.getEmptyLanguageContent()
+              }
+            };
+            
+            // Extract content from each translation
+            ['fr', 'ar', 'en'].forEach(lang => {
+              const translation = page.translations?.[lang];
+              if (translation && translation.content) {
+                try {
+                  const parsedContent = JSON.parse(translation.content);
+                  content.translations[lang as 'fr' | 'ar' | 'en'] = parsedContent;
+                } catch (e) {
+                  console.error(`Error parsing ${lang} translation content:`, e);
+                }
+              }
+            });
+            
+            this.populateForm(content);
+            // Check if Arabic data is empty and load defaults
+            const arGroup = this.getLanguageFormGroup('ar');
+            if (!arGroup.get('heroTitle')?.value || (arGroup.get('process') as FormArray).length === 0) {
+              this.loadDefaultArabicData();
+            }
+            // Check if English data is empty and load defaults
+            const enGroup = this.getLanguageFormGroup('en');
+            if (!enGroup.get('heroTitle')?.value || (enGroup.get('process') as FormArray).length === 0) {
+              this.loadDefaultEnglishData();
+            }
+          } catch (e) {
+            console.error('Error processing translations:', e);
+            // Fall through to page.content check
+          }
+        }
+        
+        // Fallback: Try to get from page.content (old system or backup)
         if (page.content) {
           try {
             const parsedContent = JSON.parse(page.content);
@@ -214,9 +257,10 @@ export class AdminFinancementFormComponent implements OnInit {
             console.error('Error parsing content:', e);
             this.loadDefaultData();
           }
-        } else {
+        } else if (!page.translations || Object.keys(page.translations).length === 0) {
           this.loadDefaultData();
         }
+        
         this.isLoading = false;
       },
       error: (error) => {
@@ -421,11 +465,13 @@ export class AdminFinancementFormComponent implements OnInit {
     (['fr', 'ar', 'en'] as const).forEach(lang => {
       const langContent = content.translations[lang];
       if (langContent) {
+        const langContentJson = JSON.stringify(langContent);
         translations[lang] = {
           title: langContent.heroTitle || 'Financement',
           heroTitle: langContent.heroTitle || '',
           heroSubtitle: langContent.heroSubtitle || '',
-          extra: JSON.stringify(langContent) // Store the full content in extra (JSONB)
+          content: langContentJson, // Store the language-specific content in content field
+          extra: langContentJson // Also store in extra for backward compatibility
         };
       }
     });

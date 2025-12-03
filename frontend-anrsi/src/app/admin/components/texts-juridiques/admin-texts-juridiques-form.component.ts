@@ -445,12 +445,14 @@ export class AdminTextsJuridiquesFormComponent implements OnInit {
     (['fr', 'ar', 'en'] as const).forEach(lang => {
       const langContent = translationsToSave[lang];
       if (langContent) {
+        const langContentJson = JSON.stringify(langContent);
         translations[lang] = {
           title: langContent.heroTitle || pageTitle,
           heroTitle: langContent.heroTitle || '',
           heroSubtitle: langContent.heroSubtitle || '',
           sectionTitle: langContent.sectionTitle || '',
-          extra: JSON.stringify(langContent) // Store the full content in extra (JSONB)
+          content: langContentJson, // Store the language-specific content in content field
+          extra: langContentJson // Also store in extra for backward compatibility
         };
       }
     });
