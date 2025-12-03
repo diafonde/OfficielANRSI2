@@ -23,10 +23,18 @@
           </a>
         </div>
         <!-- Display Article Links -->
-        <div class="media-link-item" *ngFor="let link of content.articleLinks">
-          <a [href]="link.url" target="_blank" rel="noopener noreferrer">
-            {{ link.title }}
-          </a>
+        <div class="article-link-group" *ngFor="let link of content.articleLinks">
+          <div class="article-link-label" *ngIf="link.label">{{ link.label }}</div>
+          <div class="article-link-urls" *ngIf="link.links && link.links.length > 0">
+            <a *ngFor="let linkItem of link.links; let i = index" 
+               [href]="linkItem.url" 
+               target="_blank" 
+               rel="noopener noreferrer" 
+               class="article-link-url">
+              <span class="link-label">{{ linkItem.label || linkItem.url }}</span>
+              <span class="link-url" *ngIf="linkItem.label && linkItem.url !== linkItem.label">{{ linkItem.url }}</span>
+            </a>
+          </div>
         </div>
       </div>
       <div class="no-links" *ngIf="(!content.mediaLinks || content.mediaLinks.length === 0) && (!content.articleLinks || content.articleLinks.length === 0)">

@@ -57,9 +57,14 @@ interface MediaLink {
   url: string;
 }
 
-interface ArticleLink {
-  title: string;
+interface ArticleLinkItem {
+  label: string;
   url: string;
+}
+
+interface ArticleLink {
+  label: string;
+  links: ArticleLinkItem[];
 }
 
 interface AgenceMediasLanguageContent {
@@ -208,15 +213,37 @@ export class AdminAgenceMediasFormComponent implements OnInit {
   addArticleLink(item?: ArticleLink, lang?: string): void {
     const langGroup = lang ? this.getLanguageFormGroup(lang) : this.getActiveLanguageFormGroup();
     const articleLinks = langGroup.get('articleLinks') as FormArray;
+    const linksArray = item?.links && item.links.length > 0
+      ? this.fb.array(item.links.map(link => this.createArticleLinkItemGroup(link)))
+      : this.fb.array([this.createArticleLinkItemGroup()]);
     const group = this.fb.group({
-      title: [item?.title || '', Validators.required],
-      url: [item?.url || '', Validators.required]
+      label: [item?.label || '', Validators.required],
+      links: linksArray
     });
     articleLinks.push(group);
   }
 
+  createArticleLinkItemGroup(item?: ArticleLinkItem): FormGroup {
+    return this.fb.group({
+      label: [item?.label || '', Validators.required],
+      url: [item?.url || '', Validators.required]
+    });
+  }
+
   removeArticleLink(index: number): void {
     this.articleLinks.removeAt(index);
+  }
+
+  getArticleLinkItems(index: number): FormArray {
+    return this.articleLinks.at(index).get('links') as FormArray;
+  }
+
+  addArticleLinkItem(linkIndex: number, item?: ArticleLinkItem): void {
+    this.getArticleLinkItems(linkIndex).push(this.createArticleLinkItemGroup(item));
+  }
+
+  removeArticleLinkItem(linkIndex: number, itemIndex: number): void {
+    this.getArticleLinkItems(linkIndex).removeAt(itemIndex);
   }
 
   // Media Overview FormArray methods
@@ -590,7 +617,33 @@ export class AdminAgenceMediasFormComponent implements OnInit {
           });
         }
         if (langContent.articleLinks && Array.isArray(langContent.articleLinks)) {
-          langContent.articleLinks.forEach(item => this.addArticleLink(item, lang));
+          (langContent.articleLinks as any[]).forEach((item: any) => {
+            // Support migration from old format (title/url) to new format (label/links)
+            let links: ArticleLinkItem[] = [];
+            
+            if (item.links && Array.isArray(item.links)) {
+              // Already in new format with links array
+              links = item.links;
+            } else if (item.urls && Array.isArray(item.urls)) {
+              // Migrate from urls array format
+              links = item.urls.map((url: string) => ({
+                label: url, // Use URL as label if no specific label provided
+                url: url
+              }));
+            } else if (item.url) {
+              // Migrate from single url format
+              links = [{
+                label: item.title || item.label || item.url,
+                url: item.url
+              }];
+            }
+            
+            const migratedItem: ArticleLink = {
+              label: item.label || item.title || '',
+              links: links
+            };
+            this.addArticleLink(migratedItem, lang);
+          });
         }
         if (langContent.mediaOverview && Array.isArray(langContent.mediaOverview)) {
           langContent.mediaOverview.forEach(item => this.addMediaOverview(item, lang));
@@ -645,6 +698,9 @@ export class AdminAgenceMediasFormComponent implements OnInit {
     console.log('Saving mediaLinks (fr):', content.translations.fr.mediaLinks);
     console.log('Saving mediaLinks (ar):', content.translations.ar.mediaLinks);
     console.log('Saving mediaLinks (en):', content.translations.en.mediaLinks);
+    console.log('Saving articleLinks (fr):', content.translations.fr.articleLinks);
+    console.log('Saving articleLinks (ar):', content.translations.ar.articleLinks);
+    console.log('Saving articleLinks (en):', content.translations.en.articleLinks);
 
     // Use French content for hero title/subtitle in page metadata (fallback to first available)
     // Build translations for the new structure
@@ -719,10 +775,18 @@ export class AdminAgenceMediasFormComponent implements OnInit {
       heroSubtitle: langData.heroSubtitle || '',
       introText: langData.introText || '',
       mediaLinks: mediaLinks,
-      articleLinks: (langData.articleLinks || []).map((item: any) => ({
-        title: item.title,
-        url: item.url
-      })),
+      articleLinks: (langData.articleLinks || [])
+        .filter((item: any) => item && item.label && item.links && Array.isArray(item.links) && item.links.length > 0)
+        .map((item: any) => ({
+          label: item.label || '',
+          links: (item.links || [])
+            .filter((link: any) => link && link.url && link.url.trim() !== '')
+            .map((link: any) => ({
+              label: link.label || link.url || '',
+              url: link.url || ''
+            }))
+        }))
+        .filter((item: any) => item.links.length > 0),
       mediaOverview: (langData.mediaOverview || []).map((item: any) => ({
         icon: item.icon,
         title: item.title,
@@ -811,15 +875,20 @@ export class AdminAgenceMediasFormComponent implements OnInit {
         ar: 'روابط المقالات',
         en: 'Article Links'
       },
-      'articleLinksTitle': {
-        fr: 'Titre *',
-        ar: 'العنوان *',
-        en: 'Title *'
+      'articleLinksLabel': {
+        fr: 'Libellé *',
+        ar: 'التسمية *',
+        en: 'Label *'
       },
       'articleLinksUrl': {
         fr: 'URL *',
         ar: 'الرابط *',
         en: 'URL *'
+      },
+      'articleLinksUrls': {
+        fr: 'URLs des Articles',
+        ar: 'روابط المقالات',
+        en: 'Article URLs'
       },
       'addArticleLink': {
         fr: 'Ajouter un lien article',

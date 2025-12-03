@@ -59,9 +59,14 @@ interface MediaLink {
   url: string;
 }
 
-interface ArticleLink {
-  title: string;
+interface ArticleLinkItem {
+  label: string;
   url: string;
+}
+
+interface ArticleLink {
+  label: string;
+  links: ArticleLinkItem[];
 }
 
 interface AgenceMediasContent {
@@ -177,6 +182,44 @@ export class AgenceMediasComponent implements OnInit, OnDestroy {
             if (!langContent.articleLinks) {
               langContent.articleLinks = [];
             }
+            // Support migration from old format to new format (label/links)
+            if (langContent.articleLinks && Array.isArray(langContent.articleLinks)) {
+              langContent.articleLinks = langContent.articleLinks
+                .map((item: any) => {
+                  if (item.label && item.links && Array.isArray(item.links) && item.links.length > 0) {
+                    return item; // Already in new format with links
+                  } else if (item.label && item.urls && Array.isArray(item.urls) && item.urls.length > 0) {
+                    // Migrate from urls array format to links format
+                    return {
+                      label: item.label,
+                      links: item.urls.map((url: string) => ({
+                        label: url,
+                        url: url
+                      }))
+                    };
+                  } else if (item.title && item.url) {
+                    // Migrate from old single format
+                    return {
+                      label: item.title,
+                      links: [{
+                        label: item.title,
+                        url: item.url
+                      }]
+                    };
+                  } else if (item.label && item.url) {
+                    // Another migration case
+                    return {
+                      label: item.label,
+                      links: [{
+                        label: item.label,
+                        url: item.url
+                      }]
+                    };
+                  }
+                  return null;
+                })
+                .filter((item: any) => item !== null && item.label && item.links && item.links.length > 0);
+            }
             this.content = langContent;
             
             // Update page title and hero from the language content
@@ -206,6 +249,44 @@ export class AgenceMediasComponent implements OnInit, OnDestroy {
         }
         if (!parsedContent.articleLinks) {
           parsedContent.articleLinks = [];
+        }
+        // Support migration from old format to new format (label/links)
+        if (parsedContent.articleLinks && Array.isArray(parsedContent.articleLinks)) {
+          parsedContent.articleLinks = parsedContent.articleLinks
+            .map((item: any) => {
+              if (item.label && item.links && Array.isArray(item.links) && item.links.length > 0) {
+                return item; // Already in new format with links
+              } else if (item.label && item.urls && Array.isArray(item.urls) && item.urls.length > 0) {
+                // Migrate from urls array format to links format
+                return {
+                  label: item.label,
+                  links: item.urls.map((url: string) => ({
+                    label: url,
+                    url: url
+                  }))
+                };
+              } else if (item.title && item.url) {
+                // Migrate from old single format
+                return {
+                  label: item.title,
+                  links: [{
+                    label: item.title,
+                    url: item.url
+                  }]
+                };
+              } else if (item.label && item.url) {
+                // Another migration case
+                return {
+                  label: item.label,
+                  links: [{
+                    label: item.label,
+                    url: item.url
+                  }]
+                };
+              }
+              return null;
+            })
+            .filter((item: any) => item !== null && item.label && item.links && item.links.length > 0);
         }
         this.content = parsedContent;
         // Update page title and hero from translation
@@ -241,9 +322,50 @@ export class AgenceMediasComponent implements OnInit, OnDestroy {
             || parsedContent.translations['en'];
           
           if (langContent) {
-            // Ensure mediaLinks is initialized as an array if it doesn't exist
+            // Ensure mediaLinks and articleLinks are initialized as arrays if they don't exist
             if (!langContent.mediaLinks) {
               langContent.mediaLinks = [];
+            }
+            if (!langContent.articleLinks) {
+              langContent.articleLinks = [];
+            }
+            // Support migration from old format to new format (label/links)
+            if (langContent.articleLinks && Array.isArray(langContent.articleLinks)) {
+              langContent.articleLinks = langContent.articleLinks
+                .map((item: any) => {
+                  if (item.label && item.links && Array.isArray(item.links) && item.links.length > 0) {
+                    return item; // Already in new format with links
+                  } else if (item.label && item.urls && Array.isArray(item.urls) && item.urls.length > 0) {
+                    // Migrate from urls array format to links format
+                    return {
+                      label: item.label,
+                      links: item.urls.map((url: string) => ({
+                        label: url,
+                        url: url
+                      }))
+                    };
+                  } else if (item.title && item.url) {
+                    // Migrate from old single format
+                    return {
+                      label: item.title,
+                      links: [{
+                        label: item.title,
+                        url: item.url
+                      }]
+                    };
+                  } else if (item.label && item.url) {
+                    // Another migration case
+                    return {
+                      label: item.label,
+                      links: [{
+                        label: item.label,
+                        url: item.url
+                      }]
+                    };
+                  }
+                  return null;
+                })
+                .filter((item: any) => item !== null && item.label && item.links && item.links.length > 0);
             }
             this.content = langContent;
           } else {
@@ -257,6 +379,44 @@ export class AgenceMediasComponent implements OnInit, OnDestroy {
           }
           if (!parsedContent.articleLinks) {
             parsedContent.articleLinks = [];
+          }
+          // Support migration from old format to new format (label/links)
+          if (parsedContent.articleLinks && Array.isArray(parsedContent.articleLinks)) {
+            parsedContent.articleLinks = parsedContent.articleLinks
+              .map((item: any) => {
+                if (item.label && item.links && Array.isArray(item.links) && item.links.length > 0) {
+                  return item; // Already in new format with links
+                } else if (item.label && item.urls && Array.isArray(item.urls) && item.urls.length > 0) {
+                  // Migrate from urls array format to links format
+                  return {
+                    label: item.label,
+                    links: item.urls.map((url: string) => ({
+                      label: url,
+                      url: url
+                    }))
+                  };
+                } else if (item.title && item.url) {
+                  // Migrate from old single format
+                  return {
+                    label: item.title,
+                    links: [{
+                      label: item.title,
+                      url: item.url
+                    }]
+                  };
+                } else if (item.label && item.url) {
+                  // Another migration case
+                  return {
+                    label: item.label,
+                    links: [{
+                      label: item.label,
+                      url: item.url
+                    }]
+                  };
+                }
+                return null;
+              })
+              .filter((item: any) => item !== null && item.label && item.links && item.links.length > 0);
           }
           this.content = parsedContent;
         }

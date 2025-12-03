@@ -60,17 +60,38 @@
             <p class="text-muted">{{ getLabel('noArticleLinks') || 'No article links added yet. Click the button below to add one.' }}</p>
           </div>
           <div *ngFor="let item of articleLinks.controls; let i = index">
-            <div [formGroupName]="i" class="nested-form-group">
+            <div [formGroupName]="i" class="nested-form-group article-link-group">
               <div class="form-row">
                 <div class="form-group">
-                  <label>{{ getLabel('articleLinksTitle') }}</label>
-                  <input type="text" formControlName="title" class="form-control" />
-                </div>
-                <div class="form-group">
-                  <label>{{ getLabel('articleLinksUrl') }}</label>
-                  <input type="text" formControlName="url" class="form-control" />
+                  <label>{{ getLabel('articleLinksLabel') }}</label>
+                  <input type="text" formControlName="label" class="form-control" />
                 </div>
                 <button type="button" (click)="removeArticleLink(i)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
+              </div>
+              <div class="urls-section">
+                <label class="urls-label">{{ getLabel('articleLinksUrls') }}</label>
+                <div formArrayName="links">
+                  <div *ngFor="let linkControl of getArticleLinkItems(i).controls; let j = index" class="url-item">
+                    <div [formGroupName]="j" class="link-item-group">
+                      <div class="form-row">
+                        <div class="form-group url-label-group">
+                          <label>{{ getLabel('articleLinksTitle') }}</label>
+                          <input type="text" formControlName="label" class="form-control" placeholder="Article Title" />
+                        </div>
+                        <div class="form-group url-input-group">
+                          <label>{{ getLabel('articleLinksUrl') }}</label>
+                          <input type="text" formControlName="url" class="form-control" placeholder="https://example.com/article" />
+                        </div>
+                        <button type="button" (click)="removeArticleLinkItem(i, j)" class="btn btn-danger btn-sm" [disabled]="getArticleLinkItems(i).length === 1">
+                          {{ getLabel('remove') }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <button type="button" (click)="addArticleLinkItem(i)" class="btn btn-secondary btn-sm">
+                  <i class="fas fa-plus"></i> {{ getLabel('addItem') }}
+                </button>
               </div>
             </div>
           </div>
