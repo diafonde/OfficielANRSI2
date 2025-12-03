@@ -1,20 +1,5 @@
 package mr.gov.anrsi.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import mr.gov.anrsi.dto.PageCreateDTO;
-import mr.gov.anrsi.dto.PageUpdateDTO;
-import mr.gov.anrsi.entity.Page;
-import mr.gov.anrsi.entity.PageType;
-import mr.gov.anrsi.exception.PageNotFoundException;
-import mr.gov.anrsi.repository.PageRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,6 +14,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import mr.gov.anrsi.dto.PageCreateDTO;
+import mr.gov.anrsi.dto.PageTranslationDTO;
+import mr.gov.anrsi.dto.PageUpdateDTO;
+import mr.gov.anrsi.entity.Language;
+import mr.gov.anrsi.entity.Page;
+import mr.gov.anrsi.repository.PageRepository;
 
 @Service
 @ConditionalOnProperty(name = "spring.datasource.url")
@@ -76,7 +78,7 @@ public class AppelsCandidaturesImportService {
             (rootNode.get(0).has("fr") || rootNode.get(0).has("ar") || rootNode.get(0).has("en"));
         
         // Build content structure
-        Map<String, Object> translations = new HashMap<>();
+        Map<String, Object> contentTranslations = new HashMap<>();
         Map<String, Object> frContent = new HashMap<>();
         Map<String, Object> arContent = new HashMap<>();
         Map<String, Object> enContent = new HashMap<>();
@@ -134,28 +136,58 @@ public class AppelsCandidaturesImportService {
         enContent.put("supportServices", new ArrayList<>());
         enContent.put("contactInfo", new ArrayList<>());
         
-        translations.put("fr", frContent);
-        translations.put("ar", arContent);
-        translations.put("en", enContent);
-        
-        Map<String, Object> finalContent = new HashMap<>();
-        finalContent.put("translations", translations);
-        
-        // Convert to JSON string
-        String contentJson = objectMapper.writeValueAsString(finalContent);
+        contentTranslations.put("fr", frContent);
+        contentTranslations.put("ar", arContent);
+        contentTranslations.put("en", enContent);
         
         // Get or create page
         Optional<Page> existingPage = pageRepository.findBySlug("appels-candidatures");
+        
+        // Create translations map
+        Map<String, PageTranslationDTO> translations = new HashMap<>();
+        
+        // Convert each language's content to JSON string separately
+        // This matches how the frontend component saves data (language-specific content in content field)
+        String frContentJson = objectMapper.writeValueAsString(frContent);
+        String arContentJson = objectMapper.writeValueAsString(arContent);
+        String enContentJson = objectMapper.writeValueAsString(enContent);
+        
+        // French translation
+        PageTranslationDTO frTranslation = new PageTranslationDTO();
+        frTranslation.setLanguage(Language.FR);
+        frTranslation.setTitle("Appels à Candidatures");
+        frTranslation.setHeroTitle("Appels à Candidatures");
+        frTranslation.setHeroSubtitle("Opportunités de recherche et d'innovation en Mauritanie");
+        frTranslation.setContent(frContentJson); // Store only French content
+        frTranslation.setExtra(frContentJson); // Store only French content in extra
+        translations.put("fr", frTranslation);
+        
+        // Arabic translation (if available)
+        PageTranslationDTO arTranslation = new PageTranslationDTO();
+        arTranslation.setLanguage(Language.AR);
+        arTranslation.setTitle("دعوات الترشيح");
+        arTranslation.setHeroTitle("دعوات الترشيح");
+        arTranslation.setHeroSubtitle("فرص البحث والابتكار في موريتانيا");
+        arTranslation.setContent(arContentJson); // Store only Arabic content
+        arTranslation.setExtra(arContentJson); // Store only Arabic content in extra
+        translations.put("ar", arTranslation);
+        
+        // English translation (if available)
+        PageTranslationDTO enTranslation = new PageTranslationDTO();
+        enTranslation.setLanguage(Language.EN);
+        enTranslation.setTitle("Calls for Applications");
+        enTranslation.setHeroTitle("Calls for Applications");
+        enTranslation.setHeroSubtitle("Research and innovation opportunities in Mauritania");
+        enTranslation.setContent(enContentJson); // Store only English content
+        enTranslation.setExtra(enContentJson); // Store only English content in extra
+        translations.put("en", enTranslation);
         
         if (existingPage.isPresent()) {
             // Update existing page
             Page page = existingPage.get();
             PageUpdateDTO updateDTO = new PageUpdateDTO();
-            updateDTO.setTitle("Appels à Candidatures");
-            updateDTO.setHeroTitle("Appels à Candidatures");
-            updateDTO.setHeroSubtitle("Opportunités de recherche et d'innovation en Mauritanie");
-            updateDTO.setContent(contentJson);
-            updateDTO.setPageType(PageType.STRUCTURED);
+            updateDTO.setTranslations(translations);
+            updateDTO.setPageType(Page.PageType.STRUCTURED);
             updateDTO.setIsPublished(true);
             updateDTO.setIsActive(true);
             
@@ -166,11 +198,8 @@ public class AppelsCandidaturesImportService {
             // Create new page
             PageCreateDTO createDTO = new PageCreateDTO();
             createDTO.setSlug("appels-candidatures");
-            createDTO.setTitle("Appels à Candidatures");
-            createDTO.setHeroTitle("Appels à Candidatures");
-            createDTO.setHeroSubtitle("Opportunités de recherche et d'innovation en Mauritanie");
-            createDTO.setContent(contentJson);
-            createDTO.setPageType(PageType.STRUCTURED);
+            createDTO.setPageType(Page.PageType.STRUCTURED);
+            createDTO.setTranslations(translations);
             createDTO.setIsPublished(true);
             createDTO.setIsActive(true);
             
@@ -208,22 +237,31 @@ public class AppelsCandidaturesImportService {
             localImageUrl = imageUrl; // Already a local path
         }
         
-        // Process French
+        // Process French (required - use as fallback for other languages)
+        JsonNode frData = null;
         if (item.has("fr")) {
-            JsonNode frData = item.get("fr");
+            frData = item.get("fr");
             frAppels.add(createAppelItem(frData, localImageUrl, item, "fr"));
         }
         
-        // Process Arabic
+        // Process Arabic (use French as fallback if Arabic translation is missing)
         if (item.has("ar")) {
             JsonNode arData = item.get("ar");
             arAppels.add(createAppelItem(arData, localImageUrl, item, "ar"));
+        } else if (frData != null) {
+            // Use French data as fallback for Arabic
+            arAppels.add(createAppelItem(frData, localImageUrl, item, "ar"));
+            logger.info("Arabic translation missing, using French as fallback for item");
         }
         
-        // Process English
+        // Process English (use French as fallback if English translation is missing)
         if (item.has("en")) {
             JsonNode enData = item.get("en");
             enAppels.add(createAppelItem(enData, localImageUrl, item, "en"));
+        } else if (frData != null) {
+            // Use French data as fallback for English
+            enAppels.add(createAppelItem(frData, localImageUrl, item, "en"));
+            logger.info("English translation missing, using French as fallback for item");
         }
     }
     
@@ -319,34 +357,70 @@ public class AppelsCandidaturesImportService {
         return path;
     }
     
+    /**
+     * Truncate text to a maximum length for preview purposes (read more style)
+     * @param text The text to truncate
+     * @param maxLength Maximum length before truncation
+     * @return Truncated text with "..." if it was longer than maxLength
+     */
+    private String truncateText(String text, int maxLength) {
+        if (text == null || text.length() <= maxLength) {
+            return text;
+        }
+        // Truncate and add ellipsis
+        return text.substring(0, maxLength).trim() + "...";
+    }
+    
     private Map<String, Object> createAppelItem(JsonNode langData, String imageUrl, 
                                                JsonNode rootItem, String lang) {
         Map<String, Object> appel = new HashMap<>();
         appel.put("status", "active");
         appel.put("title", langData.has("title") ? langData.get("title").asText() : "");
-        appel.put("description", langData.has("summary") ? langData.get("summary").asText() : "");
+        
+        // Store summary separately if available
+        if (langData.has("summary") && !langData.get("summary").isNull()) {
+            appel.put("summary", langData.get("summary").asText());
+        }
+        
+        // Use full_text with truncation (read more style), fallback to summary
+        String description = "";
+        if (langData.has("full_text") && !langData.get("full_text").isNull()) {
+            String fullText = langData.get("full_text").asText();
+            // Truncate to 250 characters for preview
+            description = truncateText(fullText, 250);
+        } else if (langData.has("summary") && !langData.get("summary").isNull()) {
+            description = langData.get("summary").asText();
+        }
+        appel.put("description", description);
+        
+        // Store full text separately for "read more" functionality
+        if (langData.has("full_text") && !langData.get("full_text").isNull()) {
+            appel.put("fullText", langData.get("full_text").asText());
+        }
+        
+        // Image URL (use local downloaded URL if available)
         if (imageUrl != null) {
             appel.put("imageUrl", imageUrl);
         }
         
-        // Details
+        // Details array (for date display)
         List<Map<String, Object>> details = new ArrayList<>();
         if (langData.has("date") && !langData.get("date").isNull()) {
             Map<String, Object> dateDetail = new HashMap<>();
-            dateDetail.put("label", lang.equals("ar") ? "التاريخ" : "Date");
+            dateDetail.put("label", lang.equals("ar") ? "التاريخ" : (lang.equals("en") ? "Date" : "Date"));
             dateDetail.put("value", langData.get("date").asText());
             details.add(dateDetail);
         }
         appel.put("details", details);
         
-        // Actions
+        // Actions array (for URL link)
         List<Map<String, Object>> actions = new ArrayList<>();
         String url = rootItem.has("url") && !rootItem.get("url").isNull() 
             ? rootItem.get("url").asText() 
             : (langData.has("url") && !langData.get("url").isNull() 
                 ? langData.get("url").asText() : null);
         
-        if (url != null) {
+        if (url != null && !url.isEmpty()) {
             Map<String, Object> action = new HashMap<>();
             action.put("text", lang.equals("fr") ? "En savoir plus" : 
                        (lang.equals("ar") ? "المزيد" : "Learn more"));

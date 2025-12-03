@@ -49,32 +49,7 @@
     </div>
 
     <!-- Media Links -->
-    <div class="form-section">
-      <h2>{{ getLabel('mediaLinksSection') }} - {{ getActiveLanguageName() }}</h2>
-      <div [formGroup]="getActiveLanguageFormGroup()">
-        <div formArrayName="mediaLinks">
-          <div *ngIf="mediaLinks.length === 0" class="empty-state">
-            <p class="text-muted">{{ getLabel('noMediaLinks') || 'No media links added yet. Click the button below to add one.' }}</p>
-          </div>
-          <div *ngFor="let item of mediaLinks.controls; let i = index">
-            <div [formGroupName]="i" class="nested-form-group">
-              <div class="form-row">
-                <div class="form-group">
-                  <label>{{ getLabel('mediaLinksLabel') }}</label>
-                  <input type="text" formControlName="label" class="form-control" />
-                </div>
-                <div class="form-group">
-                  <label>{{ getLabel('mediaLinksUrl') }}</label>
-                  <input type="text" formControlName="url" class="form-control" />
-                </div>
-                <button type="button" (click)="removeMediaLink(i)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <button type="button" (click)="addMediaLink()" class="btn btn-primary">{{ getLabel('addMediaLink') }}</button>
-      </div>
-    </div>
+
 
     <!-- Article Links -->
     <div class="form-section">

@@ -2,6 +2,9 @@ package mr.gov.anrsi.entity;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -22,7 +25,7 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "page_translations",
-       uniqueConstraints = @UniqueConstraint(columnNames = {"page_id", "language"}))
+       uniqueConstraints = @UniqueConstraint(columnNames = {"page_id", "lang"}))
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -36,7 +39,7 @@ public class PageTranslation {
     private Page page;
     
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 10)
+    @Column(name = "lang", nullable = false, length = 10)
     private Language language;
     
     @Column(nullable = false, length = 255)
@@ -48,8 +51,21 @@ public class PageTranslation {
     @Column(name = "hero_subtitle", columnDefinition = "TEXT")
     private String heroSubtitle;
     
+    @Column(name = "section_title", columnDefinition = "TEXT")
+    private String sectionTitle;
+    
+    @Column(name = "intro_text", columnDefinition = "TEXT")
+    private String introText;
+    
     @Column(columnDefinition = "TEXT")
-    private String content; // For simple text content (not JSON)
+    private String description;
+    
+    @Column(columnDefinition = "TEXT")
+    private String content; // Contenu HTML principal
+    
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "JSONB")
+    private String extra; // Pour stocker des listes complexes (rapports, programmes, vidéos, etc.)
     
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

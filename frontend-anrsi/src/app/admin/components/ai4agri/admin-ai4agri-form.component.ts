@@ -668,6 +668,53 @@ export class AdminAi4agriFormComponent implements OnInit {
     this.pageService.getPageBySlug('ai4agri').subscribe({
       next: (page) => {
         this.pageId = page.id || null;
+        
+        // First, try to get from page.translations (new system) - matches how page component reads
+        if (page.translations && Object.keys(page.translations).length > 0) {
+          try {
+            const content: Ai4agriContent = {
+              translations: {
+                fr: this.getEmptyLanguageContent(),
+                ar: this.getEmptyLanguageContent(),
+                en: this.getEmptyLanguageContent()
+              }
+            };
+            
+            // Extract content from each translation
+            ['fr', 'ar', 'en'].forEach(lang => {
+              const translation = page.translations?.[lang];
+              if (translation && translation.content) {
+                try {
+                  const parsedContent = JSON.parse(translation.content);
+                  content.translations[lang as 'fr' | 'ar' | 'en'] = parsedContent;
+                } catch (e) {
+                  console.error(`Error parsing ${lang} translation content:`, e);
+                }
+              }
+            });
+            
+            this.populateForm(content);
+            // Check if Arabic data is empty and load defaults
+            const arGroup = this.getLanguageFormGroup('ar');
+            const arHeroTitle = arGroup.get('heroTitle')?.value;
+            const arNewsItems = arGroup.get('newsItems') as FormArray;
+            if ((!arHeroTitle || arHeroTitle.trim() === '') && arNewsItems.length === 0) {
+              this.loadDefaultArabicData();
+            }
+            // Check if English data is empty and load defaults
+            const enGroup = this.getLanguageFormGroup('en');
+            const enHeroTitle = enGroup.get('heroTitle')?.value;
+            const enNewsItems = enGroup.get('newsItems') as FormArray;
+            if ((!enHeroTitle || enHeroTitle.trim() === '') && enNewsItems.length === 0) {
+              this.loadDefaultEnglishData();
+            }
+          } catch (e) {
+            console.error('Error processing translations:', e);
+            // Fall through to page.content check
+          }
+        }
+        
+        // Fallback: Try to get from page.content (old system or backup)
         if (page.content) {
           try {
             const parsedContent = JSON.parse(page.content);
@@ -708,9 +755,11 @@ export class AdminAi4agriFormComponent implements OnInit {
             console.error('Error parsing content:', e);
             this.loadDefaultData();
           }
-        } else {
+        } else if (!page.translations || Object.keys(page.translations).length === 0) {
+          // No translations and no content, load defaults
           this.loadDefaultData();
         }
+        
         this.isLoading = false;
       },
       error: (error) => {
@@ -901,14 +950,26 @@ export class AdminAi4agriFormComponent implements OnInit {
       });
     });
     
-    const contentJson = JSON.stringify(content);
-    console.log('Final JSON being sent to backend (first 500 chars):', contentJson.substring(0, 500));
+    // Build translations for the new structure
+    const translations: { [key: string]: any } = {};
     
+    (['fr', 'ar', 'en'] as const).forEach(lang => {
+      const langContent = content.translations?.[lang];
+      if (langContent) {
+        const langContentJson = JSON.stringify(langContent);
+        translations[lang] = {
+          title: langContent.heroTitle || 'AI 4 AGRI',
+          heroTitle: langContent.heroTitle || '',
+          heroSubtitle: langContent.heroSubtitle || '',
+          introText: (langContent as any).introText || '',
+          content: langContentJson, // Store the language-specific content in content field
+          extra: langContentJson // Also store in extra for backward compatibility
+        };
+      }
+    });
+
     const updateData: PageUpdateDTO = {
-      title: 'AI 4 AGRI',
-      heroTitle: heroTitle,
-      heroSubtitle: heroSubtitle,
-      content: contentJson,
+      translations: translations,
       pageType: 'STRUCTURED',
       isPublished: true,
       isActive: true
@@ -929,11 +990,8 @@ export class AdminAi4agriFormComponent implements OnInit {
     } else {
       this.pageService.createPage({
         slug: 'ai4agri',
-        title: 'AI 4 AGRI',
-        heroTitle: heroTitle,
-        heroSubtitle: heroSubtitle,
-        content: contentJson,
         pageType: 'STRUCTURED',
+        translations: translations,
         isPublished: true,
         isActive: true
       }).subscribe({

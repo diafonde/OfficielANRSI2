@@ -14,7 +14,11 @@ public class PageTranslationDTO {
     private String title;
     private String heroTitle;
     private String heroSubtitle;
+    private String sectionTitle;
+    private String introText;
+    private String description;
     private String content;
+    private String extra; // JSONB pour listes complexes
 }
 
 

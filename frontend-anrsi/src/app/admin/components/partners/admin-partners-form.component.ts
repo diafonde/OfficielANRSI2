@@ -133,9 +133,24 @@ export class AdminPartnersFormComponent implements OnInit {
       partners: formValue.partners || []
     };
 
+    // Build translations for the new structure (simple content without language-specific fields)
+    const translations: { [key: string]: any } = {
+      fr: {
+        title: 'Nos Partenaires',
+        extra: JSON.stringify(content)
+      },
+      ar: {
+        title: 'شركاؤنا',
+        extra: JSON.stringify(content)
+      },
+      en: {
+        title: 'Our Partners',
+        extra: JSON.stringify(content)
+      }
+    };
+
     const updateData: PageUpdateDTO = {
-      title: 'Nos Partenaires',
-      content: JSON.stringify(content),
+      translations: translations,
       pageType: 'STRUCTURED',
       isPublished: true,
       isActive: true
@@ -156,9 +171,8 @@ export class AdminPartnersFormComponent implements OnInit {
     } else {
       this.pageService.createPage({
         slug: 'partners',
-        title: 'Nos Partenaires',
-        content: JSON.stringify(content),
         pageType: 'STRUCTURED',
+        translations: translations,
         isPublished: true,
         isActive: true
       }).subscribe({

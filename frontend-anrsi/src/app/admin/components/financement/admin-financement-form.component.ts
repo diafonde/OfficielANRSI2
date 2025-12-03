@@ -415,16 +415,23 @@ export class AdminFinancementFormComponent implements OnInit {
       }
     };
 
-    // Use French content for hero title/subtitle in page metadata (fallback to first available)
-    const frContent = content.translations.fr;
-    const heroTitle = frContent.heroTitle || content.translations.ar.heroTitle || content.translations.en.heroTitle || 'Financement';
-    const heroSubtitle = frContent.heroSubtitle || content.translations.ar.heroSubtitle || content.translations.en.heroSubtitle || '';
+    // Build translations for the new structure
+    const translations: { [key: string]: any } = {};
+    
+    (['fr', 'ar', 'en'] as const).forEach(lang => {
+      const langContent = content.translations[lang];
+      if (langContent) {
+        translations[lang] = {
+          title: langContent.heroTitle || 'Financement',
+          heroTitle: langContent.heroTitle || '',
+          heroSubtitle: langContent.heroSubtitle || '',
+          extra: JSON.stringify(langContent) // Store the full content in extra (JSONB)
+        };
+      }
+    });
 
     const updateData: PageUpdateDTO = {
-      title: 'Financement',
-      heroTitle: heroTitle,
-      heroSubtitle: heroSubtitle,
-      content: JSON.stringify(content),
+      translations: translations,
       pageType: 'STRUCTURED',
       isPublished: true,
       isActive: true
@@ -445,11 +452,8 @@ export class AdminFinancementFormComponent implements OnInit {
     } else {
       this.pageService.createPage({
         slug: 'financement',
-        title: 'Financement',
-        heroTitle: heroTitle,
-        heroSubtitle: heroSubtitle,
-        content: JSON.stringify(content),
         pageType: 'STRUCTURED',
+        translations: translations,
         isPublished: true,
         isActive: true
       }).subscribe({

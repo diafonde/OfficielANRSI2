@@ -1,5 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { User, LoginRequest, LoginResponse } from '../models/user.model';
@@ -10,6 +11,7 @@ import { User, LoginRequest, LoginResponse } from '../models/user.model';
 export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
+  private router = inject(Router);
 
   private readonly TOKEN_KEY = 'admin_token';
   private readonly USER_KEY = 'admin_user';
@@ -52,12 +54,22 @@ export class AuthService {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
     this.currentUserSubject.next(null);
+    this.router.navigate(['/admin/login']);
   }
 
   isAuthenticated(): boolean {
     const token = localStorage.getItem(this.TOKEN_KEY);
     const user = localStorage.getItem(this.USER_KEY);
-    return !!(token && user);
+    if (!token || !user) {
+      return false;
+    }
+    // Check if token is expired
+    if (this.isTokenExpired(token)) {
+      console.warn('Token expired, clearing session');
+      this.logout();
+      return false;
+    }
+    return true;
   }
 
   getCurrentUser(): User | null {
@@ -97,6 +109,13 @@ export class AuthService {
         return;
       }
 
+      // Check if token is expired
+      if (this.isTokenExpired(storedToken)) {
+        console.warn('Stored token is expired, clearing session');
+        this.logout();
+        return;
+      }
+
       try {
         const user = JSON.parse(storedUser);
         this.currentUserSubject.next(user);
@@ -111,6 +130,21 @@ export class AuthService {
     // JWT tokens have 3 parts separated by dots: header.payload.signature
     const parts = token.split('.');
     return parts.length === 3 && parts.every(part => part.length > 0);
+  }
+
+  private isTokenExpired(token: string): boolean {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const exp = payload.exp;
+      if (!exp) {
+        return true; // No expiration claim means expired
+      }
+      const expirationDate = new Date(exp * 1000); // Convert to milliseconds
+      return expirationDate < new Date();
+    } catch (error) {
+      console.error('Error decoding token:', error);
+      return true; // If we can't decode, consider it expired
+    }
   }
 
   private setCurrentUser(user: User, token: string): void {

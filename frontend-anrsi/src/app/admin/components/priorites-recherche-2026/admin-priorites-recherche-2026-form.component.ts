@@ -487,16 +487,23 @@ export class AdminPrioritesRecherche2026FormComponent implements OnInit {
       }
     };
 
-    // Use French content for hero title/subtitle in page metadata (fallback to first available)
-    const frContent = content.translations.fr;
-    const heroTitle = frContent.heroTitle || content.translations.ar.heroTitle || content.translations.en.heroTitle || 'Priorités de la Recherche 2026';
-    const heroSubtitle = frContent.heroSubtitle || content.translations.ar.heroSubtitle || content.translations.en.heroSubtitle || '';
+    // Build translations for the new structure
+    const translations: { [key: string]: any } = {};
+    
+    (['fr', 'ar', 'en'] as const).forEach(lang => {
+      const langContent = content.translations[lang];
+      if (langContent) {
+        translations[lang] = {
+          title: langContent.heroTitle || 'Priorités de la Recherche 2026',
+          heroTitle: langContent.heroTitle || '',
+          heroSubtitle: langContent.heroSubtitle || '',
+          extra: JSON.stringify(langContent) // Store the full content in extra (JSONB)
+        };
+      }
+    });
 
     const updateData: PageUpdateDTO = {
-      title: 'Priorités de la Recherche 2026',
-      heroTitle: heroTitle,
-      heroSubtitle: heroSubtitle,
-      content: JSON.stringify(content),
+      translations: translations,
       pageType: 'STRUCTURED',
       isPublished: true,
       isActive: true
@@ -517,11 +524,8 @@ export class AdminPrioritesRecherche2026FormComponent implements OnInit {
     } else {
       this.pageService.createPage({
         slug: 'priorites-recherche-2026',
-        title: 'Priorités de la Recherche 2026',
-        heroTitle: heroTitle,
-        heroSubtitle: heroSubtitle,
-        content: JSON.stringify(content),
         pageType: 'STRUCTURED',
+        translations: translations,
         isPublished: true,
         isActive: true
       }).subscribe({

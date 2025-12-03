@@ -1,5 +1,11 @@
 package mr.gov.anrsi.dto;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,29 +15,26 @@ import mr.gov.anrsi.entity.PagePhotoTranslation;
 import mr.gov.anrsi.entity.PageTranslation;
 import mr.gov.anrsi.entity.PageVideoTranslation;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class PageDTO {
     private Long id;
     private String slug;
-    private String title; // Backward compatibility
-    private String heroTitle; // Backward compatibility
-    private String heroSubtitle; // Backward compatibility
     private String heroImageUrl;
-    private String content; // Backward compatibility - keep for old JSON format
     private Page.PageType pageType;
-    private String metadata;
+    private Integer ordre;
+    private Long parentId;
     private Boolean isPublished;
     private Boolean isActive;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    
+    // Backward compatibility fields (deprecated - use translations instead)
+    private String title;
+    private String heroTitle;
+    private String heroSubtitle;
+    private String content;
     
     // New normalized structure
     private Map<String, PageTranslationDTO> translations = new HashMap<>();
@@ -46,13 +49,10 @@ public class PageDTO {
         PageDTO dto = new PageDTO();
         dto.setId(page.getId());
         dto.setSlug(page.getSlug());
-        dto.setTitle(page.getTitle());
-        dto.setHeroTitle(page.getHeroTitle());
-        dto.setHeroSubtitle(page.getHeroSubtitle());
         dto.setHeroImageUrl(page.getHeroImageUrl());
-        dto.setContent(page.getContent());
         dto.setPageType(page.getPageType());
-        dto.setMetadata(page.getMetadata());
+        dto.setOrdre(page.getOrdre());
+        dto.setParentId(page.getParentId());
         dto.setIsPublished(page.getIsPublished() != null ? page.getIsPublished() : false);
         dto.setIsActive(page.getIsActive() != null ? page.getIsActive() : true);
         dto.setCreatedAt(page.getCreatedAt());
@@ -68,7 +68,11 @@ public class PageDTO {
                 transDTO.setTitle(translation.getTitle());
                 transDTO.setHeroTitle(translation.getHeroTitle());
                 transDTO.setHeroSubtitle(translation.getHeroSubtitle());
+                transDTO.setSectionTitle(translation.getSectionTitle());
+                transDTO.setIntroText(translation.getIntroText());
+                transDTO.setDescription(translation.getDescription());
                 transDTO.setContent(translation.getContent());
+                transDTO.setExtra(translation.getExtra());
                 translationsMap.put(translation.getLanguage().name().toLowerCase(), transDTO);
             }
             dto.setTranslations(translationsMap);
@@ -85,7 +89,7 @@ public class PageDTO {
                                     .findFirst()
                                     .orElse(page.getTranslations().get(0))));
             
-            // Update main fields from translation if they exist
+            // Backward compatibility: set main fields from first translation
             if (firstTranslation.getTitle() != null) {
                 dto.setTitle(firstTranslation.getTitle());
             }

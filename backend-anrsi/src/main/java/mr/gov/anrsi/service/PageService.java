@@ -1,9 +1,24 @@
 package mr.gov.anrsi.service;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import mr.gov.anrsi.dto.PageCreateDTO;
 import mr.gov.anrsi.dto.PageDTO;
+import mr.gov.anrsi.dto.PageTranslationDTO;
 import mr.gov.anrsi.dto.PageUpdateDTO;
 import mr.gov.anrsi.entity.Language;
 import mr.gov.anrsi.entity.Page;
@@ -13,17 +28,6 @@ import mr.gov.anrsi.entity.PageVideo;
 import mr.gov.anrsi.exception.PageNotFoundException;
 import mr.gov.anrsi.repository.PageRepository;
 import mr.gov.anrsi.repository.PageTranslationRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -117,19 +121,52 @@ public class PageService {
             throw new IllegalArgumentException("Page with slug '" + pageCreateDTO.getSlug() + "' already exists");
         }
         
+        // Validate translations
+        if (pageCreateDTO.getTranslations() == null || pageCreateDTO.getTranslations().isEmpty()) {
+            throw new IllegalArgumentException("At least one translation is required");
+        }
+        
         Page page = new Page();
         page.setSlug(pageCreateDTO.getSlug());
-        page.setTitle(pageCreateDTO.getTitle());
-        page.setHeroTitle(pageCreateDTO.getHeroTitle());
-        page.setHeroSubtitle(pageCreateDTO.getHeroSubtitle());
-        page.setHeroImageUrl(pageCreateDTO.getHeroImageUrl());
-        page.setContent(pageCreateDTO.getContent());
         page.setPageType(pageCreateDTO.getPageType());
-        page.setMetadata(pageCreateDTO.getMetadata());
+        page.setOrdre(pageCreateDTO.getOrdre());
+        page.setParentId(pageCreateDTO.getParentId());
+        page.setHeroImageUrl(pageCreateDTO.getHeroImageUrl());
         page.setIsPublished(pageCreateDTO.getIsPublished() != null ? pageCreateDTO.getIsPublished() : false);
         page.setIsActive(pageCreateDTO.getIsActive() != null ? pageCreateDTO.getIsActive() : true);
         
+        // Save page first to get the ID
         Page savedPage = pageRepository.save(page);
+        
+        // Create translations
+        for (Map.Entry<String, PageTranslationDTO> entry : pageCreateDTO.getTranslations().entrySet()) {
+            String langCode = entry.getKey().toUpperCase();
+            PageTranslationDTO transDTO = entry.getValue();
+            
+            try {
+                Language language = Language.valueOf(langCode);
+                
+                PageTranslation translation = new PageTranslation();
+                translation.setPage(savedPage);
+                translation.setLanguage(language);
+                translation.setTitle(transDTO.getTitle());
+                translation.setHeroTitle(transDTO.getHeroTitle());
+                translation.setHeroSubtitle(transDTO.getHeroSubtitle());
+                translation.setSectionTitle(transDTO.getSectionTitle());
+                translation.setIntroText(transDTO.getIntroText());
+                translation.setDescription(transDTO.getDescription());
+                translation.setContent(transDTO.getContent());
+                translation.setExtra(transDTO.getExtra());
+                
+                pageTranslationRepository.save(translation);
+            } catch (IllegalArgumentException e) {
+                // Skip invalid language codes
+                continue;
+            }
+        }
+        
+        // Reload page with translations
+        loadPageWithRelations(savedPage);
         return PageDTO.fromEntity(savedPage);
     }
     
@@ -137,29 +174,26 @@ public class PageService {
         Page page = pageRepository.findById(id)
             .orElseThrow(() -> new PageNotFoundException("Page not found with id: " + id));
         
-        if (pageUpdateDTO.getTitle() != null) {
-            page.setTitle(pageUpdateDTO.getTitle());
-        }
-        if (pageUpdateDTO.getHeroTitle() != null) {
-            page.setHeroTitle(pageUpdateDTO.getHeroTitle());
-        }
-        if (pageUpdateDTO.getHeroSubtitle() != null) {
-            page.setHeroSubtitle(pageUpdateDTO.getHeroSubtitle());
-        }
-        if (pageUpdateDTO.getHeroImageUrl() != null) {
-            page.setHeroImageUrl(pageUpdateDTO.getHeroImageUrl());
-        }
-        if (pageUpdateDTO.getContent() != null) {
-            page.setContent(pageUpdateDTO.getContent());
-            
-            // Update PageTranslation entries if content contains translations
-            updatePageTranslations(page, pageUpdateDTO.getContent());
+        // Update page fields
+        if (pageUpdateDTO.getSlug() != null) {
+            // Check if new slug already exists (and is not the current page)
+            if (!page.getSlug().equals(pageUpdateDTO.getSlug()) && 
+                pageRepository.existsBySlug(pageUpdateDTO.getSlug())) {
+                throw new IllegalArgumentException("Page with slug '" + pageUpdateDTO.getSlug() + "' already exists");
+            }
+            page.setSlug(pageUpdateDTO.getSlug());
         }
         if (pageUpdateDTO.getPageType() != null) {
             page.setPageType(pageUpdateDTO.getPageType());
         }
-        if (pageUpdateDTO.getMetadata() != null) {
-            page.setMetadata(pageUpdateDTO.getMetadata());
+        if (pageUpdateDTO.getOrdre() != null) {
+            page.setOrdre(pageUpdateDTO.getOrdre());
+        }
+        if (pageUpdateDTO.getParentId() != null) {
+            page.setParentId(pageUpdateDTO.getParentId());
+        }
+        if (pageUpdateDTO.getHeroImageUrl() != null) {
+            page.setHeroImageUrl(pageUpdateDTO.getHeroImageUrl());
         }
         if (pageUpdateDTO.getIsPublished() != null) {
             page.setIsPublished(pageUpdateDTO.getIsPublished());
@@ -168,7 +202,64 @@ public class PageService {
             page.setIsActive(pageUpdateDTO.getIsActive());
         }
         
+        // Update translations if provided
+        if (pageUpdateDTO.getTranslations() != null && !pageUpdateDTO.getTranslations().isEmpty()) {
+            for (Map.Entry<String, PageTranslationDTO> entry : pageUpdateDTO.getTranslations().entrySet()) {
+                String langCode = entry.getKey().toUpperCase();
+                PageTranslationDTO transDTO = entry.getValue();
+                
+                try {
+                    Language language = Language.valueOf(langCode);
+                    
+                    // Find existing translation or create new one
+                    Optional<PageTranslation> existingTranslation = 
+                        pageTranslationRepository.findByPageAndLanguage(page, language);
+                    
+                    PageTranslation translation;
+                    if (existingTranslation.isPresent()) {
+                        translation = existingTranslation.get();
+                    } else {
+                        translation = new PageTranslation();
+                        translation.setPage(page);
+                        translation.setLanguage(language);
+                    }
+                    
+                    // Update translation fields
+                    if (transDTO.getTitle() != null) {
+                        translation.setTitle(transDTO.getTitle());
+                    }
+                    if (transDTO.getHeroTitle() != null) {
+                        translation.setHeroTitle(transDTO.getHeroTitle());
+                    }
+                    if (transDTO.getHeroSubtitle() != null) {
+                        translation.setHeroSubtitle(transDTO.getHeroSubtitle());
+                    }
+                    if (transDTO.getSectionTitle() != null) {
+                        translation.setSectionTitle(transDTO.getSectionTitle());
+                    }
+                    if (transDTO.getIntroText() != null) {
+                        translation.setIntroText(transDTO.getIntroText());
+                    }
+                    if (transDTO.getDescription() != null) {
+                        translation.setDescription(transDTO.getDescription());
+                    }
+                    if (transDTO.getContent() != null) {
+                        translation.setContent(transDTO.getContent());
+                    }
+                    if (transDTO.getExtra() != null) {
+                        translation.setExtra(transDTO.getExtra());
+                    }
+                    
+                    pageTranslationRepository.save(translation);
+                } catch (IllegalArgumentException e) {
+                    // Skip invalid language codes
+                    continue;
+                }
+            }
+        }
+        
         Page updatedPage = pageRepository.save(page);
+        loadPageWithRelations(updatedPage);
         return PageDTO.fromEntity(updatedPage);
     }
     
@@ -206,7 +297,7 @@ public class PageService {
                     // Extract title, heroTitle, heroSubtitle, and full content
                     String title = langContent.has("heroTitle") 
                         ? langContent.get("heroTitle").asText() 
-                        : (langContent.has("title") ? langContent.get("title").asText() : page.getTitle());
+                        : (langContent.has("title") ? langContent.get("title").asText() : "Untitled");
                     
                     String heroTitle = langContent.has("heroTitle") 
                         ? langContent.get("heroTitle").asText() 
@@ -233,7 +324,7 @@ public class PageService {
                     }
                     
                     // Update translation fields
-                    translation.setTitle(title != null ? title : page.getTitle());
+                    translation.setTitle(title != null ? title : "Untitled");
                     translation.setHeroTitle(heroTitle);
                     translation.setHeroSubtitle(heroSubtitle);
                     translation.setContent(langContentJson);

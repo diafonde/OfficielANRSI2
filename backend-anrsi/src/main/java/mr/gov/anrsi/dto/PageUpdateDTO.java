@@ -1,30 +1,28 @@
 package mr.gov.anrsi.dto;
 
+import java.util.Map;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import mr.gov.anrsi.entity.Page;
 
-import jakarta.validation.constraints.NotBlank;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class PageUpdateDTO {
-    @NotBlank(message = "Title is required")
-    private String title;
-    
-    private String heroTitle;
-    
-    private String heroSubtitle;
-    
-    private String heroImageUrl;
-    
-    private String content;
+    private String slug;
     
     private Page.PageType pageType;
     
-    private String metadata;
+    private Integer ordre;
+    
+    private Long parentId;
+    
+    private String heroImageUrl;
+    
+    // Translations map: key = language code (fr, en, ar), value = translation data
+    private Map<String, PageTranslationDTO> translations;
     
     private Boolean isPublished;
     

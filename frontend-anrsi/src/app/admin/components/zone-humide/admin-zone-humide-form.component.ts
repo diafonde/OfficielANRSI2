@@ -413,6 +413,55 @@ export class AdminZoneHumideFormComponent implements OnInit {
     this.pageService.getPageBySlug('zone-humide').subscribe({
       next: (page) => {
         this.pageId = page.id || null;
+        
+        // First, try to get from page.translations (new system)
+        if (page.translations && Object.keys(page.translations).length > 0) {
+          try {
+            const content: ZoneHumideContent = {
+              translations: {
+                fr: this.getEmptyLanguageContent(),
+                ar: this.getEmptyLanguageContent(),
+                en: this.getEmptyLanguageContent()
+              }
+            };
+            
+            // Extract content from each translation
+            ['fr', 'ar', 'en'].forEach(lang => {
+              const translation = page.translations?.[lang];
+              if (translation && translation.content) {
+                try {
+                  const parsedContent = JSON.parse(translation.content);
+                  content.translations[lang as 'fr' | 'ar' | 'en'] = parsedContent;
+                } catch (e) {
+                  console.error(`Error parsing ${lang} translation content:`, e);
+                }
+              }
+            });
+            
+            this.populateForm(content);
+            // Check if Arabic data is empty in the form and load defaults if needed
+            const arGroup = this.getLanguageFormGroup('ar');
+            const arHeroTitle = arGroup.get('heroTitle')?.value;
+            const arOverview = arGroup.get('overview') as FormArray;
+            const arThemes = arGroup.get('themes') as FormArray;
+            if ((!arHeroTitle || arHeroTitle.trim() === '') && arOverview.length === 0 && arThemes.length === 0) {
+              this.loadDefaultArabicData();
+            }
+            // Check if English data is empty in the form and load defaults if needed
+            const enGroup = this.getLanguageFormGroup('en');
+            const enHeroTitle = enGroup.get('heroTitle')?.value;
+            const enOverview = enGroup.get('overview') as FormArray;
+            const enThemes = enGroup.get('themes') as FormArray;
+            if ((!enHeroTitle || enHeroTitle.trim() === '') && enOverview.length === 0 && enThemes.length === 0) {
+              this.loadDefaultEnglishData();
+            }
+          } catch (e) {
+            console.error('Error processing translations:', e);
+            // Fall through to page.content check
+          }
+        }
+        
+        // Fallback: Try to get from page.content (old system or backup)
         if (page.content) {
           try {
             const parsedContent = JSON.parse(page.content);
@@ -455,9 +504,10 @@ export class AdminZoneHumideFormComponent implements OnInit {
             console.error('Error parsing content:', e);
             this.loadDefaultData();
           }
-        } else {
+        } else if (!page.translations || Object.keys(page.translations).length === 0) {
           this.loadDefaultData();
         }
+        
         this.isLoading = false;
       },
       error: (error) => {
@@ -834,16 +884,26 @@ export class AdminZoneHumideFormComponent implements OnInit {
     // Debug: Log built content to verify media is included
     console.log('Built content media:', content.translations[this.activeLanguage]?.media);
 
-    // Use French content for hero title/subtitle in page metadata (fallback to first available)
-    const frContent = content.translations.fr;
-    const heroTitle = frContent.heroTitle || content.translations.ar.heroTitle || content.translations.en.heroTitle || 'Zone Humide';
-    const heroSubtitle = frContent.heroSubtitle || content.translations.ar.heroSubtitle || content.translations.en.heroSubtitle || '';
+    // Build translations for the new structure
+    const translations: { [key: string]: any } = {};
+    
+    (['fr', 'ar', 'en'] as const).forEach(lang => {
+      const langContent = content.translations[lang];
+      if (langContent) {
+        const langContentJson = JSON.stringify(langContent);
+        translations[lang] = {
+          title: langContent.heroTitle || 'Zone Humide',
+          heroTitle: langContent.heroTitle || '',
+          heroSubtitle: langContent.heroSubtitle || '',
+          introText: langContent.introText || '',
+          content: langContentJson, // Store the language-specific content in content field
+          extra: langContentJson // Also store in extra for backward compatibility
+        };
+      }
+    });
 
     const updateData: PageUpdateDTO = {
-      title: 'Zone Humide',
-      heroTitle: heroTitle,
-      heroSubtitle: heroSubtitle,
-      content: JSON.stringify(content),
+      translations: translations,
       pageType: 'STRUCTURED',
       isPublished: true,
       isActive: true
@@ -864,11 +924,8 @@ export class AdminZoneHumideFormComponent implements OnInit {
     } else {
       this.pageService.createPage({
         slug: 'zone-humide',
-        title: 'Zone Humide',
-        heroTitle: heroTitle,
-        heroSubtitle: heroSubtitle,
-        content: JSON.stringify(content),
         pageType: 'STRUCTURED',
+        translations: translations,
         isPublished: true,
         isActive: true
       }).subscribe({

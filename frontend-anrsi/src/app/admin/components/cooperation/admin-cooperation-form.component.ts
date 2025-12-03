@@ -597,16 +597,23 @@ export class AdminCooperationFormComponent implements OnInit {
       }
     };
 
-    // Use French content for hero title/subtitle in page metadata (fallback to first available)
-    const frContent = content.translations.fr;
-    const heroTitle = frContent.cooperationInfo.title || content.translations.ar.cooperationInfo.title || content.translations.en.cooperationInfo.title || 'Coopération & Partenariats';
-    const heroSubtitle = frContent.cooperationInfo.description || content.translations.ar.cooperationInfo.description || content.translations.en.cooperationInfo.description || '';
+    // Build translations for the new structure
+    const translations: { [key: string]: any } = {};
+    
+    (['fr', 'ar', 'en'] as const).forEach(lang => {
+      const langContent = content.translations[lang];
+      if (langContent) {
+        translations[lang] = {
+          title: langContent.cooperationInfo?.title || 'Coopération & Partenariats',
+          heroTitle: langContent.cooperationInfo?.title || '',
+          heroSubtitle: langContent.cooperationInfo?.description || '',
+          extra: JSON.stringify(langContent) // Store the full content in extra (JSONB)
+        };
+      }
+    });
 
     const updateData: PageUpdateDTO = {
-      title: 'Coopération & Partenariats',
-      heroTitle: heroTitle,
-      heroSubtitle: heroSubtitle,
-      content: JSON.stringify(content),
+      translations: translations,
       pageType: 'STRUCTURED',
       isPublished: true,
       isActive: true
@@ -627,11 +634,8 @@ export class AdminCooperationFormComponent implements OnInit {
     } else {
       this.pageService.createPage({
         slug: 'cooperation',
-        title: 'Coopération & Partenariats',
-        heroTitle: heroTitle,
-        heroSubtitle: heroSubtitle,
-        content: JSON.stringify(content),
         pageType: 'STRUCTURED',
+        translations: translations,
         isPublished: true,
         isActive: true
       }).subscribe({

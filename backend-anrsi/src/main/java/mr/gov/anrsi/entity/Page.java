@@ -34,27 +34,18 @@ public class Page {
     @Column(unique = true, nullable = false, length = 255)
     private String slug;
     
-    @Column(nullable = false, length = 255)
-    private String title; // Keep for backward compatibility, will be moved to translations
-    
-    @Column(name = "hero_title", columnDefinition = "TEXT")
-    private String heroTitle; // Keep for backward compatibility
-    
-    @Column(name = "hero_subtitle", columnDefinition = "TEXT")
-    private String heroSubtitle; // Keep for backward compatibility
-    
-    @Column(name = "hero_image_url", columnDefinition = "TEXT")
-    private String heroImageUrl;
-    
-    @Column(columnDefinition = "TEXT")
-    private String content; // Keep for backward compatibility during migration, can be removed later
-    
     @Enumerated(EnumType.STRING)
-    @Column(name = "page_type", nullable = false, length = 50)
+    @Column(name = "type", nullable = false, length = 50)
     private PageType pageType;
     
-    @Column(columnDefinition = "TEXT")
-    private String metadata; // Additional JSON metadata
+    @Column(name = "ordre")
+    private Integer ordre; // Pour l'ordre dans le menu
+    
+    @Column(name = "parent_id")
+    private Long parentId; // Pour créer des sous-pages / catégories
+    
+    @Column(name = "hero_image_url", columnDefinition = "TEXT")
+    private String heroImageUrl; // Bannière de la page
     
     // New relationships - normalized structure
     @OneToMany(mappedBy = "page", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)

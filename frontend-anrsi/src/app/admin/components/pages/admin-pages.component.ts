@@ -49,7 +49,7 @@ export class AdminPagesComponent implements OnInit {
     if (this.searchTerm) {
       const term = this.searchTerm.toLowerCase();
       filtered = filtered.filter(page =>
-        page.title.toLowerCase().includes(term) ||
+        (page.title || '').toLowerCase().includes(term) ||
         page.slug.toLowerCase().includes(term)
       );
     }

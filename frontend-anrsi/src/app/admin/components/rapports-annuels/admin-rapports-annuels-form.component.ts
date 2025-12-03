@@ -484,11 +484,24 @@ export class AdminRapportsAnnuelsFormComponent implements OnInit {
       heroTitle = pageTitle; // Use pageTitle as fallback
     }
 
+    // Build translations for the new structure
+    const translations: { [key: string]: any } = {};
+    
+    (['fr', 'ar', 'en'] as const).forEach(lang => {
+      const langContent = translationsToSave[lang];
+      if (langContent) {
+        translations[lang] = {
+          title: langContent.heroTitle || pageTitle,
+          heroTitle: langContent.heroTitle || '',
+          heroSubtitle: langContent.heroSubtitle || '',
+          sectionTitle: langContent.sectionTitle || '',
+          extra: JSON.stringify(langContent) // Store the full content in extra (JSONB)
+        };
+      }
+    });
+
     const updateData: PageUpdateDTO = {
-      title: pageTitle,
-      heroTitle: heroTitle,
-      heroSubtitle: heroSubtitle,
-      content: JSON.stringify(content),
+      translations: translations,
       pageType: 'STRUCTURED',
       isPublished: true,
       isActive: true
@@ -498,7 +511,7 @@ export class AdminRapportsAnnuelsFormComponent implements OnInit {
       pageId: this.pageId,
       updateData: {
         ...updateData,
-        content: content // Log parsed content, not stringified
+        translations: translations // Log translations
       }
     });
 
@@ -539,11 +552,8 @@ export class AdminRapportsAnnuelsFormComponent implements OnInit {
     } else {
       this.pageService.createPage({
         slug: 'rapports-annuels',
-        title: pageTitle,
-        heroTitle: heroTitle,
-        heroSubtitle: heroSubtitle,
-        content: JSON.stringify(content),
         pageType: 'STRUCTURED',
+        translations: translations,
         isPublished: true,
         isActive: true
       }).subscribe({

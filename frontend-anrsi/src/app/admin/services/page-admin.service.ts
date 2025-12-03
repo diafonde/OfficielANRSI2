@@ -5,23 +5,29 @@ import { AuthService } from './auth.service';
 
 export interface PageTranslationDTO {
   id?: number;
-  language: string;
+  language?: string;
   title?: string;
   heroTitle?: string;
   heroSubtitle?: string;
+  sectionTitle?: string;
+  introText?: string;
+  description?: string;
   content?: string;
+  extra?: string; // JSONB pour listes complexes
 }
 
 export interface PageDTO {
   id?: number;
   slug: string;
-  title: string;
-  heroTitle?: string;
-  heroSubtitle?: string;
+  title?: string; // Backward compatibility
+  heroTitle?: string; // Backward compatibility
+  heroSubtitle?: string; // Backward compatibility
   heroImageUrl?: string;
-  content?: string;
+  content?: string; // Backward compatibility
   pageType: 'SIMPLE' | 'LIST' | 'STRUCTURED' | 'FAQ';
-  metadata?: string;
+  ordre?: number;
+  parentId?: number;
+  metadata?: string; // Backward compatibility
   isPublished?: boolean;
   isActive?: boolean;
   createdAt?: Date;
@@ -31,25 +37,22 @@ export interface PageDTO {
 
 export interface PageCreateDTO {
   slug: string;
-  title: string;
-  heroTitle?: string;
-  heroSubtitle?: string;
-  heroImageUrl?: string;
-  content?: string;
   pageType: 'SIMPLE' | 'LIST' | 'STRUCTURED' | 'FAQ';
-  metadata?: string;
+  ordre?: number;
+  parentId?: number;
+  heroImageUrl?: string;
+  translations: { [key: string]: PageTranslationDTO }; // key = 'fr', 'ar', 'en'
   isPublished?: boolean;
   isActive?: boolean;
 }
 
 export interface PageUpdateDTO {
-  title: string;
-  heroTitle?: string;
-  heroSubtitle?: string;
-  heroImageUrl?: string;
-  content?: string;
+  slug?: string;
   pageType?: 'SIMPLE' | 'LIST' | 'STRUCTURED' | 'FAQ';
-  metadata?: string;
+  ordre?: number;
+  parentId?: number;
+  heroImageUrl?: string;
+  translations?: { [key: string]: PageTranslationDTO }; // key = 'fr', 'ar', 'en'
   isPublished?: boolean;
   isActive?: boolean;
 }

@@ -22,14 +22,29 @@
     <h2 class="page-title">Appels à Candidatures</h2>
     
     <div class="appels-list" *ngIf="content.appels && content.appels.length > 0">
-      <article class="appel-article" *ngFor="let appel of content.appels">
+      <article class="appel-article" *ngFor="let appel of content.appels; let i = index">
         <div class="article-content-wrapper">
           <div class="article-image" *ngIf="appel.imageUrl">
-            <img [src]="appel.imageUrl" [alt]="appel.title" />
+            <img [src]="getImageUrl(appel.imageUrl)" [alt]="appel.title" (error)="onImageError($event)" loading="lazy" />
           </div>
           <div class="article-text-content">
             <h3 class="article-title">{{ appel.title }}</h3>
-            <p class="article-description" *ngIf="appel.description">{{ appel.description }}</p>
+            <p class="article-summary" *ngIf="appel.summary">
+              {{ appel.summary }}
+            </p>
+            <div class="article-description-wrapper" *ngIf="appel.fullText || appel.description">
+              <p class="article-description">
+                {{ getDisplayText(appel, i) }}
+              </p>
+              <button 
+                *ngIf="hasMoreText(appel)"
+                type="button"
+                class="read-more-btn"
+                (click)="toggleExpand(i)"
+                [attr.aria-expanded]="isExpanded(i)">
+                {{ getReadMoreText(i) }}
+              </button>
+            </div>
             <div class="article-meta">
               <span class="article-date" *ngIf="getAppelDate(appel)">
                 {{ getAppelDate(appel) }}
@@ -42,8 +57,22 @@
                 class="learn-more-link"
                 [target]="action.url.startsWith('http') ? '_blank' : '_self'"
                 [rel]="action.url.startsWith('http') ? 'noopener noreferrer' : null">
-                En savoir plus à propos de {{ appel.title }}
+                {{ action.text || (currentLang === 'ar' ? 'المزيد' : (currentLang === 'en' ? 'Learn more' : 'En savoir plus')) }} à propos de {{ appel.title }}
               </a>
+            </div>
+            <div class="article-document" *ngIf="appel.documentUrl">
+              <div class="document-link">
+                <i class="fas" [ngClass]="getFileIconClass(appel.documentUrl)"></i>
+                <a 
+                  [href]="getDocumentUrl(appel.documentUrl)" 
+                  [download]="getFileNameFromUrl(appel.documentUrl)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="document-download-link">
+                  <span class="document-name">{{ getFileNameFromUrl(appel.documentUrl) }}</span>
+                  <i class="fas fa-download"></i>
+                </a>
+              </div>
             </div>
           </div>
         </div>

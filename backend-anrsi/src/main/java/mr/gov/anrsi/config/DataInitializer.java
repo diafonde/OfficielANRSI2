@@ -1,10 +1,15 @@
 package mr.gov.anrsi.config;
 
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import mr.gov.anrsi.entity.Language;
 import mr.gov.anrsi.entity.Page;
@@ -210,10 +215,6 @@ public class DataInitializer implements CommandLineRunner {
             
             agenceMediasPage = new Page();
             agenceMediasPage.setSlug("agence-medias");
-            agenceMediasPage.setTitle("ANRSI dans les Médias");
-            agenceMediasPage.setHeroTitle("ANRSI dans les Médias");
-            agenceMediasPage.setHeroSubtitle("Actualités, publications et visibilité médiatique");
-            agenceMediasPage.setContent(defaultContent);
             agenceMediasPage.setPageType(Page.PageType.STRUCTURED);
             agenceMediasPage.setIsPublished(true);
             agenceMediasPage.setIsActive(true);
@@ -530,18 +531,30 @@ public class DataInitializer implements CommandLineRunner {
             createOrUpdateTranslation(agenceMediasPage, Language.FR, 
                 "ANRSI dans les Médias", 
                 "ANRSI dans les Médias", 
-                "Actualités, publications et visibilité médiatique", 
-                contentFR);
+                "Actualités, publications et visibilité médiatique",
+                null, // sectionTitle
+                "L'Agence Nationale de la Recherche Scientifique et de l'Innovation (ANRSI) maintient une présence active dans les médias pour promouvoir la recherche scientifique, l'innovation technologique, et les initiatives de développement en Mauritanie.", // introText
+                null, // description
+                null, // content (HTML)
+                contentFR); // extra (JSONB)
             createOrUpdateTranslation(agenceMediasPage, Language.AR, 
                 "الوكالة الوطنية للبحث العلمي والابتكار في الإعلام", 
                 "الوكالة الوطنية للبحث العلمي والابتكار في الإعلام", 
-                "الأخبار والمنشورات والظهور الإعلامي", 
-                contentAR);
+                "الأخبار والمنشورات والظهور الإعلامي",
+                null, // sectionTitle
+                "تحافظ الوكالة الوطنية للبحث العلمي والابتكار (ANRSI) على وجود نشط في وسائل الإعلام لتعزيز البحث العلمي والابتكار التكنولوجي ومبادرات التنمية في موريتانيا.", // introText
+                null, // description
+                null, // content (HTML)
+                contentAR); // extra (JSONB)
             createOrUpdateTranslation(agenceMediasPage, Language.EN, 
                 "ANRSI in the Media", 
                 "ANRSI in the Media", 
-                "News, publications and media visibility", 
-                contentEN);
+                "News, publications and media visibility",
+                null, // sectionTitle
+                "The National Agency for Scientific Research and Innovation (ANRSI) maintains an active presence in the media to promote scientific research, technological innovation, and development initiatives in Mauritania.", // introText
+                null, // description
+                null, // content (HTML)
+                contentEN); // extra (JSONB)
         }
         
         // Create zone-humide page if it doesn't exist
@@ -650,10 +663,6 @@ public class DataInitializer implements CommandLineRunner {
             
             zoneHumidePage = new Page();
             zoneHumidePage.setSlug("zone-humide");
-            zoneHumidePage.setTitle("Zone Humide");
-            zoneHumidePage.setHeroTitle("Zone Humide");
-            zoneHumidePage.setHeroSubtitle("Colloque International sur les Zones Humides du Sahel");
-            zoneHumidePage.setContent(defaultContent);
             zoneHumidePage.setPageType(Page.PageType.STRUCTURED);
             zoneHumidePage.setIsPublished(true);
             zoneHumidePage.setIsActive(true);
@@ -667,7 +676,105 @@ public class DataInitializer implements CommandLineRunner {
         
         // Create translations for zone-humide page
         if (zoneHumidePage != null) {
-            String contentFR = zoneHumidePage.getContent();
+            String contentFR = """
+                {
+                  "heroTitle": "Zone Humide",
+                  "heroSubtitle": "Colloque International sur les Zones Humides du Sahel",
+                  "introText": "L'ANRSI organise un colloque international majeur sur la préservation et la gestion durable des zones humides du Sahel, réunissant experts, chercheurs et décideurs pour échanger sur les enjeux environnementaux et climatiques.",
+                  "overview": [
+                    {
+                      "icon": "📅",
+                      "title": "Dates et Lieu",
+                      "content": [
+                        {"label": "Date :", "value": "15-17 Mars 2024"},
+                        {"label": "Lieu :", "value": "Centre International de Conférences, Nouakchott"},
+                        {"label": "Format :", "value": "Présentiel et en ligne"}
+                      ]
+                    },
+                    {
+                      "icon": "👥",
+                      "title": "Participants Attendus",
+                      "content": [
+                        {"label": "Experts internationaux :", "value": "50+ spécialistes"},
+                        {"label": "Chercheurs :", "value": "100+ scientifiques"},
+                        {"label": "Décideurs :", "value": "Ministres et responsables"},
+                        {"label": "ONG et OSC :", "value": "Organisations de la société civile"}
+                      ]
+                    },
+                    {
+                      "icon": "🌍",
+                      "title": "Pays Participants",
+                      "content": [
+                        {"label": "Afrique de l'Ouest :", "value": "Sénégal, Mali, Niger, Burkina Faso"},
+                        {"label": "Afrique du Nord :", "value": "Maroc, Algérie, Tunisie"},
+                        {"label": "Europe :", "value": "France, Belgique, Espagne"},
+                        {"label": "Organisations :", "value": "UICN, Ramsar, PNUE"}
+                      ]
+                    }
+                  ],
+                  "themes": [
+                    {
+                      "icon": "💧",
+                      "title": "Gestion des Ressources Hydriques",
+                      "items": ["Conservation des zones humides", "Gestion intégrée des bassins versants", "Technologies de traitement de l'eau", "Économie de l'eau"]
+                    },
+                    {
+                      "icon": "🌱",
+                      "title": "Biodiversité et Écosystèmes",
+                      "items": ["Protection de la faune et flore", "Restauration écologique", "Services écosystémiques", "Corridors écologiques"]
+                    },
+                    {
+                      "icon": "🌡️",
+                      "title": "Changement Climatique",
+                      "items": ["Adaptation aux changements climatiques", "Atténuation des effets", "Modélisation climatique", "Stratégies de résilience"]
+                    },
+                    {
+                      "icon": "👨‍🌾",
+                      "title": "Développement Durable",
+                      "items": ["Agriculture durable", "Pêche responsable", "Écotourisme", "Économie verte"]
+                    },
+                    {
+                      "icon": "🏛️",
+                      "title": "Gouvernance et Politiques",
+                      "items": ["Cadres législatifs", "Politiques publiques", "Participation communautaire", "Coopération internationale"]
+                    },
+                    {
+                      "icon": "🔬",
+                      "title": "Recherche et Innovation",
+                      "items": ["Technologies de monitoring", "Innovation environnementale", "Transfert de connaissances", "Formation et éducation"]
+                    }
+                  ],
+                  "programme": [],
+                  "speakers": [],
+                  "registrationModes": [
+                    {
+                      "icon": "🏢",
+                      "title": "Participation Présentielle",
+                      "description": "Accès complet au colloque avec hébergement et restauration inclus.",
+                      "items": ["Accès à toutes les sessions", "Matériel de conférence", "Pause-café et déjeuners", "Certificat de participation"],
+                      "price": "Gratuit"
+                    },
+                    {
+                      "icon": "💻",
+                      "title": "Participation en Ligne",
+                      "description": "Suivi du colloque en direct via plateforme numérique.",
+                      "items": ["Diffusion en direct", "Interaction avec les speakers", "Accès aux présentations", "Certificat numérique"],
+                      "price": "Gratuit"
+                    }
+                  ],
+                  "processSteps": [
+                    {"number": 1, "title": "Formulaire d'Inscription", "description": "Remplir le formulaire en ligne avec vos informations personnelles et professionnelles."},
+                    {"number": 2, "title": "Validation", "description": "Validation de votre inscription par l'équipe organisatrice sous 48h."},
+                    {"number": 3, "title": "Confirmation", "description": "Réception de votre confirmation d'inscription avec les détails pratiques."}
+                  ],
+                  "contactInfo": [
+                    {"icon": "fas fa-envelope", "label": "Email", "value": "zonehumide@anrsi.mr"},
+                    {"icon": "fas fa-phone", "label": "Téléphone", "value": "+222 45 25 44 21"},
+                    {"icon": "fas fa-map-marker-alt", "label": "Lieu", "value": "Centre International de Conférences, Nouakchott"},
+                    {"icon": "fas fa-calendar", "label": "Date Limite", "value": "28 Février 2024"}
+                  ]
+                }
+                """;
             String contentAR = """
                 {
                   "heroTitle": "المناطق الرطبة",
@@ -879,10 +986,7 @@ public class DataInitializer implements CommandLineRunner {
         }
         
         // Create plateformes page if it doesn't exist
-        if (!pageRepository.existsBySlug("plateformes")) {
-            System.out.println("✓ Creating plateformes page");
-            
-            String defaultContent = """
+        String defaultContentPlateformes = """
                 {
                   "heroTitle": "Plateformes",
                   "heroSubtitle": "Outils et technologies pour la recherche et l'innovation",
@@ -985,13 +1089,12 @@ public class DataInitializer implements CommandLineRunner {
                   ]
                 }
                 """;
+        
+        if (!pageRepository.existsBySlug("plateformes")) {
+            System.out.println("✓ Creating plateformes page");
             
             plateformesPage = new Page();
             plateformesPage.setSlug("plateformes");
-            plateformesPage.setTitle("Plateformes");
-            plateformesPage.setHeroTitle("Plateformes");
-            plateformesPage.setHeroSubtitle("Outils et technologies pour la recherche et l'innovation");
-            plateformesPage.setContent(defaultContent);
             plateformesPage.setPageType(Page.PageType.STRUCTURED);
             plateformesPage.setIsPublished(true);
             plateformesPage.setIsActive(true);
@@ -1005,7 +1108,7 @@ public class DataInitializer implements CommandLineRunner {
         
         // Create translations for plateformes page
         if (plateformesPage != null) {
-            String contentFR = plateformesPage.getContent();
+            String contentFR = defaultContentPlateformes;
             String contentAR = """
                 {
                   "heroTitle": "المنصات",
@@ -1225,58 +1328,15 @@ public class DataInitializer implements CommandLineRunner {
         }
         
         // Create appels-candidatures page if it doesn't exist
-        if (!pageRepository.existsBySlug("appels-candidatures")) {
-            System.out.println("✓ Creating appels-candidatures page");
-            
-            String defaultContent = """
+        String defaultContentAppelsCandidatures = """
                 {
                   "heroTitle": "Appels à Candidatures",
                   "heroSubtitle": "Opportunités de recherche et d'innovation en Mauritanie",
                   "introText": "L'ANRSI lance régulièrement des appels à candidatures pour financer des projets de recherche et d'innovation qui contribuent au développement scientifique et technologique de la Mauritanie.",
                   "appels": [
-                    {
-                      "status": "active",
-                      "title": "Appel à Projets de Recherche 2024",
-                      "description": "Financement de projets de recherche dans les domaines prioritaires : agriculture durable, énergies renouvelables, technologies de l'information, et sciences de l'environnement.",
-                      "details": [
-                        {"label": "Budget :", "value": "Jusqu'à 50 millions MRO par projet"},
-                        {"label": "Durée :", "value": "12-36 mois"},
-                        {"label": "Date limite :", "value": "31 Mars 2024"},
-                        {"label": "Éligibilité :", "value": "Institutions de recherche, universités, entreprises"}
-                      ],
-                      "actions": [
-                        {"text": "Consulter l'appel", "url": "#", "type": "primary"},
-                        {"text": "Télécharger le dossier", "url": "#", "type": "outline"}
-                      ]
-                    },
-                    {
-                      "status": "upcoming",
-                      "title": "Programme Innovation Technologique",
-                      "description": "Soutien aux projets d'innovation technologique et de transfert de technologie vers l'industrie mauritanienne.",
-                      "details": [
-                        {"label": "Budget :", "value": "Jusqu'à 30 millions MRO par projet"},
-                        {"label": "Durée :", "value": "6-24 mois"},
-                        {"label": "Ouverture :", "value": "Avril 2024"},
-                        {"label": "Éligibilité :", "value": "Startups, PME, centres de recherche"}
-                      ],
-                      "actions": [
-                        {"text": "S'inscrire aux alertes", "url": "#", "type": "outline"}
-                      ]
-                    },
-                    {
-                      "status": "closed",
-                      "title": "Bourses de Doctorat 2023",
-                      "description": "Programme de bourses pour soutenir les étudiants mauritaniens dans leurs études doctorales en sciences et technologies.",
-                      "details": [
-                        {"label": "Montant :", "value": "500,000 MRO/an pendant 3 ans"},
-                        {"label": "Durée :", "value": "3 ans"},
-                        {"label": "Date limite :", "value": "15 Décembre 2023"},
-                        {"label": "Éligibilité :", "value": "Étudiants mauritaniens en master"}
-                      ],
-                      "actions": [
-                        {"text": "Voir les résultats", "url": "#", "type": "outline"}
-                      ]
-                    }
+                    
+                    
+                  
                   ],
                   "categories": [
                     {
@@ -1337,13 +1397,12 @@ public class DataInitializer implements CommandLineRunner {
                   ]
                 }
                 """;
+        
+        if (!pageRepository.existsBySlug("appels-candidatures")) {
+            System.out.println("✓ Creating appels-candidatures page");
             
             appelsCandidaturesPage = new Page();
             appelsCandidaturesPage.setSlug("appels-candidatures");
-            appelsCandidaturesPage.setTitle("Appels à Candidatures");
-            appelsCandidaturesPage.setHeroTitle("Appels à Candidatures");
-            appelsCandidaturesPage.setHeroSubtitle("Opportunités de recherche et d'innovation en Mauritanie");
-            appelsCandidaturesPage.setContent(defaultContent);
             appelsCandidaturesPage.setPageType(Page.PageType.STRUCTURED);
             appelsCandidaturesPage.setIsPublished(true);
             appelsCandidaturesPage.setIsActive(true);
@@ -1357,7 +1416,7 @@ public class DataInitializer implements CommandLineRunner {
         
         // Create translations for appels-candidatures page
         if (appelsCandidaturesPage != null) {
-            String contentFR = appelsCandidaturesPage.getContent();
+            String contentFR = defaultContentAppelsCandidatures;
             
             // Arabic translation
             String contentAR = """
@@ -1366,49 +1425,9 @@ public class DataInitializer implements CommandLineRunner {
                   "heroSubtitle": "فرص البحث والابتكار في موريتانيا",
                   "introText": "تطلق الوكالة الوطنية للبحث العلمي والابتكار (ANRSI) بانتظام دعوات للترشيح لتمويل مشاريع البحث والابتكار التي تساهم في التنمية العلمية والتكنولوجية في موريتانيا.",
                   "appels": [
-                    {
-                      "status": "active",
-                      "title": "دعوة لمشاريع البحث 2024",
-                      "description": "تمويل مشاريع البحث في المجالات ذات الأولوية: الزراعة المستدامة، والطاقات المتجددة، وتكنولوجيا المعلومات، وعلوم البيئة.",
-                      "details": [
-                        { "label": "الميزانية :", "value": "حتى 50 مليون أوقية لكل مشروع" },
-                        { "label": "المدة :", "value": "12-36 شهراً" },
-                        { "label": "الموعد النهائي :", "value": "31 مارس 2024" },
-                        { "label": "الأهلية :", "value": "مؤسسات البحث، الجامعات، الشركات" }
-                      ],
-                      "actions": [
-                        { "text": "استشارة الدعوة", "url": "#", "type": "primary" },
-                        { "text": "تحميل الملف", "url": "#", "type": "outline" }
-                      ]
-                    },
-                    {
-                      "status": "upcoming",
-                      "title": "برنامج الابتكار التكنولوجي",
-                      "description": "دعم مشاريع الابتكار التكنولوجي ونقل التكنولوجيا إلى الصناعة الموريتانية.",
-                      "details": [
-                        { "label": "الميزانية :", "value": "حتى 30 مليون أوقية لكل مشروع" },
-                        { "label": "المدة :", "value": "6-24 شهراً" },
-                        { "label": "الافتتاح :", "value": "أبريل 2024" },
-                        { "label": "الأهلية :", "value": "الشركات الناشئة، المؤسسات الصغيرة والمتوسطة، مراكز البحث" }
-                      ],
-                      "actions": [
-                        { "text": "التسجيل للتنبيهات", "url": "#", "type": "outline" }
-                      ]
-                    },
-                    {
-                      "status": "closed",
-                      "title": "منح الدكتوراه 2023",
-                      "description": "برنامج منح لدعم الطلاب الموريتانيين في دراساتهم للدكتوراه في العلوم والتكنولوجيا.",
-                      "details": [
-                        { "label": "المبلغ :", "value": "500,000 أوقية/سنة لمدة 3 سنوات" },
-                        { "label": "المدة :", "value": "3 سنوات" },
-                        { "label": "الموعد النهائي :", "value": "15 ديسمبر 2023" },
-                        { "label": "الأهلية :", "value": "الطلاب الموريتانيون في الماجستير" }
-                      ],
-                      "actions": [
-                        { "text": "عرض النتائج", "url": "#", "type": "outline" }
-                      ]
-                    }
+              
+                  
+                   
                   ],
                   "categories": [
                     {
@@ -1486,10 +1505,7 @@ public class DataInitializer implements CommandLineRunner {
         }
         
         // Create ai4agri page if it doesn't exist
-        if (!pageRepository.existsBySlug("ai4agri")) {
-            System.out.println("✓ Creating ai4agri page");
-            
-            String defaultContent = """
+        String defaultContentAi4agri = """
                 {
                   "heroTitle": "AI 4 AGRI",
                   "heroSubtitle": "Intelligence Artificielle pour l'Agriculture de Précision",
@@ -1534,13 +1550,12 @@ public class DataInitializer implements CommandLineRunner {
                   ]
                 }
                 """;
+        
+        if (!pageRepository.existsBySlug("ai4agri")) {
+            System.out.println("✓ Creating ai4agri page");
             
             ai4agriPage = new Page();
             ai4agriPage.setSlug("ai4agri");
-            ai4agriPage.setTitle("AI 4 AGRI");
-            ai4agriPage.setHeroTitle("AI 4 AGRI");
-            ai4agriPage.setHeroSubtitle("Intelligence Artificielle pour l'Agriculture de Précision");
-            ai4agriPage.setContent(defaultContent);
             ai4agriPage.setPageType(Page.PageType.STRUCTURED);
             ai4agriPage.setIsPublished(true);
             ai4agriPage.setIsActive(true);
@@ -1554,7 +1569,7 @@ public class DataInitializer implements CommandLineRunner {
         
         // Create translations for ai4agri page
         if (ai4agriPage != null) {
-            String contentFR = ai4agriPage.getContent();
+            String contentFR = defaultContentAi4agri;
             
             // Arabic translation (complete from aiargi.sql)
             String contentAR = """
@@ -1662,10 +1677,7 @@ public class DataInitializer implements CommandLineRunner {
         }
         
         // Create expert-anrsi page if it doesn't exist
-        if (!pageRepository.existsBySlug("expert-anrsi")) {
-            System.out.println("✓ Creating expert-anrsi page");
-            
-            String defaultContent = """
+        String defaultContentExpertAnrsi = """
                 {
                   "heroTitle": "Expert à l'ANRSI",
                   "heroSubtitle": "Rejoignez notre réseau d'experts scientifiques et technologiques",
@@ -1737,13 +1749,12 @@ public class DataInitializer implements CommandLineRunner {
                   ]
                 }
                 """;
+        
+        if (!pageRepository.existsBySlug("expert-anrsi")) {
+            System.out.println("✓ Creating expert-anrsi page");
             
             expertAnrsiPage = new Page();
             expertAnrsiPage.setSlug("expert-anrsi");
-            expertAnrsiPage.setTitle("Expert à l'ANRSI");
-            expertAnrsiPage.setHeroTitle("Expert à l'ANRSI");
-            expertAnrsiPage.setHeroSubtitle("Rejoignez notre réseau d'experts scientifiques et technologiques");
-            expertAnrsiPage.setContent(defaultContent);
             expertAnrsiPage.setPageType(Page.PageType.STRUCTURED);
             expertAnrsiPage.setIsPublished(true);
             expertAnrsiPage.setIsActive(true);
@@ -1757,7 +1768,7 @@ public class DataInitializer implements CommandLineRunner {
         
         // Create translations for expert-anrsi page
         if (expertAnrsiPage != null) {
-            String contentFR = expertAnrsiPage.getContent();
+            String contentFR = defaultContentExpertAnrsi;
             
             // Arabic translation (complete from expertise.sql)
             String contentAR = """
@@ -1919,10 +1930,7 @@ public class DataInitializer implements CommandLineRunner {
         }
         
         // Create cooperation page if it doesn't exist
-        if (!pageRepository.existsBySlug("cooperation")) {
-            System.out.println("✓ Creating cooperation page");
-            
-            String defaultContent = """
+        String defaultContentCooperation = """
                 {
                   "cooperationInfo": {
                     "title": "Coopération & Partenariats",
@@ -2009,13 +2017,13 @@ public class DataInitializer implements CommandLineRunner {
                   ]
                 }
                 """;
+        
+        if (!pageRepository.existsBySlug("cooperation")) {
+            System.out.println("✓ Creating cooperation page");
+            
             
             cooperationPage = new Page();
             cooperationPage.setSlug("cooperation");
-            cooperationPage.setTitle("Coopération & Partenariats");
-            cooperationPage.setHeroTitle("Coopération & Partenariats");
-            cooperationPage.setHeroSubtitle("L'Agence est liée à des institutions d'intérêt commun par le biais d'accords de coopération et de partenariat pour atteindre des objectifs communs.");
-            cooperationPage.setContent(defaultContent);
             cooperationPage.setPageType(Page.PageType.STRUCTURED);
             cooperationPage.setIsPublished(true);
             cooperationPage.setIsActive(true);
@@ -2029,7 +2037,7 @@ public class DataInitializer implements CommandLineRunner {
         
         // Create translations for cooperation page
         if (cooperationPage != null) {
-            String contentFR = cooperationPage.getContent();
+            String contentFR = defaultContentCooperation;
             
             // Arabic translation (complete from cooperation.sql)
             String contentAR = """
@@ -2211,7 +2219,7 @@ public class DataInitializer implements CommandLineRunner {
             
             createOrUpdateTranslation(cooperationPage, Language.FR, 
                 "Coopération & Partenariats", "Coopération & Partenariats", 
-                cooperationPage.getHeroSubtitle(), contentFR);
+                "L'Agence est liée à des institutions d'intérêt commun par le biais d'accords de coopération et de partenariat pour atteindre des objectifs communs.", contentFR);
             createOrUpdateTranslation(cooperationPage, Language.AR, 
                 "التعاون والشراكات", "التعاون والشراكات", 
                 "ترتبط الوكالة بمؤسسات ذات مصلحة مشتركة من خلال اتفاقيات التعاون والشراكة لتحقيق أهداف مشتركة.", contentAR);
@@ -2221,10 +2229,7 @@ public class DataInitializer implements CommandLineRunner {
         }
         
         // Create programmes page if it doesn't exist
-        if (!pageRepository.existsBySlug("programmes")) {
-            System.out.println("✓ Creating programmes page");
-            
-            String defaultContent = """
+        String defaultContentProgrammes = """
                 {
                   "heroTitle": "Programmes",
                   "heroSubtitle": "Programmes de l'Agence",
@@ -2290,13 +2295,13 @@ public class DataInitializer implements CommandLineRunner {
                   "ctaDescription": "Découvrez comment participer à nos programmes de recherche et d'innovation"
                 }
                 """;
+        
+        if (!pageRepository.existsBySlug("programmes")) {
+            System.out.println("✓ Creating programmes page");
+            
             
             programmesPage = new Page();
             programmesPage.setSlug("programmes");
-            programmesPage.setTitle("Programmes");
-            programmesPage.setHeroTitle("Programmes");
-            programmesPage.setHeroSubtitle("Programmes de l'Agence");
-            programmesPage.setContent(defaultContent);
             programmesPage.setPageType(Page.PageType.STRUCTURED);
             programmesPage.setIsPublished(true);
             programmesPage.setIsActive(true);
@@ -2310,7 +2315,7 @@ public class DataInitializer implements CommandLineRunner {
         
         // Create translations for programmes page
         if (programmesPage != null) {
-            String contentFR = programmesPage.getContent();
+            String contentFR = defaultContentProgrammes;
             
             // Arabic translation (complete from programme.sql)
             String contentAR = """
@@ -2460,10 +2465,7 @@ public class DataInitializer implements CommandLineRunner {
         }
         
         // Create financement page if it doesn't exist
-        if (!pageRepository.existsBySlug("financement")) {
-            System.out.println("✓ Creating financement page");
-            
-            String defaultContent = """
+        String defaultContentFinancement = """
                 {
                   "heroTitle": "Financement",
                   "heroSubtitle": "L'Agence finance de nombreuses activités liées à la recherche scientifique. Ces activités s'inscrivent dans le cadre des programmes de l'Agence qui sont annoncés annuellement.",
@@ -2505,13 +2507,13 @@ public class DataInitializer implements CommandLineRunner {
                   "ctaDescription": "Consultez nos appels à candidatures et soumettez votre projet"
                 }
                 """;
+        
+        if (!pageRepository.existsBySlug("financement")) {
+            System.out.println("✓ Creating financement page");
+            
             
             financementPage = new Page();
             financementPage.setSlug("financement");
-            financementPage.setTitle("Financement");
-            financementPage.setHeroTitle("Financement");
-            financementPage.setHeroSubtitle("L'Agence finance de nombreuses activités liées à la recherche scientifique. Ces activités s'inscrivent dans le cadre des programmes de l'Agence qui sont annoncés annuellement.");
-            financementPage.setContent(defaultContent);
             financementPage.setPageType(Page.PageType.STRUCTURED);
             financementPage.setIsPublished(true);
             financementPage.setIsActive(true);
@@ -2525,7 +2527,7 @@ public class DataInitializer implements CommandLineRunner {
         
         // Create translations for financement page
         if (financementPage != null) {
-            String contentFR = financementPage.getContent();
+            String contentFR = defaultContentFinancement;
             
             // Arabic translation (complete from financement.sql)
             String contentAR = """
@@ -2617,7 +2619,7 @@ public class DataInitializer implements CommandLineRunner {
             
             createOrUpdateTranslation(financementPage, Language.FR, 
                 "Financement", "Financement", 
-                financementPage.getHeroSubtitle(), contentFR);
+                "L'Agence est liée à des institutions d'intérêt commun par le biais d'accords de coopération et de partenariat pour atteindre des objectifs communs.", contentFR);
             createOrUpdateTranslation(financementPage, Language.AR, 
                 "التمويل", "التمويل", 
                 "تمول الوكالة العديد من الأنشطة المتعلقة بالبحث العلمي. هذه الأنشطة تأتي ضمن برامج الوكالة التي يتم الإعلان عنها سنويًا.", contentAR);
@@ -2627,10 +2629,7 @@ public class DataInitializer implements CommandLineRunner {
         }
         
         // Create videos page if it doesn't exist
-        if (!pageRepository.existsBySlug("videos")) {
-            System.out.println("✓ Creating videos page");
-            
-            String defaultContent = """
+        String defaultContentVideos = """
                 {
                   "heroTitle": "Mediatique",
                   "heroSubtitle": "Get in touch with our research teams and support staff",
@@ -2700,13 +2699,13 @@ public class DataInitializer implements CommandLineRunner {
                   ]
                 }
                 """;
+        
+        if (!pageRepository.existsBySlug("videos")) {
+            System.out.println("✓ Creating videos page");
+            
             
             videosPage = new Page();
             videosPage.setSlug("videos");
-            videosPage.setTitle("Mediatique");
-            videosPage.setHeroTitle("Mediatique");
-            videosPage.setHeroSubtitle("Get in touch with our research teams and support staff");
-            videosPage.setContent(defaultContent);
             videosPage.setPageType(Page.PageType.STRUCTURED);
             videosPage.setIsPublished(true);
             videosPage.setIsActive(true);
@@ -2720,13 +2719,13 @@ public class DataInitializer implements CommandLineRunner {
         
         // Create translations for videos page
         if (videosPage != null) {
-            String contentFR = videosPage.getContent();
+            String contentFR = defaultContentVideos;
             String contentAR = contentFR.replace("\"heroTitle\": \"Mediatique\"", "\"heroTitle\": \"إعلامي\"");
             String contentEN = contentFR.replace("\"heroTitle\": \"Mediatique\"", "\"heroTitle\": \"Media\"");
             
             createOrUpdateTranslation(videosPage, Language.FR, 
                 "Mediatique", "Mediatique", 
-                videosPage.getHeroSubtitle(), contentFR);
+                "L'Agence est liée à des institutions d'intérêt commun par le biais d'accords de coopération et de partenariat pour atteindre des objectifs communs.", contentFR);
             createOrUpdateTranslation(videosPage, Language.AR, 
                 "إعلامي", "إعلامي", 
                 "تواصل مع فرق البحث وموظفي الدعم لدينا", contentAR);
@@ -2736,10 +2735,7 @@ public class DataInitializer implements CommandLineRunner {
         }
         
         // Create objectives page if it doesn't exist
-        if (!pageRepository.existsBySlug("objectives")) {
-            System.out.println("✓ Creating objectives page");
-            
-            String defaultContent = """
+        String defaultContentObjectives = """
                 {
                   "heroTitle": "Objectifs",
                   "heroSubtitle": "Les objectifs stratégiques de l'Agence Nationale de la Recherche Scientifique et de l'Innovation",
@@ -2768,13 +2764,13 @@ public class DataInitializer implements CommandLineRunner {
                   ]
                 }
                 """;
+        
+        if (!pageRepository.existsBySlug("objectives")) {
+            System.out.println("✓ Creating objectives page");
+            
             
             objectivesPage = new Page();
             objectivesPage.setSlug("objectives");
-            objectivesPage.setTitle("Objectifs");
-            objectivesPage.setHeroTitle("Objectifs");
-            objectivesPage.setHeroSubtitle("Les objectifs stratégiques de l'Agence Nationale de la Recherche Scientifique et de l'Innovation");
-            objectivesPage.setContent(defaultContent);
             objectivesPage.setPageType(Page.PageType.STRUCTURED);
             objectivesPage.setIsPublished(true);
             objectivesPage.setIsActive(true);
@@ -2788,7 +2784,7 @@ public class DataInitializer implements CommandLineRunner {
         
         // Create translations for objectives page
         if (objectivesPage != null) {
-            String contentFR = objectivesPage.getContent();
+            String contentFR = defaultContentObjectives;
             
             // Arabic translation (complete from objective.sql)
             String contentAR = """
@@ -2854,7 +2850,7 @@ public class DataInitializer implements CommandLineRunner {
             
             createOrUpdateTranslation(objectivesPage, Language.FR, 
                 "Objectifs", "Objectifs", 
-                objectivesPage.getHeroSubtitle(), contentFR);
+                "L'Agence est liée à des institutions d'intérêt commun par le biais d'accords de coopération et de partenariat pour atteindre des objectifs communs.", contentFR);
             createOrUpdateTranslation(objectivesPage, Language.AR, 
                 "الأهداف", "الأهداف", 
                 "الأهداف الاستراتيجية للوكالة الوطنية للبحث العلمي والابتكار", contentAR);
@@ -2864,10 +2860,7 @@ public class DataInitializer implements CommandLineRunner {
         }
         
         // Create strategic-vision page if it doesn't exist
-        if (!pageRepository.existsBySlug("strategic-vision")) {
-            System.out.println("✓ Creating strategic-vision page");
-            
-            String defaultContent = """
+        String defaultContentStrategicVision = """
                 {
                   "heroTitle": "Vision Stratégique",
                   "heroSubtitle": "La vision et le message de l'Agence Nationale de la Recherche Scientifique et de l'Innovation",
@@ -2900,13 +2893,12 @@ public class DataInitializer implements CommandLineRunner {
                   ]
                 }
                 """;
+        
+        if (!pageRepository.existsBySlug("strategic-vision")) {
+            System.out.println("✓ Creating strategic-vision page");
             
             strategicVisionPage = new Page();
             strategicVisionPage.setSlug("strategic-vision");
-            strategicVisionPage.setTitle("Vision Stratégique");
-            strategicVisionPage.setHeroTitle("Vision Stratégique");
-            strategicVisionPage.setHeroSubtitle("La vision et le message de l'Agence Nationale de la Recherche Scientifique et de l'Innovation");
-            strategicVisionPage.setContent(defaultContent);
             strategicVisionPage.setPageType(Page.PageType.STRUCTURED);
             strategicVisionPage.setIsPublished(true);
             strategicVisionPage.setIsActive(true);
@@ -2920,7 +2912,7 @@ public class DataInitializer implements CommandLineRunner {
         
         // Create translations for strategic-vision page
         if (strategicVisionPage != null) {
-            String contentFR = strategicVisionPage.getContent();
+            String contentFR = defaultContentStrategicVision;
             
             // Arabic translation (complete from vision.sql)
             String contentAR = """
@@ -2994,7 +2986,7 @@ public class DataInitializer implements CommandLineRunner {
             
             createOrUpdateTranslation(strategicVisionPage, Language.FR, 
                 "Vision Stratégique", "Vision Stratégique", 
-                strategicVisionPage.getHeroSubtitle(), contentFR);
+                "L'Agence est liée à des institutions d'intérêt commun par le biais d'accords de coopération et de partenariat pour atteindre des objectifs communs.", contentFR);
             createOrUpdateTranslation(strategicVisionPage, Language.AR, 
                 "الرؤية الاستراتيجية", "الرؤية الاستراتيجية", 
                 "الرؤية والرسالة للوكالة الوطنية للبحث العلمي والابتكار", contentAR);
@@ -3004,10 +2996,7 @@ public class DataInitializer implements CommandLineRunner {
         }
         
         // Create organigramme page if it doesn't exist
-        if (!pageRepository.existsBySlug("organigramme")) {
-            System.out.println("✓ Creating organigramme page");
-            
-            String defaultContent = """
+        String defaultContentOrganigramme = """
                 {
                   "heroTitle": "Organigramme",
                   "heroSubtitle": "Structure organisationnelle de l'Agence Nationale de la Recherche Scientifique et de l'Innovation",
@@ -3114,13 +3103,13 @@ public class DataInitializer implements CommandLineRunner {
                   ]
                 }
                 """;
+        
+        if (!pageRepository.existsBySlug("organigramme")) {
+            System.out.println("✓ Creating organigramme page");
+            
             
             organigrammePage = new Page();
             organigrammePage.setSlug("organigramme");
-            organigrammePage.setTitle("Organigramme");
-            organigrammePage.setHeroTitle("Organigramme");
-            organigrammePage.setHeroSubtitle("Structure organisationnelle de l'Agence Nationale de la Recherche Scientifique et de l'Innovation");
-            organigrammePage.setContent(defaultContent);
             organigrammePage.setPageType(Page.PageType.STRUCTURED);
             organigrammePage.setIsPublished(true);
             organigrammePage.setIsActive(true);
@@ -3134,7 +3123,7 @@ public class DataInitializer implements CommandLineRunner {
         
         // Create translations for organigramme page
         if (organigrammePage != null) {
-            String contentFR = organigrammePage.getContent();
+            String contentFR = defaultContentOrganigramme;
             
             // Arabic translation (complete from organigramme.sql)
             String contentAR = """
@@ -3356,7 +3345,7 @@ public class DataInitializer implements CommandLineRunner {
             
             createOrUpdateTranslation(organigrammePage, Language.FR, 
                 "Organigramme", "Organigramme", 
-                organigrammePage.getHeroSubtitle(), contentFR);
+                "L'Agence est liée à des institutions d'intérêt commun par le biais d'accords de coopération et de partenariat pour atteindre des objectifs communs.", contentFR);
             createOrUpdateTranslation(organigrammePage, Language.AR, 
                 "الهيكل التنظيمي", "الهيكل التنظيمي", 
                 "الهيكل التنظيمي للوكالة الوطنية للبحث العلمي والابتكار", contentAR);
@@ -3366,10 +3355,7 @@ public class DataInitializer implements CommandLineRunner {
         }
         
         // Create conseil-administration page if it doesn't exist
-        if (!pageRepository.existsBySlug("conseil-administration")) {
-            System.out.println("✓ Creating conseil-administration page");
-            
-            String defaultContent = """
+        String defaultContentConseilAdministration = """
                 {
                   "heroTitle": "Conseil d'Administration",
                   "heroSubtitle": "Composition du Conseil d'Administration de l'Agence Nationale de la Recherche Scientifique et de l'Innovation",
@@ -3428,13 +3414,12 @@ public class DataInitializer implements CommandLineRunner {
                   "updateDate": "11 Novembre 2021"
                 }
                 """;
+        
+        if (!pageRepository.existsBySlug("conseil-administration")) {
+            System.out.println("✓ Creating conseil-administration page");
             
             conseilAdministrationPage = new Page();
             conseilAdministrationPage.setSlug("conseil-administration");
-            conseilAdministrationPage.setTitle("Conseil d'Administration");
-            conseilAdministrationPage.setHeroTitle("Conseil d'Administration");
-            conseilAdministrationPage.setHeroSubtitle("Composition du Conseil d'Administration de l'Agence Nationale de la Recherche Scientifique et de l'Innovation");
-            conseilAdministrationPage.setContent(defaultContent);
             conseilAdministrationPage.setPageType(Page.PageType.STRUCTURED);
             conseilAdministrationPage.setIsPublished(true);
             conseilAdministrationPage.setIsActive(true);
@@ -3448,7 +3433,7 @@ public class DataInitializer implements CommandLineRunner {
         
         // Create translations for conseil-administration page
         if (conseilAdministrationPage != null) {
-            String contentFR = conseilAdministrationPage.getContent();
+            String contentFR = defaultContentConseilAdministration;
             
             // Arabic translation (complete from conseil.sql)
             String contentAR = """
@@ -3574,7 +3559,7 @@ public class DataInitializer implements CommandLineRunner {
             
             createOrUpdateTranslation(conseilAdministrationPage, Language.FR, 
                 "Conseil d'Administration", "Conseil d'Administration", 
-                conseilAdministrationPage.getHeroSubtitle(), contentFR);
+                "L'Agence est liée à des institutions d'intérêt commun par le biais d'accords de coopération et de partenariat pour atteindre des objectifs communs.", contentFR);
             createOrUpdateTranslation(conseilAdministrationPage, Language.AR, 
                 "مجلس الإدارة", "مجلس الإدارة", 
                 "تشكيل مجلس إدارة الوكالة الوطنية للبحث العلمي والابتكار", contentAR);
@@ -3584,10 +3569,7 @@ public class DataInitializer implements CommandLineRunner {
         }
         
         // Create priorites-recherche-2026 page if it doesn't exist
-        if (!pageRepository.existsBySlug("priorites-recherche-2026")) {
-            System.out.println("✓ Creating priorites-recherche-2026 page");
-            
-            String defaultContent = """
+        String defaultContentPrioritesRecherche2026 = """
                 {
                   "heroTitle": "LES PRIORITÉS DE LA RECHERCHE À L'HORIZON 2026",
                   "heroSubtitle": "L'ANRSI définit les priorités de la recherche scientifique et de l'innovation pour le développement national",
@@ -3644,13 +3626,12 @@ public class DataInitializer implements CommandLineRunner {
                   "publicationDate": "18 Janvier 2023"
                 }
                 """;
+        
+        if (!pageRepository.existsBySlug("priorites-recherche-2026")) {
+            System.out.println("✓ Creating priorites-recherche-2026 page");
             
             prioritesRecherche2026Page = new Page();
             prioritesRecherche2026Page.setSlug("priorites-recherche-2026");
-            prioritesRecherche2026Page.setTitle("Priorités de la Recherche 2026");
-            prioritesRecherche2026Page.setHeroTitle("LES PRIORITÉS DE LA RECHERCHE À L'HORIZON 2026");
-            prioritesRecherche2026Page.setHeroSubtitle("L'ANRSI définit les priorités de la recherche scientifique et de l'innovation pour le développement national");
-            prioritesRecherche2026Page.setContent(defaultContent);
             prioritesRecherche2026Page.setPageType(Page.PageType.STRUCTURED);
             prioritesRecherche2026Page.setIsPublished(true);
             prioritesRecherche2026Page.setIsActive(true);
@@ -3664,7 +3645,7 @@ public class DataInitializer implements CommandLineRunner {
         
         // Create translations for priorites-recherche-2026 page
         if (prioritesRecherche2026Page != null) {
-            String contentFR = prioritesRecherche2026Page.getContent();
+            String contentFR = defaultContentPrioritesRecherche2026;
             
             // Arabic translation (complete from pqges.sql)
             String contentAR = """
@@ -3786,7 +3767,7 @@ public class DataInitializer implements CommandLineRunner {
             
             createOrUpdateTranslation(prioritesRecherche2026Page, Language.FR, 
                 "Priorités de la Recherche 2026", "LES PRIORITÉS DE LA RECHERCHE À L'HORIZON 2026", 
-                prioritesRecherche2026Page.getHeroSubtitle(), contentFR);
+                "L'ANRSI définit les priorités de la recherche scientifique et de l'innovation pour le développement national", contentFR);
             createOrUpdateTranslation(prioritesRecherche2026Page, Language.AR, 
                 "أولويات البحث 2026", "أولويات البحث في أفق 2026", 
                 "تحدد الوكالة الوطنية للبحث العلمي والابتكار أولويات البحث العلمي والابتكار لخدمة التنمية الوطنية", contentAR);
@@ -3800,19 +3781,99 @@ public class DataInitializer implements CommandLineRunner {
     
     private void createOrUpdateTranslation(Page page, Language language, String title, 
                                          String heroTitle, String heroSubtitle, String content) {
-        PageTranslation translation = pageTranslationRepository
-            .findByPageAndLanguage(page, language)
-            .orElse(new PageTranslation());
+        createOrUpdateTranslation(page, language, title, heroTitle, heroSubtitle, null, null, null, content, null);
+    }
+    
+    private void createOrUpdateTranslation(Page page, Language language, String title, 
+                                         String heroTitle, String heroSubtitle, 
+                                         String sectionTitle, String introText, String description,
+                                         String content, String extra) {
+        Optional<PageTranslation> existingTranslation = pageTranslationRepository
+            .findByPageAndLanguage(page, language);
+        
+        PageTranslation translation;
+        boolean isNew = false;
+        
+        if (existingTranslation.isPresent()) {
+            translation = existingTranslation.get();
+            // Check if translation already has meaningful content
+            // Only update if content is null, empty, or contains only empty arrays
+            if (translation.getContent() != null && !translation.getContent().trim().isEmpty()) {
+                try {
+                    // Try to parse the content to check if it has actual data
+                    ObjectMapper mapper = new ObjectMapper();
+                    JsonNode contentNode = mapper.readTree(translation.getContent());
+                    
+                    // Check for common data arrays that indicate the page has user-entered data
+                    // Different page types use different array fields:
+                    // - appels-candidatures: "appels"
+                    // - agence-medias: "mediaLinks", "articleLinks", "recentCoverage"
+                    // - ai4agri: "projects", "partners"
+                    // - etc.
+                    boolean hasData = false;
+                    
+                    // List of common array fields that indicate user data
+                    String[] dataFields = {"appels", "mediaLinks", "articleLinks", "recentCoverage", 
+                                          "projects", "partners", "programmes", "videos", "photos",
+                                          "objectives", "members", "rapports", "texts", "platforms",
+                                          "newsItems", "items", "links", "documents"};
+                    
+                    for (String field : dataFields) {
+                        if (contentNode.has(field) && contentNode.get(field).isArray()) {
+                            JsonNode array = contentNode.get(field);
+                            if (array.size() > 0) {
+                                hasData = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // Also check if content has non-empty string fields beyond just heroTitle/heroSubtitle
+                    // This catches cases where users have added custom content
+                    if (!hasData) {
+                        // Check for meaningful text content (not just default values)
+                        if (contentNode.has("introText") && !contentNode.get("introText").asText().trim().isEmpty()) {
+                            String introTextValue = contentNode.get("introText").asText().trim();
+                            // If introText is longer than 100 chars, likely user-entered
+                            if (introTextValue.length() > 100) {
+                                hasData = true;
+                            }
+                        }
+                    }
+                    
+                    if (hasData) {
+                        // Translation has data, skip overwriting
+                        System.out.println("  ⊘ Translation already has data, skipping update: " + language);
+                        return;
+                    }
+                } catch (Exception e) {
+                    // If parsing fails, assume it might have data, so skip overwriting
+                    System.out.println("  ⊘ Translation content exists but couldn't parse, skipping update: " + language);
+                    return;
+                }
+            }
+            // Translation exists but is empty, update it
+            System.out.println("  ↻ Updating existing empty translation: " + language);
+        } else {
+            // Translation doesn't exist, create new one
+            translation = new PageTranslation();
+            isNew = true;
+            System.out.println("  ✓ Creating new translation: " + language);
+        }
         
         translation.setPage(page);
         translation.setLanguage(language);
         translation.setTitle(title);
         translation.setHeroTitle(heroTitle);
         translation.setHeroSubtitle(heroSubtitle);
+        translation.setSectionTitle(sectionTitle);
+        translation.setIntroText(introText);
+        translation.setDescription(description);
         translation.setContent(content);
+        translation.setExtra(extra);
         
         pageTranslationRepository.save(translation);
-        System.out.println("  ✓ Translation created/updated: " + language);
+        System.out.println("  ✓ Translation " + (isNew ? "created" : "updated") + ": " + language);
     }
 }
 

@@ -438,14 +438,25 @@ export class AdminTextsJuridiquesFormComponent implements OnInit {
     // Use French title as default for page title
     const frGroup = this.getLanguageFormGroup('fr');
     const pageTitle = frGroup.get('heroTitle')?.value?.trim() || 'Textes Juridiques';
-    const heroTitle = frGroup.get('heroTitle')?.value?.trim() || pageTitle;
-    const heroSubtitle = frGroup.get('heroSubtitle')?.value?.trim() || '';
+
+    // Build translations for the new structure
+    const translations: { [key: string]: any } = {};
+    
+    (['fr', 'ar', 'en'] as const).forEach(lang => {
+      const langContent = translationsToSave[lang];
+      if (langContent) {
+        translations[lang] = {
+          title: langContent.heroTitle || pageTitle,
+          heroTitle: langContent.heroTitle || '',
+          heroSubtitle: langContent.heroSubtitle || '',
+          sectionTitle: langContent.sectionTitle || '',
+          extra: JSON.stringify(langContent) // Store the full content in extra (JSONB)
+        };
+      }
+    });
 
     const updateData: PageUpdateDTO = {
-      title: pageTitle,
-      heroTitle: heroTitle,
-      heroSubtitle: heroSubtitle,
-      content: JSON.stringify(content),
+      translations: translations,
       pageType: 'STRUCTURED',
       isPublished: true,
       isActive: true
@@ -466,11 +477,8 @@ export class AdminTextsJuridiquesFormComponent implements OnInit {
     } else {
       this.pageService.createPage({
         slug: 'texts-juridiques',
-        title: pageTitle,
-        heroTitle: heroTitle,
-        heroSubtitle: heroSubtitle,
-        content: JSON.stringify(content),
         pageType: 'STRUCTURED',
+        translations: translations,
         isPublished: true,
         isActive: true
       }).subscribe({

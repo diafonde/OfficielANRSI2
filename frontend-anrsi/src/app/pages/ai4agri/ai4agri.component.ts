@@ -1,8 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink, NavigationEnd } from '@angular/router';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
+import { filter, skip } from 'rxjs/operators';
 import { PageService, PageDTO } from '../../services/page.service';
 
 interface Ai4agriNewsItem {
@@ -44,11 +45,13 @@ export class Ai4agriComponent implements OnInit, OnDestroy {
   isLoading = true;
   currentLang = 'fr';
   private langSubscription?: Subscription;
+  private routerSubscription?: Subscription;
   expandedItems: Set<number> = new Set(); // Track which items are expanded
 
   constructor(
     private pageService: PageService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -61,12 +64,31 @@ export class Ai4agriComponent implements OnInit, OnDestroy {
       this.updateTranslatedContent();
     });
 
+    // Load page on initial load
     this.loadPage();
+
+    // Subscribe to router events to reload data when navigating to this route
+    // Skip the first event (initial load) since we already loaded above
+    this.routerSubscription = this.router.events
+      .pipe(
+        filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+        skip(1) // Skip the initial navigation event
+      )
+      .subscribe((event) => {
+        // Reload data when navigating to /ai4agri route
+        if (event.urlAfterRedirects === '/ai4agri' || event.urlAfterRedirects.startsWith('/ai4agri')) {
+          console.log('Route activated, reloading ai4agri data');
+          this.loadPage();
+        }
+      });
   }
 
   ngOnDestroy(): void {
     if (this.langSubscription) {
       this.langSubscription.unsubscribe();
+    }
+    if (this.routerSubscription) {
+      this.routerSubscription.unsubscribe();
     }
   }
 

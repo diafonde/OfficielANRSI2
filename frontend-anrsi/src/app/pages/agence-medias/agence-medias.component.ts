@@ -1,7 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router, NavigationEnd } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
+import { filter, skip } from 'rxjs/operators';
 import { PageService, PageDTO } from '../../services/page.service';
 
 interface MediaOverview {
@@ -90,10 +92,12 @@ export class AgenceMediasComponent implements OnInit, OnDestroy {
   isLoading = true;
   currentLang: string = 'fr';
   private langSubscription?: Subscription;
+  private routerSubscription?: Subscription;
 
   constructor(
     private pageService: PageService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -105,13 +109,32 @@ export class AgenceMediasComponent implements OnInit, OnDestroy {
       this.currentLang = event.lang;
       this.updateTranslatedContent();
     });
-    
+
+    // Load page on initial load
     this.loadPage();
+
+    // Subscribe to router events to reload data when navigating to this route
+    // Skip the first event (initial load) since we already loaded above
+    this.routerSubscription = this.router.events
+      .pipe(
+        filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+        skip(1) // Skip the initial navigation event
+      )
+      .subscribe((event) => {
+        // Reload data when navigating to /agence-medias route
+        if (event.urlAfterRedirects === '/agence-medias' || event.urlAfterRedirects.startsWith('/agence-medias')) {
+          console.log('Route activated, reloading agence-medias data');
+          this.loadPage();
+        }
+      });
   }
 
   ngOnDestroy(): void {
     if (this.langSubscription) {
       this.langSubscription.unsubscribe();
+    }
+    if (this.routerSubscription) {
+      this.routerSubscription.unsubscribe();
     }
   }
 

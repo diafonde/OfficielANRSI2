@@ -49,20 +49,6 @@
         </div>
 
         <div class="form-group">
-          <label for="title">Title *</label>
-          <input
-            type="text"
-            id="title"
-            formControlName="title"
-            class="form-control"
-            placeholder="Page title"
-          />
-          <div *ngIf="pageForm.get('title')?.invalid && pageForm.get('title')?.touched" class="error-text">
-            Title is required
-          </div>
-        </div>
-
-        <div class="form-group">
           <label for="pageType">Page Type *</label>
           <select id="pageType" formControlName="pageType" class="form-control">
             <option *ngFor="let type of pageTypes" [value]="type.value">
@@ -73,31 +59,29 @@
             Page type is required
           </div>
         </div>
-      </div>
 
-      <div class="form-section">
-        <h2>Hero Section</h2>
-        
         <div class="form-group">
-          <label for="heroTitle">Hero Title</label>
+          <label for="ordre">Order</label>
           <input
-            type="text"
-            id="heroTitle"
-            formControlName="heroTitle"
+            type="number"
+            id="ordre"
+            formControlName="ordre"
             class="form-control"
-            placeholder="Hero section title"
+            placeholder="Menu order"
           />
+          <div class="help-text">Order in the menu (optional)</div>
         </div>
 
         <div class="form-group">
-          <label for="heroSubtitle">Hero Subtitle</label>
+          <label for="parentId">Parent Page ID</label>
           <input
-            type="text"
-            id="heroSubtitle"
-            formControlName="heroSubtitle"
+            type="number"
+            id="parentId"
+            formControlName="parentId"
             class="form-control"
-            placeholder="Hero section subtitle"
+            placeholder="Parent page ID for sub-pages"
           />
+          <div class="help-text">ID of parent page for creating sub-pages (optional)</div>
         </div>
 
         <div class="form-group">
@@ -111,65 +95,157 @@
           />
         </div>
       </div>
-    </div>
 
-    <div class="form-section">
-      <h2>Content</h2>
-      
-      <div class="form-group">
-        <label for="content">Content (JSON)</label>
-        <textarea
-          id="content"
-          formControlName="content"
-          class="form-control"
-          rows="15"
-          placeholder='{"sections": [...]}'
-        ></textarea>
-        <div class="help-text">
-          Enter page content as JSON. The structure depends on the page type.
+      <div class="form-section">
+        <h2>Settings</h2>
+        
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              formControlName="isPublished"
+              class="checkbox"
+            />
+            <span>Published</span>
+          </label>
+          <div class="help-text">Published pages are visible to the public.</div>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label for="metadata">Metadata (JSON)</label>
-        <textarea
-          id="metadata"
-          formControlName="metadata"
-          class="form-control"
-          rows="5"
-          placeholder='{"key": "value"}'
-        ></textarea>
-        <div class="help-text">
-          Additional metadata as JSON (optional).
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              formControlName="isActive"
+              class="checkbox"
+            />
+            <span>Active</span>
+          </label>
+          <div class="help-text">Inactive pages are hidden from all views.</div>
         </div>
       </div>
     </div>
 
-    <div class="form-section">
-      <h2>Settings</h2>
+    <!-- Translations Section with Tabs -->
+    <div class="form-section translations-section">
+      <h2>Translations</h2>
       
-      <div class="form-group">
-        <label class="checkbox-label">
-          <input
-            type="checkbox"
-            formControlName="isPublished"
-            class="checkbox"
-          />
-          <span>Published</span>
-        </label>
-        <div class="help-text">Published pages are visible to the public.</div>
+      <!-- Language Tabs -->
+      <div class="language-tabs">
+        <button
+          type="button"
+          *ngFor="let lang of languages"
+          (click)="setActiveLanguage(lang.code)"
+          [class.active]="activeLanguageTab === lang.code"
+          class="language-tab"
+        >
+          {{ lang.flag }} {{ lang.label }}
+        </button>
       </div>
 
-      <div class="form-group">
-        <label class="checkbox-label">
-          <input
-            type="checkbox"
-            formControlName="isActive"
-            class="checkbox"
-          />
-          <span>Active</span>
-        </label>
-        <div class="help-text">Inactive pages are hidden from all views.</div>
+      <!-- Translation Forms for each language -->
+      <div *ngFor="let lang of languages" [hidden]="activeLanguageTab !== lang.code">
+        <div [formGroup]="getTranslationFormGroup(lang.code)" class="translation-form">
+          <h3>{{ lang.flag }} {{ lang.label }} Translation</h3>
+
+          <div class="form-group">
+            <label [for]="'title-' + lang.code">Title *</label>
+            <input
+              type="text"
+              [id]="'title-' + lang.code"
+              formControlName="title"
+              class="form-control"
+              [placeholder]="'Page title in ' + lang.label"
+            />
+            <div *ngIf="getTranslationFormGroup(lang.code).get('title')?.invalid && getTranslationFormGroup(lang.code).get('title')?.touched" class="error-text">
+              Title is required for {{ lang.label }}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label [for]="'heroTitle-' + lang.code">Hero Title</label>
+            <input
+              type="text"
+              [id]="'heroTitle-' + lang.code"
+              formControlName="heroTitle"
+              class="form-control"
+              [placeholder]="'Hero title in ' + lang.label"
+            />
+          </div>
+
+          <div class="form-group">
+            <label [for]="'heroSubtitle-' + lang.code">Hero Subtitle</label>
+            <input
+              type="text"
+              [id]="'heroSubtitle-' + lang.code"
+              formControlName="heroSubtitle"
+              class="form-control"
+              [placeholder]="'Hero subtitle in ' + lang.label"
+            />
+          </div>
+
+          <div class="form-group">
+            <label [for]="'sectionTitle-' + lang.code">Section Title</label>
+            <input
+              type="text"
+              [id]="'sectionTitle-' + lang.code"
+              formControlName="sectionTitle"
+              class="form-control"
+              [placeholder]="'Section title in ' + lang.label"
+            />
+          </div>
+
+          <div class="form-group">
+            <label [for]="'introText-' + lang.code">Intro Text</label>
+            <textarea
+              [id]="'introText-' + lang.code"
+              formControlName="introText"
+              class="form-control"
+              rows="3"
+              [placeholder]="'Introduction text in ' + lang.label"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label [for]="'description-' + lang.code">Description</label>
+            <textarea
+              [id]="'description-' + lang.code"
+              formControlName="description"
+              class="form-control"
+              rows="4"
+              [placeholder]="'Page description in ' + lang.label"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label [for]="'content-' + lang.code">Content (HTML)</label>
+            <textarea
+              [id]="'content-' + lang.code"
+              formControlName="content"
+              class="form-control"
+              rows="8"
+              [placeholder]="'HTML content in ' + lang.label"
+            ></textarea>
+            <div class="help-text">HTML content for this page in {{ lang.label }}</div>
+          </div>
+
+          <div class="form-group">
+            <label [for]="'extra-' + lang.code">Extra (JSONB)</label>
+            <textarea
+              [id]="'extra-' + lang.code"
+              formControlName="extra"
+              class="form-control code-textarea"
+              rows="12"
+              placeholder='{"key": "value"}'
+            ></textarea>
+            <div class="help-text">
+              Complex structured data as JSON (e.g., lists of reports, programs, videos). 
+              Must be valid JSON format.
+            </div>
+            <div *ngIf="getTranslationFormGroup(lang.code).get('extra')?.errors?.['jsonError']" class="error-text">
+              Invalid JSON format
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -183,4 +259,3 @@
     </div>
   </form>
 </div>
-

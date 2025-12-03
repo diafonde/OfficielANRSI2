@@ -307,6 +307,55 @@ export class AdminExpertAnrsiFormComponent implements OnInit {
       next: (page) => {
         try {
           this.pageId = page.id || null;
+          
+          // First, try to get from page.translations (new system)
+          if (page.translations && Object.keys(page.translations).length > 0) {
+            try {
+              const content: ExpertAnrsiContent = {
+                translations: {
+                  fr: this.getEmptyLanguageContent(),
+                  ar: this.getEmptyLanguageContent(),
+                  en: this.getEmptyLanguageContent()
+                }
+              };
+              
+              // Extract content from each translation
+              ['fr', 'ar', 'en'].forEach(lang => {
+                const translation = page.translations?.[lang];
+                if (translation && translation.content) {
+                  try {
+                    const parsedContent = JSON.parse(translation.content);
+                    content.translations[lang as 'fr' | 'ar' | 'en'] = parsedContent;
+                  } catch (e) {
+                    console.error(`Error parsing ${lang} translation content:`, e);
+                  }
+                }
+              });
+              
+              this.populateForm(content);
+              // Check if Arabic data is empty and load defaults
+              const arGroup = this.getLanguageFormGroup('ar');
+              const arHeroTitle = arGroup.get('heroTitle')?.value;
+              const arRequirements = arGroup.get('requirements') as FormArray;
+              const arDomains = arGroup.get('domains') as FormArray;
+              if ((!arHeroTitle || arHeroTitle.trim() === '') && arRequirements.length === 0 && arDomains.length === 0) {
+                this.loadDefaultArabicData();
+              }
+              // Check if English data is empty and load defaults
+              const enGroup = this.getLanguageFormGroup('en');
+              const enHeroTitle = enGroup.get('heroTitle')?.value;
+              const enRequirements = enGroup.get('requirements') as FormArray;
+              const enDomains = enGroup.get('domains') as FormArray;
+              if ((!enHeroTitle || enHeroTitle.trim() === '') && enRequirements.length === 0 && enDomains.length === 0) {
+                this.loadDefaultEnglishData();
+              }
+            } catch (e) {
+              console.error('Error processing translations:', e);
+              // Fall through to page.content check
+            }
+          }
+          
+          // Fallback: Try to get from page.content (old system or backup)
           if (page.content) {
             try {
               const parsedContent = JSON.parse(page.content);
@@ -349,7 +398,7 @@ export class AdminExpertAnrsiFormComponent implements OnInit {
               console.error('Error parsing content:', e);
               this.loadDefaultData();
             }
-          } else {
+          } else if (!page.translations || Object.keys(page.translations).length === 0) {
             this.loadDefaultData();
           }
         } catch (error) {
@@ -685,16 +734,25 @@ export class AdminExpertAnrsiFormComponent implements OnInit {
       }
     };
 
-    // Use French content for hero title/subtitle in page metadata (fallback to first available)
-    const frContent = content.translations.fr;
-    const heroTitle = frContent.heroTitle || content.translations.ar.heroTitle || content.translations.en.heroTitle || 'Expert à l\'ANRSI';
-    const heroSubtitle = frContent.heroSubtitle || content.translations.ar.heroSubtitle || content.translations.en.heroSubtitle || '';
+    // Build translations for the new structure
+    const translations: { [key: string]: any } = {};
+    
+    (['fr', 'ar', 'en'] as const).forEach(lang => {
+      const langContent = content.translations[lang];
+      if (langContent) {
+        const langContentJson = JSON.stringify(langContent);
+        translations[lang] = {
+          title: langContent.heroTitle || 'Expert à l\'ANRSI',
+          heroTitle: langContent.heroTitle || '',
+          heroSubtitle: langContent.heroSubtitle || '',
+          content: langContentJson, // Store the language-specific content in content field
+          extra: langContentJson // Also store in extra for backward compatibility
+        };
+      }
+    });
 
     const updateData: PageUpdateDTO = {
-      title: 'Expert à l\'ANRSI',
-      heroTitle: heroTitle,
-      heroSubtitle: heroSubtitle,
-      content: JSON.stringify(content),
+      translations: translations,
       pageType: 'STRUCTURED',
       isPublished: true,
       isActive: true
@@ -715,11 +773,8 @@ export class AdminExpertAnrsiFormComponent implements OnInit {
     } else {
       this.pageService.createPage({
         slug: 'expert-anrsi',
-        title: 'Expert à l\'ANRSI',
-        heroTitle: heroTitle,
-        heroSubtitle: heroSubtitle,
-        content: JSON.stringify(content),
         pageType: 'STRUCTURED',
+        translations: translations,
         isPublished: true,
         isActive: true
       }).subscribe({

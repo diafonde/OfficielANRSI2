@@ -1,34 +1,23 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { PageAdminService, PageDTO, PageCreateDTO, PageUpdateDTO } from '../../services/page-admin.service';
 import { ArticleAdminService } from '../../services/article-admin.service';
-
-interface AppelDetail {
-  label: string;
-  value: string;
-}
-
-interface AppelAction {
-  text: string;
-  url: string;
-  type: 'primary' | 'outline';
-}
+import { AuthService } from '../../services/auth.service';
 
 interface AppelItem {
-  status: 'active' | 'upcoming' | 'closed';
   title: string;
-  description: string;
-  imageUrl?: string;
-  details: AppelDetail[];
-  actions: AppelAction[];
+  url: string;
+  image: string | null;
+  summary: string;
+  date: string;
+  full_text: string;
+  documentUrl?: string;
 }
 
 interface AppelsCandidaturesLanguageContent {
-  heroTitle: string;
-  heroSubtitle: string;
-  introText: string;
   appels: AppelItem[];
 }
 
@@ -47,13 +36,21 @@ interface AppelsCandidaturesContent {
   templateUrl: './admin-appels-candidatures-form.component.html',
   styleUrls: ['./admin-appels-candidatures-form.component.scss']
 })
-export class AdminAppelsCandidaturesFormComponent implements OnInit {
+export class AdminAppelsCandidaturesFormComponent implements OnInit { 
   form: FormGroup;
   pageId: number | null = null;
   isLoading = false;
   errorMessage = '';
   isSaving = false;
   activeLanguage: 'fr' | 'ar' | 'en' = 'fr';
+  documentUploadStates: { [key: string]: { isUploading: boolean; uploadProgress: number; fileName?: string } } = {};
+  imageUploadStates: { [key: string]: { file?: File; preview?: string; isUploading: boolean; uploadProgress: number } } = {};
+  isImporting = false;
+  importProgress = 0;
+  
+  // Pagination properties
+  currentPage = 1;
+  itemsPerPage = 10;
 
   languages = [
     { code: 'fr', name: 'Français', flag: '🇫🇷' },
@@ -61,45 +58,43 @@ export class AdminAppelsCandidaturesFormComponent implements OnInit {
     { code: 'en', name: 'English', flag: '🇺🇸' }
   ];
 
-  // Image upload state tracking
-  private imageUploadState = new Map<string, {
-    file?: File;
-    preview?: string;
-    isUploading?: boolean;
-    uploadProgress?: number;
-  }>();
-
-  // Document upload state tracking
-  private documentUploadState = new Map<string, {
-    file?: File;
-    fileName?: string;
-    isUploading?: boolean;
-    uploadProgress?: number;
-  }>();
-
   constructor(
     private fb: FormBuilder,
     private pageService: PageAdminService,
     private articleService: ArticleAdminService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private http: HttpClient,
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef
   ) {
     this.form = this.createForm();
   }
 
   ngOnInit(): void {
-    const langParam = this.route.snapshot.queryParams['lang'];
-    if (langParam && ['fr', 'ar', 'en'].includes(langParam)) {
-      this.activeLanguage = langParam as 'fr' | 'ar' | 'en';
-    }
-    
+    // Check for language query parameter
     this.route.queryParams.subscribe(params => {
       if (params['lang'] && ['fr', 'ar', 'en'].includes(params['lang'])) {
         this.activeLanguage = params['lang'] as 'fr' | 'ar' | 'en';
       }
     });
-    
-    this.loadPage();
+
+    this.route.params.subscribe(params => {
+      const id = params['id'];
+      if (id) {
+        this.pageId = +id;
+        this.loadPage();
+      } else {
+        // Try to load by slug
+        this.pageService.getPageBySlug('appels-candidatures').subscribe({
+          next: (page: PageDTO) => {
+            this.pageId = page.id || null;
+            this.initializeForm(page);
+          },
+          error: (error: any) => this.handleError(error)
+        });
+      }
+    });
   }
 
   createForm(): FormGroup {
@@ -114,9 +109,6 @@ export class AdminAppelsCandidaturesFormComponent implements OnInit {
 
   private createLanguageFormGroup(): FormGroup {
     return this.fb.group({
-      heroTitle: ['', Validators.required],
-      heroSubtitle: ['', Validators.required],
-      introText: ['', Validators.required],
       appels: this.fb.array([])
     });
   }
@@ -124,29 +116,142 @@ export class AdminAppelsCandidaturesFormComponent implements OnInit {
   switchLanguage(lang: string): void {
     if (lang === 'fr' || lang === 'ar' || lang === 'en') {
       this.activeLanguage = lang as 'fr' | 'ar' | 'en';
+      this.currentPage = 1; // Reset to first page when switching languages
     }
   }
 
   getActiveLanguageFormGroup(): FormGroup {
-    const group = this.form.get(`translations.${this.activeLanguage}`) as FormGroup;
-    if (!group) {
-      return this.form.get(`translations.fr`) as FormGroup;
-    }
-    return group;
+    return this.form.get(`translations.${this.activeLanguage}`) as FormGroup;
   }
 
   getLanguageFormGroup(lang: string): FormGroup {
     return this.form.get(`translations.${lang}`) as FormGroup;
   }
 
+  get appels(): FormArray {
+    return this.getActiveLanguageFormGroup().get('appels') as FormArray;
+  }
+
+  getAppelsForLanguage(lang: string): FormArray {
+    return this.getLanguageFormGroup(lang).get('appels') as FormArray;
+  }
+
+  // Pagination methods
+  get paginatedAppels(): any[] {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    return this.appels.controls.slice(startIndex, endIndex);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.appels.length / this.itemsPerPage);
+  }
+
+  get totalItems(): number {
+    return this.appels.length;
+  }
+
+  get startIndex(): number {
+    return (this.currentPage - 1) * this.itemsPerPage + 1;
+  }
+
+  get endIndex(): number {
+    const end = this.currentPage * this.itemsPerPage;
+    return end > this.totalItems ? this.totalItems : end;
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      // Scroll to top of the appels list
+      const element = document.querySelector('.appels-list-container');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  }
+
+  previousPage(): void {
+    if (this.currentPage > 1) {
+      this.goToPage(this.currentPage - 1);
+    }
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.goToPage(this.currentPage + 1);
+    }
+  }
+
+  onItemsPerPageChange(event: Event): void {
+    const select = event.target as HTMLSelectElement;
+    this.itemsPerPage = parseInt(select.value, 10);
+    this.currentPage = 1; // Reset to first page when changing items per page
+  }
+
+  getPageNumbers(): (number | string)[] {
+    const pages: (number | string)[] = [];
+    const total = this.totalPages;
+    const current = this.currentPage;
+    
+    if (total <= 7) {
+      // Show all pages if 7 or fewer
+      for (let i = 1; i <= total; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Always show first page
+      pages.push(1);
+      
+      if (current <= 4) {
+        // Near the start
+        for (let i = 2; i <= 5; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(total);
+      } else if (current >= total - 3) {
+        // Near the end
+        pages.push('...');
+        for (let i = total - 4; i <= total; i++) {
+          pages.push(i);
+        }
+      } else {
+        // In the middle
+        pages.push('...');
+        for (let i = current - 1; i <= current + 1; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(total);
+      }
+    }
+    
+    return pages;
+  }
+
+  onPageNumberClick(page: number | string): void {
+    if (typeof page === 'number') {
+      this.goToPage(page);
+    }
+  }
+
   hasTranslation(lang: string): boolean {
     const langGroup = this.getLanguageFormGroup(lang);
-    return !!(langGroup.get('heroTitle')?.value || langGroup.get('heroSubtitle')?.value);
+    const appels = langGroup.get('appels') as FormArray;
+    return appels.length > 0;
   }
 
   isLanguageFormValid(lang: string): boolean {
     const langGroup = this.getLanguageFormGroup(lang);
-    return langGroup.valid;
+    const appels = langGroup.get('appels') as FormArray;
+    
+    if (appels.length === 0) return false;
+    
+    return appels.controls.every(control => {
+      const group = control as FormGroup;
+      return group.get('title')?.valid && group.get('url')?.valid && group.get('date')?.valid;
+    });
   }
 
   getActiveLanguageName(): string {
@@ -154,706 +259,627 @@ export class AdminAppelsCandidaturesFormComponent implements OnInit {
     return lang?.name || 'Français';
   }
 
-  // Appels FormArray methods
-  get appels(): FormArray {
-    return this.getActiveLanguageFormGroup().get('appels') as FormArray;
-  }
-
-  addAppel(item?: AppelItem, lang?: string): void {
-    const langGroup = lang ? this.getLanguageFormGroup(lang) : this.getActiveLanguageFormGroup();
-    const appels = langGroup.get('appels') as FormArray;
-    const group = this.fb.group({
-      status: [item?.status || 'active', Validators.required],
-      title: [item?.title || '', Validators.required],
-      description: [item?.description || '', Validators.required],
-      imageUrl: [item?.imageUrl || ''],
-      details: this.fb.array(item?.details?.map(d => this.fb.group({
-        label: [d.label, Validators.required],
-        value: [d.value, Validators.required]
-      })) || []),
-      actions: this.fb.array(item?.actions?.map(a => this.fb.group({
-        text: [a.text, Validators.required],
-        url: [a.url, Validators.required],
-        type: [a.type || 'primary', Validators.required]
-      })) || [])
+  addAppel(): void {
+    const appelGroup = this.fb.group({
+      title: [''],
+      url: [''],
+      image: [''],
+      summary: [''],
+      date: [''],
+      full_text: [''],
+      documentUrl: ['']
     });
-    appels.push(group);
+    this.appels.push(appelGroup);
   }
 
   removeAppel(index: number): void {
     this.appels.removeAt(index);
+    
+    // Adjust pagination if needed
+    const totalAfterRemove = this.appels.length;
+    const maxPageAfterRemove = Math.ceil(totalAfterRemove / this.itemsPerPage);
+    
+    // If current page is now empty, go to the last available page
+    if (this.currentPage > maxPageAfterRemove && maxPageAfterRemove > 0) {
+      this.currentPage = maxPageAfterRemove;
+    }
+    
+    // If we're on the last page and it becomes empty, go to previous page
+    if (this.currentPage > maxPageAfterRemove) {
+      this.currentPage = Math.max(1, maxPageAfterRemove);
+    }
   }
 
-  getAppelDetails(index: number): FormArray {
-    return this.appels.at(index).get('details') as FormArray;
+  loadPage(): void {
+    this.isLoading = true;
+    
+    if (this.pageId) {
+      // Load by ID if available
+      this.pageService.getPageById(this.pageId).subscribe({
+        next: (page: PageDTO) => {
+          this.initializeForm(page);
+          this.isLoading = false;
+        },
+        error: (error: any) => {
+          this.handleError(error);
+          this.isLoading = false;
+        }
+      });
+    } else {
+      // Try to load by slug
+      this.pageService.getPageBySlug('appels-candidatures').subscribe({
+        next: (page: PageDTO) => {
+          this.pageId = page.id || null;
+          this.initializeForm(page);
+          this.isLoading = false;
+        },
+        error: (error: any) => {
+          this.handleError(error);
+          this.isLoading = false;
+        }
+      });
+    }
   }
 
-  addAppelDetail(appelIndex: number, detail?: AppelDetail): void {
-    this.getAppelDetails(appelIndex).push(this.fb.group({
-      label: [detail?.label || '', Validators.required],
-      value: [detail?.value || '', Validators.required]
-    }));
+  initializeForm(page: PageDTO): void {
+    console.log('Initializing form with page:', page);
+    console.log('Page has translations:', !!page.translations);
+    console.log('Page has content:', !!page.content);
+    
+    // First, check if we have valid data to load BEFORE clearing
+    let hasDataToLoad = false;
+    let translationsData: { [key: string]: any } = {};
+    
+    // Priority 1: Check page.translations (from page_translations table)
+    if (page.translations && Object.keys(page.translations).length > 0) {
+      console.log('Loading from page.translations (normalized structure)');
+      ['fr', 'ar', 'en'].forEach(lang => {
+        const translation = page.translations![lang];
+        if (translation && translation.content) {
+          try {
+            const langContent = JSON.parse(translation.content);
+            if (langContent && langContent.appels && langContent.appels.length > 0) {
+              console.log(`Found ${langContent.appels.length} appels for ${lang} in translations`);
+              translationsData[lang] = langContent;
+              hasDataToLoad = true;
+            }
+          } catch (e) {
+            console.error(`Error parsing ${lang} translation content:`, e);
+          }
+        }
+      });
+    }
+    
+    // Priority 2: Fallback to page.content (old format)
+    if (!hasDataToLoad && page.content) {
+      console.log('Loading from page.content (legacy format)');
+      try {
+        const parsedContent = JSON.parse(page.content);
+        console.log('Parsed content structure:', {
+          hasTranslations: !!parsedContent.translations,
+          isArray: Array.isArray(parsedContent),
+          keys: Object.keys(parsedContent)
+        });
+        
+        // Check if it's the new format with translations
+        if (parsedContent.translations) {
+          const content: AppelsCandidaturesContent = parsedContent;
+          ['fr', 'ar', 'en'].forEach(lang => {
+            const langContent = content.translations[lang as 'fr' | 'ar' | 'en'];
+            if (langContent && langContent.appels && langContent.appels.length > 0) {
+              console.log(`Found ${langContent.appels.length} appels for ${lang} in content`);
+              translationsData[lang] = langContent;
+              hasDataToLoad = true;
+            }
+          });
+        } else if (Array.isArray(parsedContent) && parsedContent.length > 0) {
+          console.log(`Found ${parsedContent.length} appels in old format`);
+          // Convert old format to new format structure
+          translationsData['fr'] = { appels: parsedContent };
+          hasDataToLoad = true;
+        }
+      } catch (e) {
+        console.error('Error parsing content:', e);
+        this.errorMessage = 'Erreur lors du chargement des données. Le format JSON est invalide.';
+        return;
+      }
+    }
+
+    // Only clear if we have valid data to load
+    if (!hasDataToLoad) {
+      console.log('No valid data to load, keeping existing form data');
+      return;
+    }
+    
+    // Clear existing appels for all languages
+    ['fr', 'ar', 'en'].forEach(lang => {
+      const langAppels = this.getAppelsForLanguage(lang);
+      while (langAppels.length !== 0) {
+        langAppels.removeAt(0);
+      }
+    });
+
+    // Load data from translationsData
+    try {
+      ['fr', 'ar', 'en'].forEach(lang => {
+        const langContent = translationsData[lang];
+        if (langContent && langContent.appels) {
+          console.log(`Loading ${lang} content:`, langContent);
+          console.log(`Found ${langContent.appels.length} appels for ${lang}`);
+          langContent.appels.forEach((appel: any) => {
+            // Convert from public page format to admin form format
+            const url = appel.actions && appel.actions.length > 0 
+              ? appel.actions[0].url || '' 
+              : appel.url || '';
+            
+            const date = appel.details && appel.details.length > 0
+              ? appel.details.find((d: any) => d.label && d.label.toLowerCase().includes('date'))?.value || ''
+              : appel.date || '';
+            
+            const appelGroup = this.fb.group({
+              title: [appel.title || ''],
+              url: [url],
+              image: [appel.imageUrl || appel.image || ''],
+              summary: [appel.summary || appel.description || ''],
+              date: [date],
+              full_text: [appel.fullText || appel.full_text || ''],
+              documentUrl: [appel.documentUrl || '']
+            });
+            this.getAppelsForLanguage(lang).push(appelGroup);
+          });
+        } else {
+          console.log(`No appels found for ${lang}`);
+        }
+      });
+      
+      // Log final state
+      const counts = {
+        fr: this.getAppelsForLanguage('fr').length,
+        ar: this.getAppelsForLanguage('ar').length,
+        en: this.getAppelsForLanguage('en').length
+      };
+      console.log('Form initialized. Appels count:', counts);
+      
+      // Switch to first language that has data
+      if (this.appels.length === 0) {
+        if (counts.fr > 0) {
+          this.activeLanguage = 'fr';
+          console.log('Switching to French tab (has data)');
+        } else if (counts.ar > 0) {
+          this.activeLanguage = 'ar';
+            console.log('Switching to Arabic tab (has data)');
+          } else if (counts.en > 0) {
+            this.activeLanguage = 'en';
+            console.log('Switching to English tab (has data)');
+          }
+        }
+        
+        // Force change detection
+        this.cdr.detectChanges();
+      } catch (e) {
+        console.error('Error loading appels:', e);
+        this.errorMessage = 'Erreur lors du chargement des données. Le format JSON est invalide.';
+      }
+
+    // If no appels loaded for any language, add one empty appel to French
+    if (this.appels.length === 0 && 
+        this.getAppelsForLanguage('fr').length === 0 && 
+        this.getAppelsForLanguage('ar').length === 0 && 
+        this.getAppelsForLanguage('en').length === 0) {
+      console.log('No appels found in any language, adding empty appel');
+      this.addAppel();
+    }
+    
+    // Force change detection after initialization
+    this.cdr.detectChanges();
   }
 
-  addDateDetail(appelIndex: number): void {
-    this.addAppelDetail(appelIndex, { label: 'Date', value: '' });
-  }
-
-  removeAppelDetail(appelIndex: number, detailIndex: number): void {
-    this.getAppelDetails(appelIndex).removeAt(detailIndex);
-  }
-
-  getAppelActions(index: number): FormArray {
-    return this.appels.at(index).get('actions') as FormArray;
-  }
-
-  addAppelAction(appelIndex: number, action?: AppelAction): void {
-    this.getAppelActions(appelIndex).push(this.fb.group({
-      text: [action?.text || 'En savoir plus', Validators.required],
-      url: [action?.url || '', Validators.required],
-      type: [action?.type || 'primary', Validators.required]
-    }));
-  }
-
-  removeAppelAction(appelIndex: number, actionIndex: number): void {
-    this.getAppelActions(appelIndex).removeAt(actionIndex);
-  }
-
-  // Image upload methods
-  getImageUploadState(appelIndex: number): {
-    file?: File;
-    preview?: string;
-    isUploading?: boolean;
-    uploadProgress?: number;
-  } {
-    const stateKey = `${this.activeLanguage}-${appelIndex}`;
-    return this.imageUploadState.get(stateKey) || {};
-  }
-
-  onImageSelected(event: Event, appelIndex: number): void {
+  onImageSelected(event: Event, index: number): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
-      const stateKey = `${this.activeLanguage}-${appelIndex}`;
       
-      this.errorMessage = '';
-      
+      // Validate file type
       if (!file.type.startsWith('image/')) {
         this.errorMessage = 'Veuillez sélectionner uniquement des fichiers image';
         return;
       }
       
+      // Validate file size (10MB)
       if (file.size > 10 * 1024 * 1024) {
         this.errorMessage = 'La taille du fichier ne doit pas dépasser 10MB';
         return;
       }
       
-      this.imageUploadState.set(stateKey, {
-        file: file,
-        preview: undefined,
-        isUploading: false,
-        uploadProgress: 0
-      });
+      const key = `${this.activeLanguage}-appel-${index}`;
       
+      // Create preview
       const reader = new FileReader();
       reader.onload = (e: any) => {
-        const state = this.imageUploadState.get(stateKey);
-        if (state) {
-          state.preview = e.target.result;
-          this.imageUploadState.set(stateKey, state);
-        }
+        this.imageUploadStates[key] = {
+          file: file,
+          preview: e.target.result,
+          isUploading: true,
+          uploadProgress: 0
+        };
       };
       reader.readAsDataURL(file);
       
-      this.uploadImage(file, appelIndex);
+      // Upload image
+      this.uploadImage(file, index);
+      
+      // Reset file input
+      input.value = '';
     }
   }
 
-  uploadImage(file: File, appelIndex: number): void {
-    const stateKey = `${this.activeLanguage}-${appelIndex}`;
-    const state = this.imageUploadState.get(stateKey);
-    if (!state) return;
+  uploadImage(file: File, index: number): void {
+    const key = `${this.activeLanguage}-appel-${index}`;
     
-    state.isUploading = true;
-    state.uploadProgress = 0;
-    this.imageUploadState.set(stateKey, state);
+    if (!this.imageUploadStates[key]) {
+      this.imageUploadStates[key] = {
+        file: file,
+        preview: undefined,
+        isUploading: true,
+        uploadProgress: 0
+      };
+    } else {
+      this.imageUploadStates[key].isUploading = true;
+      this.imageUploadStates[key].uploadProgress = 0;
+    }
+    
     this.errorMessage = '';
     
     this.articleService.uploadImage(file).subscribe({
       next: (response) => {
-        const appelGroup = this.appels.at(appelIndex) as FormGroup;
-        appelGroup.patchValue({ imageUrl: response.url });
-        
-        state.isUploading = false;
-        state.uploadProgress = 100;
-        state.file = undefined;
-        this.imageUploadState.set(stateKey, state);
-        this.errorMessage = '';
+        const appelGroup = this.appels.at(index) as FormGroup;
+        appelGroup.patchValue({ image: response.url });
+        this.imageUploadStates[key] = {
+          file: file,
+          preview: this.imageUploadStates[key]?.preview,
+          isUploading: false,
+          uploadProgress: 100
+        };
       },
       error: (error) => {
-        console.error('Upload error:', error);
-        state.isUploading = false;
-        state.uploadProgress = 0;
-        this.imageUploadState.set(stateKey, state);
-        this.errorMessage = error.error?.error || 'Erreur lors du téléchargement de l\'image';
+        console.error('Error uploading image:', error);
+        this.errorMessage = 'Erreur lors du téléchargement de l\'image.';
+        this.imageUploadStates[key] = {
+          file: file,
+          preview: this.imageUploadStates[key]?.preview,
+          isUploading: false,
+          uploadProgress: 0
+        };
       }
     });
   }
 
-  removeImage(appelIndex: number): void {
-    const appelGroup = this.appels.at(appelIndex) as FormGroup;
-    appelGroup.patchValue({ imageUrl: '' });
-    
-    const stateKey = `${this.activeLanguage}-${appelIndex}`;
-    this.imageUploadState.delete(stateKey);
+  getImageUploadState(index: number): { file?: File; preview?: string; isUploading: boolean; uploadProgress: number } {
+    const key = `${this.activeLanguage}-appel-${index}`;
+    return this.imageUploadStates[key] || { isUploading: false, uploadProgress: 0 };
   }
 
-  getAppelImageUrl(appelIndex: number): string | null {
-    const appelGroup = this.appels.at(appelIndex) as FormGroup;
-    return appelGroup.get('imageUrl')?.value || null;
+  removeImage(index: number): void {
+    const appelGroup = this.appels.at(index) as FormGroup;
+    appelGroup.patchValue({ image: '' });
+    const key = `${this.activeLanguage}-appel-${index}`;
+    delete this.imageUploadStates[key];
   }
 
-  // Document upload methods
-  getDocumentUploadState(appelIndex: number, actionIndex: number): {
-    file?: File;
-    fileName?: string;
-    isUploading?: boolean;
-    uploadProgress?: number;
-  } {
-    const stateKey = `${this.activeLanguage}-${appelIndex}-${actionIndex}`;
-    return this.documentUploadState.get(stateKey) || {};
-  }
-
-  onDocumentSelected(event: Event, appelIndex: number, actionIndex: number): void {
+  onDocumentSelected(event: Event, index: number): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
-      const stateKey = `${this.activeLanguage}-${appelIndex}-${actionIndex}`;
+      const key = `${this.activeLanguage}-appel-${index}`;
       
-      this.errorMessage = '';
-      
-      // Validate file type - allow PDF and common document types
-      const validTypes = [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-      ];
-      const validExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx'];
-      const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
-      
-      if (!validTypes.includes(file.type) && !validExtensions.includes(fileExtension)) {
-        this.errorMessage = 'Le fichier doit être un PDF, Word ou Excel';
-        return;
-      }
-      
-      // Validate file size (50MB)
-      if (file.size > 50 * 1024 * 1024) {
-        this.errorMessage = 'La taille du fichier ne doit pas dépasser 50MB';
-        return;
-      }
-      
-      // Update state
-      this.documentUploadState.set(stateKey, {
-        file: file,
-        fileName: file.name,
-        isUploading: false,
-        uploadProgress: 0
-      });
-      
-      // Upload file
-      this.uploadDocument(file, appelIndex, actionIndex);
-    }
-  }
-
-  uploadDocument(file: File, appelIndex: number, actionIndex: number): void {
-    const stateKey = `${this.activeLanguage}-${appelIndex}-${actionIndex}`;
-    const state = this.documentUploadState.get(stateKey);
-    if (!state) return;
-    
-    state.isUploading = true;
-    state.uploadProgress = 0;
-    this.documentUploadState.set(stateKey, state);
-    this.errorMessage = '';
-    
-    this.articleService.uploadDocument(file).subscribe({
-      next: (response) => {
-        const actionGroup = this.getAppelActions(appelIndex).at(actionIndex) as FormGroup;
-        actionGroup.patchValue({ url: response.url });
-        
-        state.isUploading = false;
-        state.uploadProgress = 100;
-        state.file = undefined;
-        this.documentUploadState.set(stateKey, state);
-        this.errorMessage = '';
-      },
-      error: (error) => {
-        console.error('Document upload error:', error);
-        state.isUploading = false;
-        state.uploadProgress = 0;
-        this.documentUploadState.set(stateKey, state);
-        this.errorMessage = error.error?.error || 'Erreur lors du téléchargement du document';
-      }
-    });
-  }
-
-  removeDocument(appelIndex: number, actionIndex: number): void {
-    const actionGroup = this.getAppelActions(appelIndex).at(actionIndex) as FormGroup;
-    actionGroup.patchValue({ url: '' });
-    
-    const stateKey = `${this.activeLanguage}-${appelIndex}-${actionIndex}`;
-    this.documentUploadState.delete(stateKey);
-  }
-
-  getActionUrl(appelIndex: number, actionIndex: number): string | null {
-    const actionGroup = this.getAppelActions(appelIndex).at(actionIndex) as FormGroup;
-    return actionGroup.get('url')?.value || null;
-  }
-
-  // Copy from French helper
-  copyFromFrench(): void {
-    const frGroup = this.getLanguageFormGroup('fr');
-    const activeGroup = this.getActiveLanguageFormGroup();
-    
-    activeGroup.patchValue({
-      heroTitle: frGroup.get('heroTitle')?.value || '',
-      heroSubtitle: frGroup.get('heroSubtitle')?.value || '',
-      introText: frGroup.get('introText')?.value || ''
-    });
-
-    const frAppels = frGroup.get('appels') as FormArray;
-    const activeAppels = activeGroup.get('appels') as FormArray;
-    
-    while (activeAppels.length > 0) {
-      activeAppels.removeAt(0);
-    }
-
-    for (let i = 0; i < frAppels.length; i++) {
-      const frAppel = frAppels.at(i).value;
-      this.addAppel({
-        status: frAppel.status,
-        title: frAppel.title,
-        description: frAppel.description,
-        imageUrl: frAppel.imageUrl,
-        details: frAppel.details || [],
-        actions: frAppel.actions || []
-      }, this.activeLanguage);
-    }
-
-    alert(`Contenu copié depuis le français vers ${this.getActiveLanguageName()}. N'oubliez pas de traduire les textes !`);
-  }
-
-  // JSON Import
-  async onJsonFilesSelected(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement;
-    if (!input.files || input.files.length === 0) {
-      return;
-    }
-
-    try {
-      const allItems: any[] = [];
-      const skippedFiles: string[] = [];
-      const errorFiles: string[] = [];
-
-      for (let i = 0; i < input.files.length; i++) {
-        const file = input.files[i];
-        if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
-          skippedFiles.push(file.name);
-          continue;
-        }
-
-        try {
-          const text = await file.text();
-          if (!text || text.trim().length === 0) {
-            errorFiles.push(`${file.name} (fichier vide)`);
-            continue;
-          }
-          
-          const data = JSON.parse(text);
-          if (Array.isArray(data)) {
-            allItems.push(...data);
-          } else if (typeof data === 'object') {
-            allItems.push(data);
-          } else {
-            errorFiles.push(`${file.name} (format invalide)`);
-          }
-        } catch (error) {
-          const errorMsg = error instanceof Error ? error.message : 'Erreur inconnue';
-          errorFiles.push(`${file.name} (${errorMsg})`);
-          console.error(`Error parsing file ${file.name}:`, error);
-        }
-      }
-
-      if (allItems.length === 0) {
-        let errorMsg = 'Aucune donnée valide trouvée dans les fichiers JSON';
-        if (errorFiles.length > 0) {
-          errorMsg += `\nFichiers en erreur: ${errorFiles.join(', ')}`;
-        }
-        this.errorMessage = errorMsg;
-        alert(errorMsg);
-        return;
-      }
-
-      const hasTranslations = allItems.length > 0 && 
-        (allItems[0].fr !== undefined || allItems[0].ar !== undefined || allItems[0].en !== undefined);
-
-      this.errorMessage = '';
-      const imageCount = allItems.filter(item => {
-        if (hasTranslations) {
-          return (item.image && item.image.startsWith('http')) || 
-                 (item.fr?.image && item.fr.image.startsWith('http')) ||
-                 (item.ar?.image && item.ar.image.startsWith('http')) ||
-                 (item.en?.image && item.en.image.startsWith('http'));
-        }
-        return item.image && item.image.startsWith('http');
-      }).length;
-      
-      if (imageCount > 0) {
-        this.errorMessage = `Import en cours: téléchargement de ${imageCount} images...`;
-      }
-
-      let downloadedCount = 0;
-      let failedCount = 0;
-      const appelsByLanguage: { [key: string]: AppelItem[] } = {
-        fr: [],
-        ar: [],
-        en: []
+      this.documentUploadStates[key] = {
+        isUploading: true,
+        uploadProgress: 0,
+        fileName: file.name
       };
 
-      for (let i = 0; i < allItems.length; i++) {
-        const item = allItems[i];
-        
-        if (hasTranslations) {
-          let imageUrl = item.image || item.fr?.image || item.ar?.image || item.en?.image || undefined;
-          
-          if (imageUrl && imageUrl.startsWith('http')) {
-            try {
-              if (imageCount > 0) {
-                this.errorMessage = `Téléchargement de l'image ${downloadedCount + failedCount + 1}/${imageCount}...`;
-              }
-              const localImageUrl = await this.downloadAndUploadImage(imageUrl);
-              if (localImageUrl) {
-                imageUrl = localImageUrl;
-                downloadedCount++;
-              } else {
-                failedCount++;
-              }
-            } catch (error) {
-              console.warn(`Failed to download image from ${imageUrl}:`, error);
-              failedCount++;
-            }
-          }
-
-          ['fr', 'ar', 'en'].forEach(lang => {
-            const langData = item[lang];
-            if (!langData) return;
-
-            const appel: AppelItem = {
-              status: 'active',
-              title: langData.title || '',
-              description: langData.full_text || langData.summary || '',
-              imageUrl: imageUrl,
-              details: [],
-              actions: []
-            };
-
-            if (langData.date) {
-              appel.details.push({
-                label: lang === 'fr' ? 'Date' : (lang === 'ar' ? 'التاريخ' : 'Date'),
-                value: langData.date
-              });
-            }
-
-            const url = item.url || langData.url;
-            if (url) {
-              const actionText = lang === 'fr' ? 'En savoir plus' : 
-                                (lang === 'ar' ? 'المزيد' : 'Learn more');
-              appel.actions.push({
-                text: actionText,
-                url: url,
-                type: 'primary'
-              });
-            }
-
-            appelsByLanguage[lang].push(appel);
-          });
-        } else {
-          let imageUrl = item.image || undefined;
-          
-          if (imageUrl && imageUrl.startsWith('http')) {
-            try {
-              if (imageCount > 0) {
-                this.errorMessage = `Téléchargement de l'image ${downloadedCount + failedCount + 1}/${imageCount}...`;
-              }
-              const localImageUrl = await this.downloadAndUploadImage(imageUrl);
-              if (localImageUrl) {
-                imageUrl = localImageUrl;
-                downloadedCount++;
-              } else {
-                failedCount++;
-              }
-            } catch (error) {
-              console.warn(`Failed to download image from ${imageUrl}, keeping original URL:`, error);
-              failedCount++;
-            }
-          }
-
-          const appel: AppelItem = {
-            status: 'active',
-            title: item.title || '',
-            description: item.full_text || item.summary || '',
-            imageUrl: imageUrl,
-            details: [],
-            actions: []
+      this.articleService.uploadDocument(file).subscribe({
+        next: (response) => {
+          const appelGroup = this.appels.at(index) as FormGroup;
+          appelGroup.patchValue({ documentUrl: response.url });
+          this.documentUploadStates[key] = {
+            isUploading: false,
+            uploadProgress: 100,
+            fileName: file.name
           };
-
-          if (item.date) {
-            appel.details.push({
-              label: 'Date',
-              value: item.date
-            });
-          }
-
-          if (item.url) {
-            appel.actions.push({
-              text: 'En savoir plus',
-              url: item.url,
-              type: 'primary'
-            });
-          }
-
-          appelsByLanguage['fr'].push(appel);
+        },
+        error: (error) => {
+          console.error('Error uploading document:', error);
+          this.errorMessage = 'Erreur lors du téléchargement du document.';
+          this.documentUploadStates[key] = {
+            isUploading: false,
+            uploadProgress: 0
+          };
         }
-      }
-
-      ['fr', 'ar', 'en'].forEach(lang => {
-        const langGroup = this.getLanguageFormGroup(lang);
-        appelsByLanguage[lang].forEach(appel => {
-          this.addAppel(appel, lang);
-        });
       });
-
-      const totalAppels = hasTranslations ? allItems.length : appelsByLanguage['fr'].length;
-      let successMessage = `Import réussi: ${totalAppels} appels à candidatures ajoutés`;
-      if (hasTranslations) {
-        successMessage += `\n- Français: ${appelsByLanguage['fr'].length} appels`;
-        successMessage += `\n- العربية: ${appelsByLanguage['ar'].length} appels`;
-        successMessage += `\n- English: ${appelsByLanguage['en'].length} appels`;
-      }
-      if (imageCount > 0) {
-        successMessage += `\n\nImages téléchargées: ${downloadedCount}/${imageCount}`;
-        if (failedCount > 0) {
-          successMessage += `\nImages non téléchargées (URLs originales conservées): ${failedCount}`;
-        }
-      }
-      this.errorMessage = '';
-      alert(successMessage);
-      
-      input.value = '';
-    } catch (error) {
-      console.error('Error importing JSON files:', error);
-      const errorMsg = error instanceof Error ? error.message : 'Erreur inconnue';
-      this.errorMessage = `Erreur lors de l'importation des fichiers JSON: ${errorMsg}`;
-      alert(`Erreur lors de l'importation: ${errorMsg}`);
-    } finally {
-      input.value = '';
     }
   }
 
-  private async downloadAndUploadImage(imageUrl: string): Promise<string | null> {
-    try {
-      let response: Response;
-      try {
-        response = await fetch(imageUrl, {
-          mode: 'cors',
-          credentials: 'omit',
-          referrerPolicy: 'no-referrer'
-        });
-      } catch (corsError) {
-        console.warn(`CORS error for ${imageUrl}, trying alternative method:`, corsError);
-        return null;
-      }
+  getDocumentUploadState(index: number): { isUploading: boolean; uploadProgress: number; fileName?: string } {
+    const key = `${this.activeLanguage}-appel-${index}`;
+    return this.documentUploadStates[key] || { isUploading: false, uploadProgress: 0 };
+  }
 
-      if (!response.ok) {
-        console.warn(`Failed to fetch image from ${imageUrl}: ${response.status} ${response.statusText}`);
-        return null;
-      }
+  removeDocument(index: number): void {
+    const appelGroup = this.appels.at(index) as FormGroup;
+    appelGroup.patchValue({ documentUrl: '' });
+    const key = `${this.activeLanguage}-appel-${index}`;
+    delete this.documentUploadStates[key];
+  }
 
-      const contentType = response.headers.get('content-type');
-      if (contentType && !contentType.startsWith('image/')) {
-        console.warn(`URL ${imageUrl} does not return an image (content-type: ${contentType})`);
-        return null;
-      }
-
-      const blob = await response.blob();
-      if (!blob.type.startsWith('image/')) {
-        console.warn(`Blob from ${imageUrl} is not an image (type: ${blob.type})`);
-        return null;
-      }
-
-      const fileExtension = blob.type.split('/')[1] || 'jpg';
-      const filename = `imported-${Date.now()}.${fileExtension}`;
-      const file = new File([blob], filename, { type: blob.type || 'image/jpeg' });
-
-      return new Promise((resolve, reject) => {
-        this.articleService.uploadImage(file).subscribe({
-          next: (response) => {
-            resolve(response.url);
-          },
-          error: (error) => {
-            console.error(`Failed to upload image ${filename}:`, error);
-            reject(error);
-          }
-        });
-      });
-    } catch (error) {
-      console.error(`Error downloading/uploading image from ${imageUrl}:`, error);
-      return null;
+  copyFromFrench(): void {
+    const frAppels = this.getAppelsForLanguage('fr');
+    const currentAppels = this.appels;
+    
+    // Clear current language appels
+    while (currentAppels.length !== 0) {
+      currentAppels.removeAt(0);
     }
-  }
-
-  // Load and Save
-  loadPage(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-
-    this.pageService.getPageBySlug('appels-candidatures').subscribe({
-      next: (page: PageDTO) => {
-        this.pageId = page.id ?? null;
-        try {
-          if (page.content) {
-            const content: AppelsCandidaturesContent = JSON.parse(page.content);
-            this.populateForm(content);
-          }
-        } catch (error) {
-          console.error('Error parsing page content:', error);
-          this.errorMessage = 'Erreur lors du chargement du contenu de la page';
-        }
-        this.isLoading = false;
-      },
-      error: (error) => {
-        if (error.status === 404) {
-          this.isLoading = false;
-        } else {
-          this.errorMessage = 'Erreur lors du chargement de la page';
-          this.isLoading = false;
-          console.error('Error loading page:', error);
-        }
-      }
-    });
-  }
-
-  populateForm(content: AppelsCandidaturesContent): void {
-    ['fr', 'ar', 'en'].forEach(lang => {
-      const langContent = content.translations[lang as 'fr' | 'ar' | 'en'];
-      if (langContent) {
-        const langGroup = this.getLanguageFormGroup(lang);
-        langGroup.patchValue({
-          heroTitle: langContent.heroTitle || '',
-          heroSubtitle: langContent.heroSubtitle || '',
-          introText: langContent.introText || ''
-        });
-
-        const appels = langGroup.get('appels') as FormArray;
-        while (appels.length) appels.removeAt(0);
-
-        langContent.appels?.forEach(item => this.addAppel(item, lang));
-      }
+    
+    // Copy from French
+    frAppels.controls.forEach(control => {
+      const frGroup = control as FormGroup;
+      const newGroup = this.fb.group({
+        title: [frGroup.get('title')?.value || ''],
+        url: [frGroup.get('url')?.value || ''],
+        image: [frGroup.get('image')?.value || ''],
+        summary: [frGroup.get('summary')?.value || ''],
+        date: [frGroup.get('date')?.value || ''],
+        full_text: [frGroup.get('full_text')?.value || ''],
+        documentUrl: [frGroup.get('documentUrl')?.value || '']
+      });
+      currentAppels.push(newGroup);
     });
   }
 
   onSubmit(): void {
+    // Allow saving even if form is incomplete
     this.isSaving = true;
     this.errorMessage = '';
 
     const formValue = this.form.value;
     
+    // Helper function to convert admin form format to public page format
+    const convertToPublicFormat = (appel: any, lang: string) => {
+      // Truncate full_text to 250 chars for description
+      const fullText = appel.full_text || '';
+      const description = fullText.length > 250 ? fullText.substring(0, 250).trim() + '...' : fullText || appel.summary || '';
+      
+      // Build details array with date
+      const details: any[] = [];
+      if (appel.date) {
+        details.push({
+          label: lang === 'ar' ? 'التاريخ' : (lang === 'en' ? 'Date' : 'Date'),
+          value: appel.date
+        });
+      }
+      
+      // Build actions array with URL
+      const actions: any[] = [];
+      if (appel.url) {
+        actions.push({
+          text: lang === 'fr' ? 'En savoir plus' : (lang === 'ar' ? 'المزيد' : 'Learn more'),
+          url: appel.url,
+          type: 'primary'
+        });
+      }
+      
+      return {
+        status: 'active',
+        title: appel.title,
+        description: description,
+        summary: appel.summary || undefined,  // ADD THIS BACK
+        fullText: fullText || undefined,
+        imageUrl: appel.image || undefined,
+        documentUrl: appel.documentUrl || undefined,  // ADD THIS BACK
+        details: details,
+        actions: actions
+      };
+    };
+    
     const content: AppelsCandidaturesContent = {
       translations: {
-        fr: this.buildLanguageContent(formValue.translations.fr),
-        ar: this.buildLanguageContent(formValue.translations.ar),
-        en: this.buildLanguageContent(formValue.translations.en)
+        fr: {
+          appels: formValue.translations.fr.appels.map((appel: any) => convertToPublicFormat(appel, 'fr'))
+        },
+        ar: {
+          appels: formValue.translations.ar.appels.map((appel: any) => convertToPublicFormat(appel, 'ar'))
+        },
+        en: {
+          appels: formValue.translations.en.appels.map((appel: any) => convertToPublicFormat(appel, 'en'))
+        }
       }
     };
 
-    const frContent = content.translations.fr;
-    const heroTitle = frContent.heroTitle || content.translations.ar.heroTitle || content.translations.en.heroTitle || 'Appels à Candidatures';
-    const heroSubtitle = frContent.heroSubtitle || content.translations.ar.heroSubtitle || content.translations.en.heroSubtitle || '';
-
-    const updateData: PageUpdateDTO = {
-      title: 'Appels à Candidatures',
-      heroTitle: heroTitle,
-      heroSubtitle: heroSubtitle,
-      content: JSON.stringify(content),
-      pageType: 'STRUCTURED',
-      isPublished: true,
-      isActive: true
-    };
-
-    if (this.pageId) {
-      this.pageService.updatePage(this.pageId, updateData).subscribe({
-        next: () => {
-          this.isSaving = false;
-          this.router.navigate(['/admin/pages']);
-        },
-        error: (error) => {
-          this.isSaving = false;
-          this.errorMessage = 'Erreur lors de la sauvegarde';
-          console.error('Error saving page:', error);
-        }
-      });
-    } else {
-      this.pageService.createPage({
-        slug: 'appels-candidatures',
-        title: 'Appels à Candidatures',
-        heroTitle: heroTitle,
-        heroSubtitle: heroSubtitle,
-        content: JSON.stringify(content),
-        pageType: 'STRUCTURED',
-        isPublished: true,
-        isActive: true
-      }).subscribe({
-        next: () => {
-          this.isSaving = false;
-          this.router.navigate(['/admin/pages']);
-        },
-        error: (error) => {
-          this.isSaving = false;
-          this.errorMessage = 'Erreur lors de la création';
-          console.error('Error creating page:', error);
+    // Build translations for the new structure
+    const translations: { [key: string]: any } = {};
+    
+    if (content.translations) {
+      (['fr', 'ar', 'en'] as const).forEach(lang => {
+        const langContent = content.translations[lang];
+        if (langContent) {
+          const langContentJson = JSON.stringify(langContent);
+          translations[lang] = {
+            title: 'Appels à Candidatures',
+            content: langContentJson, // Store the language-specific content in content field
+            extra: langContentJson // Also store in extra for backward compatibility
+          };
         }
       });
     }
-  }
 
-  private buildLanguageContent(langData: any): AppelsCandidaturesLanguageContent {
-    return {
-      heroTitle: langData.heroTitle || '',
-      heroSubtitle: langData.heroSubtitle || '',
-      introText: langData.introText || '',
-      appels: (langData.appels || []).map((item: any) => ({
-        status: item.status,
-        title: item.title,
-        description: item.description,
-        imageUrl: item.imageUrl || undefined,
-        details: item.details || [],
-        actions: item.actions || []
-      }))
-    };
+    if (this.pageId) {
+      // Update existing page
+      const updateData: PageUpdateDTO = {
+        translations: translations,
+        pageType: 'STRUCTURED'
+      };
+
+      this.pageService.updatePage(this.pageId, updateData).subscribe({
+        next: () => {
+          this.router.navigate(['/admin/pages']);
+        },
+        error: (error: any) => {
+          this.errorMessage = error?.message || 'Erreur lors de la sauvegarde.';
+          this.isSaving = false;
+        }
+      });
+    } else {
+      // Create new page
+      const createData: PageCreateDTO = {
+        slug: 'appels-candidatures',
+        pageType: 'STRUCTURED',
+        translations: translations
+      };
+
+      this.pageService.createPage(createData).subscribe({
+        next: (page) => {
+          this.pageId = page.id || null;
+          this.router.navigate(['/admin/pages']);
+        },
+        error: (error: any) => {
+          this.errorMessage = error?.message || 'Erreur lors de la création.';
+          this.isSaving = false;
+        }
+      });
+    }
   }
 
   onCancel(): void {
     this.router.navigate(['/admin/pages']);
   }
 
+  handleError(error: any): void {
+    this.errorMessage = error?.message || 'Une erreur est survenue lors du chargement de la page.';
+    this.isLoading = false;
+  }
+
+  onJsonFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      
+      // Validate file type
+      if (!file.name.endsWith('.json')) {
+        this.errorMessage = 'Veuillez sélectionner un fichier JSON';
+        return;
+      }
+      
+      // Validate file size (10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        this.errorMessage = 'La taille du fichier ne doit pas dépasser 10MB';
+        return;
+      }
+      
+      this.importJsonFile(file);
+      
+      // Reset file input
+      input.value = '';
+    }
+  }
+
+  importJsonFile(file: File): void {
+    this.isImporting = true;
+    this.importProgress = 0;
+    this.errorMessage = '';
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders({
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    });
+    
+    this.http.post<{ success: boolean; message?: string; error?: string }>(
+      '/api/admin/appels-candidatures/import',
+      formData,
+      { headers }
+    ).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.importProgress = 100;
+          // Reload the page data after successful import
+          // Always reload by slug to ensure we get the latest data
+          this.pageService.getPageBySlug('appels-candidatures').subscribe({
+            next: (page: PageDTO) => {
+              console.log('Page loaded after import:', page);
+              console.log('Page content:', page.content);
+              this.pageId = page.id || null;
+              
+              // Reset pagination
+              this.currentPage = 1;
+              
+              // Clear any existing form data first
+              ['fr', 'ar', 'en'].forEach(lang => {
+                const langAppels = this.getAppelsForLanguage(lang);
+                while (langAppels.length !== 0) {
+                  langAppels.removeAt(0);
+                }
+              });
+              
+              // Initialize form with imported data
+              this.initializeForm(page);
+              
+              // Verify data was loaded
+              const counts = {
+                fr: this.getAppelsForLanguage('fr').length,
+                ar: this.getAppelsForLanguage('ar').length,
+                en: this.getAppelsForLanguage('en').length
+              };
+              console.log('Appels loaded after import:', counts);
+              
+              this.isImporting = false;
+              this.importProgress = 0;
+              this.errorMessage = '';
+              
+              // Force change detection multiple times to ensure UI updates
+              this.cdr.detectChanges();
+              setTimeout(() => {
+                this.cdr.detectChanges();
+                if (counts.fr > 0 || counts.ar > 0 || counts.en > 0) {
+                  alert(`Import réussi ! ${counts.fr + counts.ar + counts.en} appels chargés.`);
+                } else {
+                  alert('Import réussi mais aucun appel trouvé. Vérifiez le format du fichier.');
+                }
+              }, 100);
+            },
+            error: (error: any) => {
+              console.error('Error loading page after import:', error);
+              this.handleError(error);
+              this.isImporting = false;
+              this.importProgress = 0;
+              // Still show success message since import worked
+              alert('Import réussi ! Veuillez recharger la page pour voir les données.');
+            }
+          });
+        } else {
+          this.errorMessage = response.error || 'Erreur lors de l\'import';
+          this.isImporting = false;
+          this.importProgress = 0;
+        }
+      },
+      error: (error) => {
+        console.error('Error importing JSON file:', error);
+        this.errorMessage = error?.error?.error || error?.message || 'Erreur lors de l\'import du fichier JSON';
+        this.isImporting = false;
+        this.importProgress = 0;
+      }
+    });
+  }
+
   // Translation methods for form labels
   getLabel(key: string): string {
     const translations: { [key: string]: { fr: string; ar: string; en: string } } = {
       'editPage': {
-        fr: 'Modifier la page Appels à Candidatures',
-        ar: 'تعديل صفحة دعوات التقديم',
-        en: 'Edit Calls for Applications Page'
+        fr: 'Gérer les Appels à Candidatures',
+        ar: 'إدارة دعوات التقديم',
+        en: 'Manage Calls for Applications'
       },
       'cancel': {
         fr: 'Annuler',
@@ -865,48 +891,23 @@ export class AdminAppelsCandidaturesFormComponent implements OnInit {
         ar: 'جار التحميل...',
         en: 'Loading...'
       },
-      'heroSection': {
-        fr: 'Section Hero',
-        ar: 'قسم البطل',
-        en: 'Hero Section'
-      },
-      'heroTitle': {
-        fr: 'Titre principal',
-        ar: 'العنوان الرئيسي',
-        en: 'Main Title'
-      },
-      'appelsSection': {
-        fr: 'Appels à Candidatures',
-        ar: 'دعوات التقديم',
-        en: 'Calls for Applications'
-      },
-      'title': {
-        fr: 'Titre',
-        ar: 'العنوان',
-        en: 'Title'
-      },
-      'description': {
-        fr: 'Description',
-        ar: 'الوصف',
-        en: 'Description'
+      'addAppel': {
+        fr: 'Ajouter un Appel',
+        ar: 'إضافة دعوة',
+        en: 'Add Call'
       },
       'remove': {
         fr: 'Supprimer',
         ar: 'حذف',
         en: 'Remove'
       },
-      'addAppel': {
-        fr: 'Ajouter un appel',
-        ar: 'إضافة دعوة',
-        en: 'Add Call'
-      },
       'saveChanges': {
-        fr: 'Enregistrer les modifications',
-        ar: 'حفظ التغييرات',
-        en: 'Save Changes'
+        fr: 'Enregistrer',
+        ar: 'حفظ',
+        en: 'Save'
       },
       'saving': {
-        fr: 'Enregistrement...',
+        fr: 'Sauvegarde...',
         ar: 'جار الحفظ...',
         en: 'Saving...'
       },
@@ -919,10 +920,23 @@ export class AdminAppelsCandidaturesFormComponent implements OnInit {
         fr: 'Incomplet',
         ar: 'غير مكتمل',
         en: 'Incomplete'
+      },
+      'importJson': {
+        fr: 'Importer des fichiers JSON',
+        ar: 'استيراد ملفات JSON',
+        en: 'Import JSON Files'
+      },
+      'importing': {
+        fr: 'Import en cours...',
+        ar: 'جار الاستيراد...',
+        en: 'Importing...'
       }
     };
 
-    const lang = this.activeLanguage;
-    return translations[key]?.[lang] || key;
+    const langTranslations = translations[key];
+    if (langTranslations) {
+      return langTranslations[this.activeLanguage] || langTranslations.fr;
+    }
+    return key;
   }
 }

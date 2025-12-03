@@ -1,9 +1,14 @@
 <div class="admin-appels-candidatures-form">
   <div class="form-header">
     <h1>{{ getLabel('editPage') }}</h1>
-    <button (click)="onCancel()" class="btn btn-secondary">
-      <i class="fas fa-times"></i> {{ getLabel('cancel') }}
-    </button>
+    <div class="header-actions">
+      <button (click)="loadPage()" class="btn btn-secondary btn-sm" [disabled]="isLoading" title="Recharger les données">
+        <i class="fas fa-sync-alt" [class.fa-spin]="isLoading"></i> Actualiser
+      </button>
+      <button (click)="onCancel()" class="btn btn-secondary">
+        <i class="fas fa-times"></i> {{ getLabel('cancel') }}
+      </button>
+    </div>
   </div>
 
   <div *ngIf="errorMessage" class="error-message">
@@ -51,70 +56,92 @@
         Tous les champs que vous remplissez seront affichés lorsque les visiteurs sélectionnent cette langue sur le site.
       </span>
     </div>
-    <!-- Hero Section -->
-    <div class="form-section">
-      <h2>{{ getLabel('heroSection') }} - {{ getActiveLanguageName() }}</h2>
-      <div [formGroup]="getActiveLanguageFormGroup()">
-        <div class="form-group">
-          <label>{{ getLabel('heroTitle') }}</label>
-          <input type="text" formControlName="heroTitle" class="form-control" />
-          <small class="form-text text-muted">Titre principal affiché dans le hero</small>
-        </div>
-      </div>
-    </div>
 
-    <!-- Appels -->
     <div class="form-section">
       <div class="section-header">
-        <h2>{{ getLabel('appelsSection') }} - {{ getActiveLanguageName() }}</h2>
-        <div class="import-section">
-          <input 
-            type="file" 
-            id="json-import-input" 
-            accept=".json,application/json" 
-            multiple 
-            (change)="onJsonFilesSelected($event)"
+        <h2>Appels à Candidatures - {{ getActiveLanguageName() }}</h2>
+        <div class="header-actions">
+          <input
+            type="file"
+            id="jsonFileInput"
+            accept=".json"
+            (change)="onJsonFileSelected($event)"
+            class="file-input"
             style="display: none;"
+            [disabled]="isImporting"
             #jsonFileInput
-          />
+          >
           <button 
             type="button" 
-            class="btn btn-info" 
-            (click)="jsonFileInput.click()"
-            title="Importer des fichiers JSON">
-            <i class="fas fa-file-import"></i> Importer des fichiers JSON
+            (click)="jsonFileInput.click()" 
+            class="btn btn-secondary"
+            [disabled]="isImporting"
+            title="Importer un fichier JSON">
+            <i class="fas fa-file-import"></i> {{ getLabel('importJson') }}
+          </button>
+          <button type="button" (click)="addAppel()" class="btn btn-primary">
+            <i class="fas fa-plus"></i> {{ getLabel('addAppel') }}
           </button>
         </div>
       </div>
       <p class="section-description">Gérez les appels à candidatures affichés sur la page publique</p>
+      
+      <div *ngIf="isImporting" class="import-progress-container">
+        <div class="import-progress">
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="importProgress"></div>
+          </div>
+          <span><i class="fas fa-spinner fa-spin"></i> {{ getLabel('importing') }}</span>
+        </div>
+        <p class="import-info">Les images seront téléchargées automatiquement...</p>
+      </div>
+
       <div [formGroup]="getActiveLanguageFormGroup()">
-        <div formArrayName="appels" *ngFor="let appel of appels.controls; let i = index">
-          <div [formGroupName]="i" class="nested-form-group appel-card">
+        <!-- Pagination Info and Controls (Top) -->
+        <div class="pagination-header" *ngIf="totalItems > 0">
+          <div class="pagination-info">
+            <span>Affichage de {{ startIndex }} à {{ endIndex }} sur {{ totalItems }} appels</span>
+            <select 
+              [value]="itemsPerPage" 
+              (change)="onItemsPerPageChange($event)"
+              class="items-per-page-select">
+              <option value="5">5 par page</option>
+              <option value="10">10 par page</option>
+              <option value="20">20 par page</option>
+              <option value="50">50 par page</option>
+            </select>
+          </div>
+        </div>
+
+        <div formArrayName="appels" class="appels-list-container">
+          <div *ngFor="let appel of paginatedAppels; let i = index" 
+               [formGroupName]="(currentPage - 1) * itemsPerPage + i" 
+               class="appel-card">
             <div class="card-header">
-              <h3>Appel #{{ i + 1 }}</h3>
-              <button type="button" (click)="removeAppel(i)" class="btn btn-danger btn-sm">
+              <h3>Appel #{{ (currentPage - 1) * itemsPerPage + i + 1 }}</h3>
+              <button type="button" (click)="removeAppel((currentPage - 1) * itemsPerPage + i)" class="btn btn-danger btn-sm" *ngIf="appels.length > 1">
                 <i class="fas fa-trash"></i> {{ getLabel('remove') }}
               </button>
             </div>
-            
+
             <div class="form-group">
-              <label>{{ getLabel('title') }} <span class="required">*</span></label>
+              <label>Titre</label>
               <input 
                 type="text" 
                 formControlName="title" 
                 class="form-control" 
-                [placeholder]="activeLanguage === 'fr' ? 'Ex: Appel à candidatures : Prime de publication 2025' : (activeLanguage === 'ar' ? 'مثال: دعوة للتقديم: جائزة النشر 2025' : 'Ex: Call for applications: Publication Prize 2025')" />
+                [placeholder]="activeLanguage === 'fr' ? 'Ex: Appel à candidature pour une bourses doctorales d\'excellence 2021-2022' : (activeLanguage === 'ar' ? 'مثال: دعوة للتقديم على منح الدكتوراه المتميزة 2021-2022' : 'Ex: Call for applications for excellence doctoral scholarships 2021-2022')" />
             </div>
-            
+
             <div class="form-group">
-              <label>{{ getLabel('description') }} <span class="required">*</span></label>
-              <textarea 
-                formControlName="description" 
+              <label>URL</label>
+              <input 
+                type="text" 
+                formControlName="url" 
                 class="form-control" 
-                rows="4" 
-                [placeholder]="activeLanguage === 'fr' ? 'Description de l\'appel à candidatures...' : (activeLanguage === 'ar' ? 'وصف دعوة التقديم...' : 'Description of the call for applications...')"></textarea>
+                placeholder="https://anrsi.mr/fr/?q=fr/node/1270" />
             </div>
-            
+
             <div class="form-group">
               <label>Image</label>
               <div class="image-upload-container">
@@ -124,17 +151,22 @@
                   accept="image/*"
                   (change)="onImageSelected($event, i)"
                   class="file-input"
+                  style="display: none;"
+                  #imageFileInput
                 >
-                <div class="image-preview" *ngIf="getImageUploadState(i).preview || getAppelImageUrl(i)">
-                  <img [src]="getImageUploadState(i).preview || getAppelImageUrl(i)" alt="Preview" class="preview-image">
-                  <button type="button" class="remove-image" (click)="removeImage(i)" title="Remove image">
+                <div class="image-preview" *ngIf="getImageUploadState(i).preview || appel.get('image')?.value">
+                  <img [src]="getImageUploadState(i).preview || appel.get('image')?.value" alt="Preview" class="preview-image">
+                  <button type="button" class="remove-image" (click)="removeImage(i)" title="Supprimer l'image">
                     <i class="fas fa-times"></i>
                   </button>
                 </div>
-                <div class="file-upload-placeholder" *ngIf="!getImageUploadState(i).preview && !getAppelImageUrl(i) && !getImageUploadState(i).file">
+                <div class="file-upload-placeholder" *ngIf="!getImageUploadState(i).preview && !appel.get('image')?.value && !getImageUploadState(i).file">
                   <i class="fas fa-cloud-upload-alt"></i>
                   <span>Cliquez pour télécharger une image</span>
                   <small>PNG, JPG, GIF jusqu'à 10MB</small>
+                  <button type="button" class="btn btn-sm btn-primary mt-2" (click)="imageFileInput.click()">
+                    <i class="fas fa-upload"></i> Télécharger une image
+                  </button>
                 </div>
                 <div class="upload-progress" *ngIf="getImageUploadState(i).isUploading">
                   <div class="progress-bar">
@@ -142,98 +174,136 @@
                   </div>
                   <span>Téléchargement... {{ getImageUploadState(i).uploadProgress || 0 }}%</span>
                 </div>
-                <div class="image-url-input" *ngIf="getAppelImageUrl(i) && !getImageUploadState(i).isUploading">
-                  <input type="text" formControlName="imageUrl" class="form-control" placeholder="Ou entrez une URL d'image" />
+                <div class="image-url-input" *ngIf="appel.get('image')?.value && !getImageUploadState(i).isUploading">
+                  <input type="text" formControlName="image" class="form-control" placeholder="Ou entrez une URL d'image" />
+                  <button type="button" class="btn btn-sm btn-secondary mt-2" (click)="imageFileInput.click()">
+                    <i class="fas fa-upload"></i> Remplacer par un fichier
+                  </button>
+                </div>
+                <div class="image-url-input" *ngIf="!appel.get('image')?.value && !getImageUploadState(i).preview && !getImageUploadState(i).isUploading">
+                  <input type="text" formControlName="image" class="form-control" placeholder="Ou entrez une URL d'image" />
+                  <button type="button" class="btn btn-sm btn-primary mt-2" (click)="imageFileInput.click()">
+                    <i class="fas fa-upload"></i> Télécharger un fichier
+                  </button>
                 </div>
               </div>
-              <small class="form-text text-muted">Téléchargez une image ou entrez une URL d'image pour cet appel</small>
+              <small class="form-text text-muted">Téléchargez une image ou entrez une URL d'image</small>
             </div>
-            
+
             <div class="form-group">
-              <label>Date de publication</label>
-              <div formArrayName="details">
-                <div *ngFor="let detail of getAppelDetails(i).controls; let j = index">
-                  <div [formGroupName]="j" class="form-row">
-                    <input type="text" formControlName="label" class="form-control" placeholder="Label (ex: Date)" />
-                    <input type="text" formControlName="value" class="form-control" placeholder="Valeur (ex: 24 October 2025)" />
-                    <button type="button" (click)="removeAppelDetail(i, j)" class="btn btn-danger btn-sm">
-                      <i class="fas fa-trash"></i>
+              <label>Résumé</label>
+              <textarea 
+                formControlName="summary" 
+                class="form-control" 
+                rows="4" 
+                [placeholder]="activeLanguage === 'fr' ? 'Résumé court de l\'appel à candidatures...' : (activeLanguage === 'ar' ? 'ملخص قصير لدعوة التقديم...' : 'Short summary of the call for applications...')"></textarea>
+              <small class="form-text text-muted">Texte court affiché dans la liste</small>
+            </div>
+
+            <div class="form-group">
+              <label>Date</label>
+              <input 
+                type="text" 
+                formControlName="date" 
+                class="form-control" 
+                [placeholder]="activeLanguage === 'fr' ? 'Ex: 9 February 2022' : (activeLanguage === 'ar' ? 'مثال: 9 فبراير 2022' : 'Ex: 9 February 2022')" />
+              <small class="form-text text-muted">Format: DD Month YYYY (ex: 9 February 2022)</small>
+            </div>
+
+            <div class="form-group">
+              <label>Texte Complet</label>
+              <textarea 
+                formControlName="full_text" 
+                class="form-control" 
+                rows="8" 
+                [placeholder]="activeLanguage === 'fr' ? 'Texte complet de l\'appel à candidatures...' : (activeLanguage === 'ar' ? 'النص الكامل لدعوة التقديم...' : 'Full text of the call for applications...')"></textarea>
+              <small class="form-text text-muted">Texte complet qui sera affiché dans la page de détails</small>
+            </div>
+
+            <div class="form-group">
+              <label>Document (PDF, Word, Excel)</label>
+              <div class="document-upload-container">
+                <input
+                  type="file"
+                  [id]="'documentFile-' + activeLanguage + '-' + i"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  (change)="onDocumentSelected($event, i)"
+                  class="file-input"
+                  style="display: none;"
+                  #documentFileInput
+                />
+                <div class="document-upload-options">
+                  <button 
+                    type="button" 
+                    class="btn btn-sm btn-outline-primary"
+                    (click)="documentFileInput.click()"
+                    [disabled]="getDocumentUploadState(i).isUploading">
+                    <i class="fas fa-file-upload"></i> 
+                    <span *ngIf="!getDocumentUploadState(i).isUploading">Télécharger un document</span>
+                    <span *ngIf="getDocumentUploadState(i).isUploading">Téléchargement...</span>
+                  </button>
+                  <span class="document-info" *ngIf="getDocumentUploadState(i).fileName && !getDocumentUploadState(i).isUploading">
+                    <i class="fas fa-file"></i> {{ getDocumentUploadState(i).fileName }}
+                  </span>
+                  <span class="document-url" *ngIf="appel.get('documentUrl')?.value && !getDocumentUploadState(i).isUploading">
+                    <i class="fas fa-link"></i> Document téléchargé
+                    <button type="button" class="btn btn-sm btn-link text-danger" (click)="removeDocument(i)" title="Supprimer le document">
+                      <i class="fas fa-times"></i>
                     </button>
-                  </div>
+                  </span>
                 </div>
-                <button type="button" (click)="addDateDetail(i)" class="btn btn-secondary btn-sm">
-                  <i class="fas fa-plus"></i> Ajouter une date
-                </button>
-              </div>
-              <small class="form-text text-muted">Pour afficher la date, ajoutez un détail avec le label "Date" ou "date" et la valeur au format "DD Month YYYY" (ex: 24 October 2025)</small>
-            </div>
-            
-            <div class="form-group">
-              <label>Lien "En savoir plus" <span class="required">*</span></label>
-              <div formArrayName="actions">
-                <div *ngFor="let action of getAppelActions(i).controls; let j = index">
-                  <div [formGroupName]="j" class="action-item">
-                    <div class="action-input-row">
-                      <input type="text" formControlName="url" class="form-control" placeholder="URL (ex: /article/123 ou https://example.com)" />
-                      <input type="hidden" formControlName="text" [value]="'En savoir plus'" />
-                      <input type="hidden" formControlName="type" [value]="'primary'" />
-                      <button type="button" (click)="removeAppelAction(i, j)" class="btn btn-danger btn-sm" *ngIf="getAppelActions(i).length > 1">
-                        <i class="fas fa-trash"></i>
-                      </button>
-                    </div>
-                    <div class="document-upload-container">
-                      <input
-                        type="file"
-                        [id]="'documentFile-' + activeLanguage + '-' + i + '-' + j"
-                        accept=".pdf,.doc,.docx,.xls,.xlsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                        (change)="onDocumentSelected($event, i, j)"
-                        class="file-input"
-                        style="display: none;"
-                        #documentFileInput
-                      />
-                      <div class="document-upload-options">
-                        <button 
-                          type="button" 
-                          class="btn btn-sm btn-outline-primary"
-                          (click)="documentFileInput.click()"
-                          [disabled]="getDocumentUploadState(i, j).isUploading">
-                          <i class="fas fa-file-upload"></i> 
-                          <span *ngIf="!getDocumentUploadState(i, j).isUploading">Télécharger un document</span>
-                          <span *ngIf="getDocumentUploadState(i, j).isUploading">Téléchargement...</span>
-                        </button>
-                        <span class="document-info" *ngIf="getDocumentUploadState(i, j).fileName && !getDocumentUploadState(i, j).isUploading">
-                          <i class="fas fa-file"></i> {{ getDocumentUploadState(i, j).fileName }}
-                        </span>
-                        <span class="document-url" *ngIf="getActionUrl(i, j) && !getDocumentUploadState(i, j).isUploading">
-                          <i class="fas fa-link"></i> Document téléchargé
-                          <button type="button" class="btn btn-sm btn-link text-danger" (click)="removeDocument(i, j)" title="Supprimer le document">
-                            <i class="fas fa-times"></i>
-                          </button>
-                        </span>
-                      </div>
-                      <div class="upload-progress" *ngIf="getDocumentUploadState(i, j).isUploading">
-                        <div class="progress-bar">
-                          <div class="progress-fill" [style.width.%]="getDocumentUploadState(i, j).uploadProgress || 0"></div>
-                        </div>
-                        <span>Téléchargement... {{ getDocumentUploadState(i, j).uploadProgress || 0 }}%</span>
-                      </div>
-                    </div>
+                <div class="upload-progress" *ngIf="getDocumentUploadState(i).isUploading">
+                  <div class="progress-bar">
+                    <div class="progress-fill" [style.width.%]="getDocumentUploadState(i).uploadProgress || 0"></div>
                   </div>
+                  <span>Téléchargement... {{ getDocumentUploadState(i).uploadProgress || 0 }}%</span>
                 </div>
-                <button type="button" (click)="addAppelAction(i)" class="btn btn-secondary btn-sm" *ngIf="getAppelActions(i).length === 0">
-                  <i class="fas fa-plus"></i> Ajouter un lien
-                </button>
               </div>
-              <small class="form-text text-muted">Entrez une URL ou téléchargez un document (PDF, Word, Excel - max 50MB)</small>
+              <small class="form-text text-muted">Téléchargez un document (PDF, Word, Excel - max 50MB)</small>
             </div>
           </div>
         </div>
-        <button type="button" (click)="addAppel()" class="btn btn-primary">
-          <i class="fas fa-plus"></i> {{ getLabel('addAppel') }}
-        </button>
+
+        <!-- Pagination Controls (Bottom) -->
+        <div class="pagination-controls" *ngIf="totalPages > 1">
+          <button 
+            type="button" 
+            class="btn btn-secondary btn-sm"
+            (click)="previousPage()"
+            [disabled]="currentPage === 1"
+            title="Page précédente">
+            <i class="fas fa-chevron-left"></i> Précédent
+          </button>
+          
+          <div class="page-numbers">
+            <button
+              *ngFor="let page of getPageNumbers()"
+              type="button"
+              class="btn btn-sm"
+              [class.btn-primary]="page === currentPage"
+              [class.btn-secondary]="page !== currentPage"
+              [class.ellipsis]="page === '...'"
+              [disabled]="page === '...'"
+              (click)="onPageNumberClick(page)">
+              {{ page }}
+            </button>
+          </div>
+          
+          <button 
+            type="button" 
+            class="btn btn-secondary btn-sm"
+            (click)="nextPage()"
+            [disabled]="currentPage === totalPages"
+            title="Page suivante">
+            Suivant <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="appels.length === 0" class="empty-state">
+        <p>Aucun appel à candidatures. Cliquez sur "{{ getLabel('addAppel') }}" pour commencer.</p>
       </div>
     </div>
-
 
     <div class="form-actions">
       <div class="translation-summary">
@@ -247,13 +317,10 @@
       </div>
       <div class="action-buttons">
         <button type="button" (click)="onCancel()" class="btn btn-secondary">{{ getLabel('cancel') }}</button>
-        <button type="submit" class="btn btn-primary" [disabled]="isSaving">
+        <button type="submit" class="btn btn-primary" [disabled]="isSaving || form.invalid">
           <i class="fas fa-save"></i> {{ isSaving ? getLabel('saving') : getLabel('saveChanges') }}
         </button>
       </div>
     </div>
   </form>
 </div>
-
-
-

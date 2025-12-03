@@ -20,7 +20,10 @@ interface AppelItem {
   status: 'active' | 'upcoming' | 'closed';
   title: string;
   description: string;
+  summary?: string; // Summary field for brief introduction
+  fullText?: string; // Full text for "read more" expansion
   imageUrl?: string;
+  documentUrl?: string; // Document URL for downloadable files
   details: AppelDetail[];
   actions: AppelAction[];
 }
@@ -80,6 +83,7 @@ export class AppelsCandidaturesComponent implements OnInit, OnDestroy {
   isLoading = true;
   currentLang: string = 'fr';
   private langSubscription?: Subscription;
+  expandedItems = new Set<number>(); // Track which items are expanded
 
   constructor(
     private pageService: PageService,
@@ -221,6 +225,170 @@ export class AppelsCandidaturesComponent implements OnInit, OnDestroy {
     
     // If no date found, return null
     return null;
+  }
+
+  /**
+   * Check if an item is expanded
+   */
+  isExpanded(index: number): boolean {
+    return this.expandedItems.has(index);
+  }
+
+  /**
+   * Toggle expansion state of an item
+   */
+  toggleExpand(index: number): void {
+    if (this.expandedItems.has(index)) {
+      this.expandedItems.delete(index);
+    } else {
+      this.expandedItems.add(index);
+    }
+  }
+
+  /**
+   * Get the display text for an item (truncated or full)
+   * Prioritizes fullText over description
+   */
+  getDisplayText(appel: AppelItem, index: number): string {
+    // Always use fullText if available, otherwise fall back to description
+    const textToDisplay = appel.fullText || appel.description;
+    
+    if (!textToDisplay) {
+      return '';
+    }
+    
+    // If expanded, show full text
+    if (this.isExpanded(index)) {
+      return textToDisplay;
+    }
+    
+    // If text is short enough, show it all
+    if (textToDisplay.length <= 250) {
+      return textToDisplay;
+    }
+    
+    // Otherwise, show truncated version
+    return textToDisplay.substring(0, 250).trim() + '...';
+  }
+
+  /**
+   * Check if an item has more text to show (needs read more)
+   * Checks if fullText exists and is longer than 250 chars, or description is longer
+   */
+  hasMoreText(appel: AppelItem): boolean {
+    // Prioritize fullText, but also check description if fullText doesn't exist
+    const textToCheck = appel.fullText || appel.description;
+    return textToCheck ? textToCheck.length > 250 : false;
+  }
+
+  /**
+   * Get the read more/less text based on language
+   */
+  getReadMoreText(index: number): string {
+    if (this.currentLang === 'ar') {
+      return this.isExpanded(index) ? 'اقرأ أقل' : 'اقرأ المزيد';
+    } else if (this.currentLang === 'en') {
+      return this.isExpanded(index) ? 'Read less' : 'Read more';
+    }
+    // French (default)
+    return this.isExpanded(index) ? 'Lire moins' : 'En savoir plus';
+  }
+
+  /**
+   * Get the proper image URL for display
+   * Handles both relative paths (/uploads/...) and absolute URLs
+   */
+  getImageUrl(imageUrl: string | undefined): string {
+    if (!imageUrl) {
+      return '';
+    }
+    
+    // If it's already an absolute URL (starts with http:// or https://), return as is
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      return imageUrl;
+    }
+    
+    // If it's a relative path starting with /uploads/, return as is (proxy will handle it)
+    if (imageUrl.startsWith('/uploads/')) {
+      return imageUrl;
+    }
+    
+    // If it doesn't start with /, add /uploads/ prefix
+    if (!imageUrl.startsWith('/')) {
+      return '/uploads/' + imageUrl;
+    }
+    
+    // Otherwise return as is
+    return imageUrl;
+  }
+
+  /**
+   * Handle image loading errors
+   */
+  onImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    // Hide the image on error
+    if (img && img.parentElement) {
+      img.parentElement.style.display = 'none';
+    }
+  }
+
+  /**
+   * Get the document URL for download
+   * Handles both relative paths (/uploads/...) and absolute URLs
+   */
+  getDocumentUrl(documentUrl: string | undefined): string {
+    if (!documentUrl) {
+      return '';
+    }
+    
+    // If it's already an absolute URL (starts with http:// or https://), return as is
+    if (documentUrl.startsWith('http://') || documentUrl.startsWith('https://')) {
+      return documentUrl;
+    }
+    
+    // If it's a relative path starting with /uploads/, return as is (proxy will handle it)
+    if (documentUrl.startsWith('/uploads/')) {
+      return documentUrl;
+    }
+    
+    // If it doesn't start with /, add /uploads/ prefix
+    if (!documentUrl.startsWith('/')) {
+      return '/uploads/' + documentUrl;
+    }
+    
+    // Otherwise return as is
+    return documentUrl;
+  }
+
+  /**
+   * Get file name from URL
+   */
+  getFileNameFromUrl(url: string): string {
+    if (!url) return '';
+    try {
+      const urlObj = new URL(url, window.location.origin);
+      const pathname = urlObj.pathname;
+      const fileName = pathname.split('/').pop() || '';
+      return fileName || 'document';
+    } catch {
+      // If URL parsing fails, try to extract from path
+      const parts = url.split('/');
+      return parts[parts.length - 1] || 'document';
+    }
+  }
+
+  /**
+   * Get file icon class based on file extension
+   */
+  getFileIconClass(url: string): string {
+    if (!url) return 'fa-file';
+    const fileName = this.getFileNameFromUrl(url).toLowerCase();
+    if (fileName.endsWith('.pdf')) return 'fa-file-pdf';
+    if (fileName.endsWith('.doc') || fileName.endsWith('.docx')) return 'fa-file-word';
+    if (fileName.endsWith('.xls') || fileName.endsWith('.xlsx')) return 'fa-file-excel';
+    if (fileName.endsWith('.ppt') || fileName.endsWith('.pptx')) return 'fa-file-powerpoint';
+    return 'fa-file';
   }
 
 }
