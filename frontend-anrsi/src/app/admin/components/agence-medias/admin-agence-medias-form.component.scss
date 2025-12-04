@@ -40,6 +40,9 @@
     margin-bottom: 24px;
     border-bottom: 2px solid var(--neutral-200);
     padding-bottom: 0;
+    flex-wrap: wrap;
+    width: 100%;
+    overflow: visible;
 
     .lang-tab {
       display: flex;
@@ -55,13 +58,33 @@
       font-weight: 500;
       color: var(--neutral-600);
       position: relative;
+      min-width: fit-content;
+      white-space: nowrap;
 
       .lang-flag {
         font-size: 18px;
+        flex-shrink: 0;
       }
 
       .lang-name {
         font-weight: 500;
+        display: inline-block;
+        white-space: nowrap;
+        overflow: visible;
+      }
+
+      // Ensure Arabic text displays correctly
+      &[dir="rtl"] {
+        direction: rtl;
+        
+        .lang-name {
+          direction: rtl;
+          unicode-bidi: embed;
+        }
+      }
+
+      &[dir="ltr"] {
+        direction: ltr;
       }
 
       .lang-status {

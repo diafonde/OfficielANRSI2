@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -111,11 +111,16 @@ export class AdminAgenceMediasFormComponent implements OnInit {
     { code: 'en', name: 'English', flag: '🇺🇸' }
   ];
 
+  trackByLanguageCode(index: number, lang: { code: string; name: string; flag: string }): string {
+    return lang.code;
+  }
+
   constructor(
     private fb: FormBuilder,
     private pageService: PageAdminService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private cdr: ChangeDetectorRef
   ) {
     this.form = this.createForm();
   }
@@ -160,11 +165,21 @@ export class AdminAgenceMediasFormComponent implements OnInit {
   switchLanguage(lang: string): void {
     if (lang === 'fr' || lang === 'ar' || lang === 'en') {
       this.activeLanguage = lang as 'fr' | 'ar' | 'en';
+      this.cdr.markForCheck();
     }
   }
 
+  get activeLanguageFormGroup(): FormGroup {
+    const group = this.form.get(`translations.${this.activeLanguage}`) as FormGroup;
+    if (!group) {
+      console.error(`Form group for language ${this.activeLanguage} not found`);
+      return this.form.get('translations.fr') as FormGroup;
+    }
+    return group;
+  }
+
   getActiveLanguageFormGroup(): FormGroup {
-    return this.form.get(`translations.${this.activeLanguage}`) as FormGroup;
+    return this.activeLanguageFormGroup;
   }
 
   getLanguageFormGroup(lang: string): FormGroup {
@@ -547,10 +562,12 @@ export class AdminAgenceMediasFormComponent implements OnInit {
         }
         
         this.isLoading = false;
+        this.cdr.markForCheck();
       },
       error: (error) => {
         this.errorMessage = this.getLabel('errorLoadingPage');
         this.isLoading = false;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -668,6 +685,8 @@ export class AdminAgenceMediasFormComponent implements OnInit {
         }
       }
     });
+    // Trigger change detection after populating form
+    this.cdr.markForCheck();
   }
 
   onSubmit(): void {

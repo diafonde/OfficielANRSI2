@@ -18,15 +18,16 @@
     <!-- Language Tabs -->
     <div class="language-tabs">
       <button
-        *ngFor="let lang of languages"
+        *ngFor="let lang of languages; trackBy: trackByLanguageCode"
         type="button"
         class="lang-tab"
         [class.active]="activeLanguage === lang.code"
         [class.has-content]="hasTranslation(lang.code)"
         [class.valid]="isLanguageFormValid(lang.code)"
+        [attr.dir]="lang.code === 'ar' ? 'rtl' : 'ltr'"
         (click)="switchLanguage(lang.code)">
         <span class="lang-flag">{{ lang.flag }}</span>
-        <span class="lang-name">{{ lang.name }}</span>
+        <span class="lang-name" [attr.lang]="lang.code === 'ar' ? 'ar' : null">{{ lang.name }}</span>
         <span class="lang-status">
           <i *ngIf="isLanguageFormValid(lang.code)" class="fas fa-check-circle"></i>
           <i *ngIf="!isLanguageFormValid(lang.code) && hasTranslation(lang.code)" class="fas fa-exclamation-circle"></i>
@@ -36,7 +37,7 @@
     <!-- Hero Section -->
     <div class="form-section">
       <h2>{{ getLabel('heroSection') }} - {{ getActiveLanguageName() }}</h2>
-      <div [formGroup]="getActiveLanguageFormGroup()">
+      <div [formGroup]="activeLanguageFormGroup">
         <div class="form-group">
           <label>{{ getLabel('heroTitle') }}</label>
           <input type="text" formControlName="heroTitle" class="form-control" />
@@ -45,16 +46,19 @@
           <label>{{ getLabel('heroSubtitle') }}</label>
           <input type="text" formControlName="heroSubtitle" class="form-control" />
         </div>
+        <div class="form-group">
+          <label>{{ getLabel('introText') }}</label>
+          <textarea formControlName="introText" class="form-control" rows="4"></textarea>
+        </div>
       </div>
     </div>
 
-    <!-- Media Links -->
-
+  
 
     <!-- Article Links -->
     <div class="form-section">
       <h2>{{ getLabel('articleLinksSection') }} - {{ getActiveLanguageName() }}</h2>
-      <div [formGroup]="getActiveLanguageFormGroup()">
+      <div [formGroup]="activeLanguageFormGroup">
         <div formArrayName="articleLinks">
           <div *ngIf="articleLinks.length === 0" class="empty-state">
             <p class="text-muted">{{ getLabel('noArticleLinks') || 'No article links added yet. Click the button below to add one.' }}</p>
