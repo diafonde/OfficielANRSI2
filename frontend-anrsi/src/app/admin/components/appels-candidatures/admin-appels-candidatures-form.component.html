@@ -221,45 +221,75 @@
             </div>
 
             <div class="form-group">
-              <label>Document (PDF, Word, Excel)</label>
-              <div class="document-upload-container">
+              <label>Documents (PDF, Word, Excel)</label>
+              <div class="documents-list">
+                <div class="document-item" *ngFor="let documentUrlCtrl of getAppelDocuments((currentPage - 1) * itemsPerPage + i).controls; let docIdx = index">
+                  <label class="document-label">Document {{ docIdx + 1 }}</label>
+                  <div class="document-upload-container">
+                    <input
+                      type="file"
+                      [id]="'documentFile-' + activeLanguage + '-' + ((currentPage - 1) * itemsPerPage + i) + '-' + docIdx"
+                      accept=".pdf,.doc,.docx,.xls,.xlsx"
+                      (change)="onDocumentSelected($event, (currentPage - 1) * itemsPerPage + i, docIdx)"
+                      class="file-input"
+                      style="display: none;"
+                      #documentFileInput
+                    />
+                    <div class="file-upload-placeholder" *ngIf="!getAppelDocumentUrl((currentPage - 1) * itemsPerPage + i, docIdx) && !getDocumentUploadState((currentPage - 1) * itemsPerPage + i, docIdx).isUploading" (click)="documentFileInput.click()">
+                      <i class="fas fa-file-upload"></i>
+                      <span>Cliquez pour télécharger un document</span>
+                      <small>PDF, DOC, DOCX, XLS, XLSX jusqu'à 50MB</small>
+                    </div>
+                    <div class="document-info" *ngIf="getAppelDocumentUrl((currentPage - 1) * itemsPerPage + i, docIdx) && !getDocumentUploadState((currentPage - 1) * itemsPerPage + i, docIdx).isUploading">
+                      <i class="fas fa-file-pdf"></i>
+                      <span>{{ getDocumentFileName(getAppelDocumentUrl((currentPage - 1) * itemsPerPage + i, docIdx) || '') }}</span>
+                      <a [href]="getAppelDocumentUrl((currentPage - 1) * itemsPerPage + i, docIdx)" target="_blank" class="btn btn-sm btn-link">
+                        <i class="fas fa-external-link-alt"></i> Voir
+                      </a>
+                      <button type="button" class="btn btn-sm btn-danger remove-document" (click)="removeDocument((currentPage - 1) * itemsPerPage + i, docIdx)">
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                    <div class="upload-progress" *ngIf="getDocumentUploadState((currentPage - 1) * itemsPerPage + i, docIdx).isUploading">
+                      <div class="progress-bar">
+                        <div class="progress-fill" [style.width.%]="getDocumentUploadState((currentPage - 1) * itemsPerPage + i, docIdx).uploadProgress || 0"></div>
+                      </div>
+                      <span>Téléchargement... {{ getDocumentUploadState((currentPage - 1) * itemsPerPage + i, docIdx).uploadProgress || 0 }}%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Add New Document Button -->
+              <div class="add-document-container">
                 <input
                   type="file"
-                  [id]="'documentFile-' + activeLanguage + '-' + ((currentPage - 1) * itemsPerPage + i)"
-                  accept=".pdf,.doc,.docx,.xls,.xlsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  [id]="'addDocumentFile-' + activeLanguage + '-' + ((currentPage - 1) * itemsPerPage + i)"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx"
+                  multiple
                   (change)="onDocumentSelected($event, (currentPage - 1) * itemsPerPage + i)"
                   class="file-input"
                   style="display: none;"
-                  #documentFileInput
+                  #addDocumentFileInput
                 />
-                <div class="document-upload-options">
-                  <button 
-                    type="button" 
-                    class="btn btn-sm btn-outline-primary"
-                    (click)="documentFileInput.click()"
-                    [disabled]="getDocumentUploadState((currentPage - 1) * itemsPerPage + i).isUploading">
-                    <i class="fas fa-file-upload"></i> 
-                    <span *ngIf="!getDocumentUploadState((currentPage - 1) * itemsPerPage + i).isUploading">Télécharger un document</span>
-                    <span *ngIf="getDocumentUploadState((currentPage - 1) * itemsPerPage + i).isUploading">Téléchargement...</span>
-                  </button>
-                  <span class="document-info" *ngIf="getDocumentUploadState((currentPage - 1) * itemsPerPage + i).fileName && !getDocumentUploadState((currentPage - 1) * itemsPerPage + i).isUploading">
-                    <i class="fas fa-file"></i> {{ getDocumentUploadState((currentPage - 1) * itemsPerPage + i).fileName }}
-                  </span>
-                  <span class="document-url" *ngIf="appel.get('documentUrl')?.value && !getDocumentUploadState((currentPage - 1) * itemsPerPage + i).isUploading">
-                    <i class="fas fa-link"></i> Document téléchargé
-                    <button type="button" class="btn btn-sm btn-link text-danger" (click)="removeDocument((currentPage - 1) * itemsPerPage + i)" title="Supprimer le document">
-                      <i class="fas fa-times"></i>
-                    </button>
-                  </span>
+                <div class="file-upload-placeholder add-more" *ngIf="getAppelDocuments((currentPage - 1) * itemsPerPage + i).length > 0" (click)="addDocumentFileInput.click()">
+                  <i class="fas fa-plus-circle"></i>
+                  <span>Cliquez pour ajouter plus de documents</span>
+                  <small>Vous pouvez sélectionner plusieurs fichiers</small>
                 </div>
-                <div class="upload-progress" *ngIf="getDocumentUploadState((currentPage - 1) * itemsPerPage + i).isUploading">
-                  <div class="progress-bar">
-                    <div class="progress-fill" [style.width.%]="getDocumentUploadState((currentPage - 1) * itemsPerPage + i).uploadProgress || 0"></div>
-                  </div>
-                  <span>Téléchargement... {{ getDocumentUploadState((currentPage - 1) * itemsPerPage + i).uploadProgress || 0 }}%</span>
+                <div class="file-upload-placeholder" *ngIf="getAppelDocuments((currentPage - 1) * itemsPerPage + i).length === 0" (click)="addDocumentFileInput.click()">
+                  <i class="fas fa-file-upload"></i>
+                  <span>Cliquez pour télécharger des documents</span>
+                  <small>PDF, DOC, DOCX, XLS, XLSX jusqu'à 50MB chacun. Vous pouvez sélectionner plusieurs fichiers.</small>
                 </div>
               </div>
-              <small class="form-text text-muted">Téléchargez un document (PDF, Word, Excel - max 50MB)</small>
+              
+              <!-- Add URL Button -->
+              <button type="button" class="btn btn-secondary btn-sm" (click)="addDocumentUrl((currentPage - 1) * itemsPerPage + i)" style="margin-top: var(--space-2);">
+                <i class="fas fa-link"></i> Ajouter un document via URL
+              </button>
+              
+              <small class="form-text text-muted">Téléchargez des documents (PDF, Word, Excel - max 50MB chacun). Vous pouvez ajouter plusieurs documents.</small>
             </div>
           </div>
         </div>

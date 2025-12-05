@@ -60,16 +60,20 @@
                 {{ action.text || (currentLang === 'ar' ? 'المزيد' : (currentLang === 'en' ? 'Learn more' : 'En savoir plus')) }} à propos de {{ appel.title }}
               </a>
             </div>
-            <div class="article-document" *ngIf="appel.documentUrl">
-              <div class="document-link">
-                <i class="fas" [ngClass]="getFileIconClass(appel.documentUrl)"></i>
+            <div class="article-documents" *ngIf="getDocumentUrls(appel).length > 0">
+              <div class="documents-label" *ngIf="getDocumentUrls(appel).length > 1">
+                <strong>{{ getDocumentsLabel() }} ({{ getDocumentUrls(appel).length }})</strong>
+              </div>
+              <div class="document-link" *ngFor="let documentUrl of getDocumentUrls(appel); let docIndex = index">
+                <span class="document-number" *ngIf="getDocumentUrls(appel).length > 1">{{ docIndex + 1 }}.</span>
+                <i class="fas" [ngClass]="getFileIconClass(documentUrl)"></i>
                 <a 
-                  [href]="getDocumentUrl(appel.documentUrl)" 
-                  [download]="getFileNameFromUrl(appel.documentUrl)"
+                  [href]="getDocumentUrl(documentUrl)" 
+                  [download]="getFileNameFromUrl(documentUrl)"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="document-download-link">
-                  <span class="document-name">{{ getFileNameFromUrl(appel.documentUrl) }}</span>
+                  <span class="document-name">{{ getFileNameFromUrl(documentUrl) }}</span>
                   <i class="fas fa-download"></i>
                 </a>
               </div>

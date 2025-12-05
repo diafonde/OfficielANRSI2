@@ -23,7 +23,8 @@ interface AppelItem {
   summary?: string; // Summary field for brief introduction
   fullText?: string; // Full text for "read more" expansion
   imageUrl?: string;
-  documentUrl?: string; // Document URL for downloadable files
+  documentUrls?: string[]; // Array of document URLs for downloadable files
+  documentUrl?: string; // Legacy: single document URL (for backward compatibility)
   details: AppelDetail[];
   actions: AppelAction[];
 }
@@ -334,6 +335,24 @@ export class AppelsCandidaturesComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Get the document URLs for an appel (handles both new array format and legacy single URL)
+   * Returns an array of document URLs
+   */
+  getDocumentUrls(appel: AppelItem): string[] {
+    // New format: array of document URLs
+    if (appel.documentUrls && Array.isArray(appel.documentUrls) && appel.documentUrls.length > 0) {
+      return appel.documentUrls.filter(url => url && url.trim() !== '');
+    }
+    
+    // Legacy format: single document URL (for backward compatibility)
+    if (appel.documentUrl && appel.documentUrl.trim() !== '') {
+      return [appel.documentUrl];
+    }
+    
+    return [];
+  }
+
+  /**
    * Get the document URL for download
    * Handles both relative paths (/uploads/...) and absolute URLs
    */
@@ -389,6 +408,19 @@ export class AppelsCandidaturesComponent implements OnInit, OnDestroy {
     if (fileName.endsWith('.xls') || fileName.endsWith('.xlsx')) return 'fa-file-excel';
     if (fileName.endsWith('.ppt') || fileName.endsWith('.pptx')) return 'fa-file-powerpoint';
     return 'fa-file';
+  }
+
+  /**
+   * Get the documents label text based on current language
+   */
+  getDocumentsLabel(): string {
+    if (this.currentLang === 'ar') {
+      return 'الوثائق';
+    } else if (this.currentLang === 'en') {
+      return 'Documents';
+    }
+    // French (default)
+    return 'Documents';
   }
 
 }

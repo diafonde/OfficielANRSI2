@@ -14,7 +14,7 @@ interface AppelItem {
   summary: string;
   date: string;
   full_text: string;
-  documentUrl?: string;
+  documentUrls?: string[]; // Changed from documentUrl to documentUrls array
 }
 
 interface AppelsCandidaturesLanguageContent {
@@ -275,7 +275,7 @@ export class AdminAppelsCandidaturesFormComponent implements OnInit {
         summary: [''],
         date: [''],
         full_text: [''],
-        documentUrl: ['']
+        documentUrls: this.fb.array([]) // Changed to FormArray
       });
       
       // Insert at the beginning (index 0) so the new item appears at the top
@@ -448,7 +448,12 @@ export class AdminAppelsCandidaturesFormComponent implements OnInit {
               summary: [appel.summary || appel.description || ''],
               date: [date],
               full_text: [appel.fullText || appel.full_text || ''],
-              documentUrl: [appel.documentUrl || '']
+              documentUrls: this.fb.array(
+                // Handle both old format (documentUrl) and new format (documentUrls)
+                (appel.documentUrls || (appel.documentUrl ? [appel.documentUrl] : [])).map((docUrl: string) => 
+                  this.fb.control(docUrl)
+                )
+              )
             });
             this.getAppelsForLanguage(lang).push(appelGroup);
           });
@@ -557,76 +562,14 @@ export class AdminAppelsCandidaturesFormComponent implements OnInit {
     
     this.articleService.uploadImage(file).subscribe({
       next: (response) => {
-        const imageUrl = response.url;
-        
-        // Update image for the same index in ALL language tabs
-        // since the image is shared across all translations
-        ['fr', 'ar', 'en'].forEach(lang => {
-          const langGroup = this.getLanguageFormGroup(lang);
-          const langAppelsArray = this.getAppelsForLanguage(lang);
-          if (langAppelsArray && langAppelsArray.length > index) {
-            const langAppelGroup = langAppelsArray.at(index) as FormGroup;
-            if (langAppelGroup) {
-              const imageControl = langAppelGroup.get('image');
-              if (imageControl) {
-                imageControl.setValue(imageUrl, { emitEvent: true });
-                imageControl.markAsDirty();
-                imageControl.markAsTouched();
-                imageControl.updateValueAndValidity({ emitEvent: true });
-              }
-              // Update the FormGroup to ensure changes are detected
-              langAppelGroup.updateValueAndValidity({ emitEvent: true });
-            }
-          } else if (langAppelsArray) {
-            // If the appel doesn't exist in this language yet, create it with the image at the same index
-            const emptyGroup = this.fb.group({
-              title: [''],
-              url: [''],
-              image: [imageUrl],
-              summary: [''],
-              date: [''],
-              full_text: [''],
-              documentUrl: ['']
-            });
-            // Ensure we have enough items before inserting at the specific index
-            while (langAppelsArray.length < index) {
-              const tempGroup = this.fb.group({
-                title: [''],
-                url: [''],
-                image: [''],
-                summary: [''],
-                date: [''],
-                full_text: [''],
-                documentUrl: ['']
-              });
-              langAppelsArray.push(tempGroup);
-            }
-            langAppelsArray.insert(index, emptyGroup);
-            // Ensure the FormArray is updated
-            langAppelsArray.updateValueAndValidity({ emitEvent: true });
-          }
-          // Update the language FormGroup to ensure changes propagate
-          if (langGroup) {
-            langGroup.updateValueAndValidity({ emitEvent: true });
-          }
-        });
-        
-        // Update upload state for active language
+        const appelGroup = this.appels.at(index) as FormGroup;
+        appelGroup.patchValue({ image: response.url });
         this.imageUploadStates[key] = {
           file: file,
           preview: this.imageUploadStates[key]?.preview,
           isUploading: false,
           uploadProgress: 100
         };
-        
-        // Force immediate change detection to update all tabs
-        this.cdr.markForCheck();
-        this.cdr.detectChanges();
-        
-        // Also trigger change detection after a short delay to ensure UI updates in all tabs
-        setTimeout(() => {
-          this.cdr.detectChanges();
-        }, 100);
       },
       error: (error) => {
         console.error('Error uploading image:', error);
@@ -653,19 +596,67 @@ export class AdminAppelsCandidaturesFormComponent implements OnInit {
     delete this.imageUploadStates[key];
   }
 
-  onDocumentSelected(event: Event, index: number): void {
+  // Document handling methods - similar to ai4agri
+  getAppelDocuments(appelIndex: number): FormArray {
+    const appelGroup = this.appels.at(appelIndex) as FormGroup;
+    return appelGroup.get('documentUrls') as FormArray;
+  }
+
+  getAppelDocumentsForLanguage(lang: string, appelIndex: number): FormArray {
+    const langAppelsArray = this.getAppelsForLanguage(lang);
+    if (!langAppelsArray || langAppelsArray.length <= appelIndex) {
+      return this.fb.array([]);
+    }
+    const appelGroup = langAppelsArray.at(appelIndex) as FormGroup;
+    if (!appelGroup) {
+      return this.fb.array([]);
+    }
+    return appelGroup.get('documentUrls') as FormArray;
+  }
+
+  addDocumentUrl(appelIndex: number, url: string = ''): void {
+    const documentUrls = this.getAppelDocuments(appelIndex);
+    documentUrls.push(this.fb.control(url));
+  }
+
+  removeDocumentUrl(appelIndex: number, documentIndex: number): void {
+    const documentUrls = this.getAppelDocuments(appelIndex);
+    documentUrls.removeAt(documentIndex);
+  }
+
+  getAppelDocumentUrl(appelIndex: number, documentIndex: number): string | null {
+    const documentUrls = this.getAppelDocuments(appelIndex);
+    if (!documentUrls || documentUrls.length <= documentIndex) {
+      return null;
+    }
+    const control = documentUrls.at(documentIndex);
+    return control ? control.value : null;
+  }
+
+  getDocumentUploadState(appelIndex: number, documentIndex: number): { isUploading: boolean; uploadProgress: number; fileName?: string } {
+    const key = `${this.activeLanguage}-appel-${appelIndex}-doc-${documentIndex}`;
+    return this.documentUploadStates[key] || { isUploading: false, uploadProgress: 0 };
+  }
+
+  onDocumentSelected(event: Event, appelIndex: number, documentIndex?: number): void {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      const file = input.files[0];
-      
+    if (!input.files || input.files.length === 0) return;
+    
+    const files = Array.from(input.files);
+    const documentUrls = this.getAppelDocuments(appelIndex);
+    const startIndex = documentUrls.length;
+    
+    files.forEach((file, fileIndex) => {
       // Validate file type
       const validTypes = ['application/pdf', 'application/msword', 
-                         'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-      const validExtensions = ['.pdf', '.doc', '.docx'];
+                         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                         'application/vnd.ms-excel', 
+                         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+      const validExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx'];
       const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
       
       if (!validTypes.includes(file.type) && !validExtensions.includes(fileExtension)) {
-        this.errorMessage = 'Le fichier doit être un PDF ou un document Word';
+        this.errorMessage = 'Le fichier doit être un PDF, Word ou Excel';
         return;
       }
       
@@ -675,7 +666,17 @@ export class AdminAppelsCandidaturesFormComponent implements OnInit {
         return;
       }
       
-      const key = `${this.activeLanguage}-appel-${index}`;
+      // Determine document index
+      let docIndex: number;
+      if (documentIndex !== undefined && fileIndex === 0) {
+        // Replacing existing document
+        docIndex = documentIndex;
+      } else {
+        // Adding new document(s)
+        docIndex = startIndex + fileIndex;
+      }
+      
+      const key = `${this.activeLanguage}-appel-${appelIndex}-doc-${docIndex}`;
       
       this.documentUploadStates[key] = {
         isUploading: true,
@@ -683,78 +684,61 @@ export class AdminAppelsCandidaturesFormComponent implements OnInit {
         fileName: file.name
       };
 
-      // Upload document
-      this.uploadDocument(file, index);
-      
-      // Reset file input
-      input.value = '';
-    }
+      // Upload file
+      this.uploadDocument(file, appelIndex, docIndex);
+    });
+    
+    // Reset file input
+    input.value = '';
   }
 
-  uploadDocument(file: File, index: number): void {
-    const key = `${this.activeLanguage}-appel-${index}`;
+  uploadDocument(file: File, appelIndex: number, documentIndex: number): void {
+    const key = `${this.activeLanguage}-appel-${appelIndex}-doc-${documentIndex}`;
     this.errorMessage = '';
-    
-    console.log('Uploading document:', {
-      fileName: file.name,
-      fileSize: file.size,
-      fileType: file.type,
-      activeLanguage: this.activeLanguage,
-      index: index
-    });
     
     this.articleService.uploadDocument(file).subscribe({
       next: (response) => {
         const downloadUrl = response.url;
-        console.log('Upload successful:', response);
         
-        // Update documentUrl for the same index in ALL language tabs
+        // Update documentUrls for the same index in ALL language tabs
         // since the document is shared across all translations
         ['fr', 'ar', 'en'].forEach(lang => {
           const langGroup = this.getLanguageFormGroup(lang);
           const langAppelsArray = this.getAppelsForLanguage(lang);
-          if (langAppelsArray && langAppelsArray.length > index) {
-            const langAppelGroup = langAppelsArray.at(index) as FormGroup;
-            if (langAppelGroup) {
-              const documentUrlControl = langAppelGroup.get('documentUrl');
-              if (documentUrlControl) {
-                documentUrlControl.setValue(downloadUrl, { emitEvent: true });
-                documentUrlControl.markAsDirty();
-                documentUrlControl.markAsTouched();
-                documentUrlControl.updateValueAndValidity({ emitEvent: true });
-              }
-              // Update the FormGroup to ensure changes are detected
-              langAppelGroup.updateValueAndValidity({ emitEvent: true });
-            }
-          } else if (langAppelsArray) {
-            // If the appel doesn't exist in this language yet, create it with the documentUrl at the same index
-            const emptyGroup = this.fb.group({
-              title: [''],
-              url: [''],
-              image: [''],
-              summary: [''],
-              date: [''],
-              full_text: [''],
-              documentUrl: [downloadUrl]
-            });
-            // Ensure we have enough items before inserting at the specific index
-            while (langAppelsArray.length < index) {
-              const tempGroup = this.fb.group({
-                title: [''],
-                url: [''],
-                image: [''],
-                summary: [''],
-                date: [''],
-                full_text: [''],
-                documentUrl: ['']
-              });
-              langAppelsArray.push(tempGroup);
-            }
-            langAppelsArray.insert(index, emptyGroup);
-            // Ensure the FormArray is updated
-            langAppelsArray.updateValueAndValidity({ emitEvent: true });
+          
+          // Ensure the appel exists at this index
+          while (langAppelsArray.length <= appelIndex) {
+            this.addAppel();
           }
-          // Update the language FormGroup to ensure changes propagate
+          
+          // Get the documentUrls array for this language and appel
+          const appelGroup = langAppelsArray.at(appelIndex) as FormGroup;
+          const documentUrls = appelGroup.get('documentUrls') as FormArray;
+          
+          // Ensure the control exists at this index
+          while (documentUrls.length <= documentIndex) {
+            documentUrls.push(this.fb.control(''));
+          }
+          
+          // Set the URL value and mark as dirty/touched
+          const control = documentUrls.at(documentIndex);
+          if (control) {
+            control.setValue(downloadUrl, { emitEvent: true });
+            control.markAsDirty();
+            control.markAsTouched();
+            control.updateValueAndValidity({ emitEvent: true });
+          }
+          
+          // Update the FormArray to ensure changes are detected
+          documentUrls.updateValueAndValidity({ emitEvent: true });
+          
+          // Update the appel FormGroup to ensure changes are detected
+          appelGroup.updateValueAndValidity({ emitEvent: true });
+        });
+        
+        // Update the language FormGroup to ensure changes propagate
+        ['fr', 'ar', 'en'].forEach(lang => {
+          const langGroup = this.getLanguageFormGroup(lang);
           if (langGroup) {
             langGroup.updateValueAndValidity({ emitEvent: true });
           }
@@ -789,7 +773,6 @@ export class AdminAppelsCandidaturesFormComponent implements OnInit {
         } else if (error.status === 403) {
           errorMsg += 'Accès refusé. Vous devez être connecté avec un compte ADMIN ou EDITOR.';
         } else if (error.status === 413 || error.status === 400) {
-          // Handle both 413 (Payload Too Large) and 400 (if backend returns 400 for size)
           errorMsg = error.error?.error || error.error?.message || 'Le fichier est trop volumineux. Taille maximale: 50MB.';
         } else if (error.status === 400) {
           errorMsg += error.error?.error || 'Fichier invalide. Veuillez sélectionner un fichier PDF, DOC ou DOCX.';
@@ -809,33 +792,39 @@ export class AdminAppelsCandidaturesFormComponent implements OnInit {
     });
   }
 
-  getDocumentUploadState(index: number): { isUploading: boolean; uploadProgress: number; fileName?: string } {
-    const key = `${this.activeLanguage}-appel-${index}`;
-    return this.documentUploadStates[key] || { isUploading: false, uploadProgress: 0 };
-  }
-
-  removeDocument(index: number): void {
-    // Remove documentUrl from the same index in ALL language tabs
+  removeDocument(appelIndex: number, documentIndex: number): void {
+    // Remove document from the same index in ALL language tabs
     // since the document is shared across all translations
     ['fr', 'ar', 'en'].forEach(lang => {
       const langAppelsArray = this.getAppelsForLanguage(lang);
-      if (langAppelsArray && langAppelsArray.length > index) {
-        const langAppelGroup = langAppelsArray.at(index) as FormGroup;
+      if (langAppelsArray && langAppelsArray.length > appelIndex) {
+        const langAppelGroup = langAppelsArray.at(appelIndex) as FormGroup;
         if (langAppelGroup) {
-          const documentUrlControl = langAppelGroup.get('documentUrl');
-          if (documentUrlControl) {
-            documentUrlControl.setValue('', { emitEvent: true });
-            documentUrlControl.markAsDirty();
-            documentUrlControl.markAsTouched();
+          const documentUrls = langAppelGroup.get('documentUrls') as FormArray;
+          if (documentUrls && documentUrls.length > documentIndex) {
+            documentUrls.removeAt(documentIndex);
+            documentUrls.updateValueAndValidity({ emitEvent: true });
           }
+        }
+        
+        // Update the language FormGroup
+        const langGroup = this.getLanguageFormGroup(lang);
+        if (langGroup) {
+          langGroup.updateValueAndValidity({ emitEvent: true });
         }
       }
     });
     
     // Clean up upload state for active language
-    const key = `${this.activeLanguage}-appel-${index}`;
+    const key = `${this.activeLanguage}-appel-${appelIndex}-doc-${documentIndex}`;
     delete this.documentUploadStates[key];
     this.cdr.markForCheck();
+  }
+
+  getDocumentFileName(url: string): string {
+    if (!url) return '';
+    const parts = url.split('/');
+    return parts[parts.length - 1];
   }
 
   copyFromFrench(): void {
@@ -857,7 +846,11 @@ export class AdminAppelsCandidaturesFormComponent implements OnInit {
         summary: [frGroup.get('summary')?.value || ''],
         date: [frGroup.get('date')?.value || ''],
         full_text: [frGroup.get('full_text')?.value || ''],
-        documentUrl: [frGroup.get('documentUrl')?.value || '']
+        documentUrls: this.fb.array(
+          (frGroup.get('documentUrls') as FormArray).controls.map(control => 
+            this.fb.control(control.value)
+          )
+        )
       });
       currentAppels.push(newGroup);
     });
@@ -895,6 +888,9 @@ export class AdminAppelsCandidaturesFormComponent implements OnInit {
         });
       }
       
+      // Handle both old format (documentUrl) and new format (documentUrls)
+      const documentUrls = appel.documentUrls || (appel.documentUrl ? [appel.documentUrl] : []);
+      
       return {
         status: 'active',
         title: appel.title,
@@ -902,7 +898,7 @@ export class AdminAppelsCandidaturesFormComponent implements OnInit {
         summary: appel.summary || undefined,  // ADD THIS BACK
         fullText: fullText || undefined,
         imageUrl: appel.image || undefined,
-        documentUrl: appel.documentUrl || undefined,  // ADD THIS BACK
+        documentUrls: documentUrls.length > 0 ? documentUrls : undefined, // Use array
         details: details,
         actions: actions
       };
