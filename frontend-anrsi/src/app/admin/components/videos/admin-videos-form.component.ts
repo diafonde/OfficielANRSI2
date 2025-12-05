@@ -156,6 +156,14 @@ export class AdminVideosFormComponent implements OnInit {
     return this.getActiveLanguageFormGroup().get('photos') as FormArray;
   }
 
+  getPhotosForLanguage(lang: string): FormArray {
+    const langGroup = this.getLanguageFormGroup(lang);
+    if (!langGroup) {
+      return this.fb.array([]);
+    }
+    return langGroup.get('photos') as FormArray;
+  }
+
   addPhoto(item?: PhotoItem, lang?: string): void {
     const langGroup = lang ? this.getLanguageFormGroup(lang) : this.getActiveLanguageFormGroup();
     const photos = langGroup.get('photos') as FormArray;
@@ -168,10 +176,26 @@ export class AdminVideosFormComponent implements OnInit {
   }
 
   removePhoto(index: number): void {
-    // Clear upload state for this photo
+    // Remove photo from the same index in ALL language tabs
+    // since the photo is shared across all translations
+    ['fr', 'ar', 'en'].forEach(lang => {
+      const langPhotosArray = this.getPhotosForLanguage(lang);
+      if (langPhotosArray && langPhotosArray.length > index) {
+        langPhotosArray.removeAt(index);
+        // Update the FormArray to ensure changes are detected
+        langPhotosArray.updateValueAndValidity({ emitEvent: true });
+        
+        // Update the language FormGroup
+        const langGroup = this.getLanguageFormGroup(lang);
+        if (langGroup) {
+          langGroup.updateValueAndValidity({ emitEvent: true });
+        }
+      }
+    });
+    
+    // Clean up upload state for active language
     const stateKey = `${this.activeLanguage}-${index}`;
     this.photoUploadState.delete(stateKey);
-    this.photos.removeAt(index);
   }
 
   // Photo upload methods
@@ -247,17 +271,48 @@ export class AdminVideosFormComponent implements OnInit {
     this.articleService.uploadImage(file).subscribe({
       next: (response) => {
         clearInterval(progressInterval);
+        const photoUrl = response.url;
+        
+        // Update photo URL for the same index in ALL language tabs
+        // since the photo is shared across all translations
+        ['fr', 'ar', 'en'].forEach(lang => {
+          const langGroup = this.getLanguageFormGroup(lang);
+          const langPhotosArray = this.getPhotosForLanguage(lang);
+          
+          // Ensure the photo exists at this index
+          while (langPhotosArray.length <= index) {
+            this.addPhoto(undefined, lang);
+          }
+          
+          // Get the photo at this index
+          const photoGroup = langPhotosArray.at(index) as FormGroup;
+          if (photoGroup) {
+            const urlControl = photoGroup.get('url');
+            if (urlControl) {
+              urlControl.setValue(photoUrl, { emitEvent: true });
+              urlControl.markAsDirty();
+              urlControl.markAsTouched();
+              urlControl.updateValueAndValidity({ emitEvent: true });
+            }
+            // Update the FormGroup to ensure changes are detected
+            photoGroup.updateValueAndValidity({ emitEvent: true });
+          }
+          
+          // Update the photos FormArray to ensure changes are detected
+          langPhotosArray.updateValueAndValidity({ emitEvent: true });
+          
+          // Update the language FormGroup to ensure changes propagate
+          if (langGroup) {
+            langGroup.updateValueAndValidity({ emitEvent: true });
+          }
+        });
+        
+        // Update upload state for active language
         const currentState = this.photoUploadState.get(stateKey);
         if (currentState) {
           currentState.uploadProgress = 100;
           currentState.isUploading = false;
           this.photoUploadState.set(stateKey, currentState);
-        }
-        
-        // Update form with uploaded URL
-        const photoGroup = this.photos.at(index);
-        if (photoGroup) {
-          photoGroup.patchValue({ url: response.url });
         }
         
         setTimeout(() => {
@@ -324,7 +379,10 @@ export class AdminVideosFormComponent implements OnInit {
       next: (page) => {
         this.pageId = page.id || null;
         
-        // First, try to get from page.translations (new system)
+        // Check if we have valid data to load BEFORE clearing
+        let contentToUse: VideosContent | null = null;
+        
+        // Priority 1: Check page.translations (from page_translations table)
         if (page.translations && Object.keys(page.translations).length > 0) {
           try {
             const content: VideosContent = {
@@ -348,38 +406,46 @@ export class AdminVideosFormComponent implements OnInit {
               }
             });
             
-            this.populateForm(content);
+            // Only use if we have at least some content
+            if (content.translations.fr.photos?.length > 0 || content.translations.fr.videos?.length > 0 || 
+                content.translations.ar.photos?.length > 0 || content.translations.ar.videos?.length > 0 ||
+                content.translations.en.photos?.length > 0 || content.translations.en.videos?.length > 0 ||
+                content.translations.fr.heroTitle || content.translations.ar.heroTitle || content.translations.en.heroTitle) {
+              contentToUse = content;
+            }
           } catch (e) {
             console.error('Error processing translations:', e);
-            // Fall through to page.content check
           }
         }
         
-        // Fallback: Try to get from page.content (old system or backup)
-        if (page.content) {
+        // Priority 2: Fallback to page.content (old format)
+        if (!contentToUse && page.content) {
           try {
             const parsedContent = JSON.parse(page.content);
             // Check if it's the new format with translations
             if (parsedContent.translations) {
-              const content: VideosContent = parsedContent;
-              this.populateForm(content);
+              contentToUse = parsedContent;
             } else {
               // Old format - migrate to new format
               const oldContent: VideosLanguageContent = parsedContent;
-              const content: VideosContent = {
+              contentToUse = {
                 translations: {
                   fr: oldContent,
                   ar: this.getEmptyLanguageContent(),
                   en: this.getEmptyLanguageContent()
                 }
               };
-              this.populateForm(content);
             }
           } catch (e) {
             console.error('Error parsing content:', e);
-            this.loadDefaultData();
           }
-        } else if (!page.translations || Object.keys(page.translations).length === 0) {
+        }
+        
+        // Only populate if we have content to use
+        if (contentToUse) {
+          this.populateForm(contentToUse);
+        } else {
+          // No content found, load defaults
           this.loadDefaultData();
         }
         
@@ -453,9 +519,34 @@ export class AdminVideosFormComponent implements OnInit {
         while (videos.length) videos.removeAt(0);
         while (photos.length) photos.removeAt(0);
 
-        // Populate arrays
-        langContent.videos?.forEach(video => this.addVideo(video, lang));
-        langContent.photos?.forEach(photo => this.addPhoto(photo, lang));
+        // Populate arrays - directly push FormGroups like texts-juridiques does
+        if (langContent.videos && Array.isArray(langContent.videos) && langContent.videos.length > 0) {
+          console.log(`Adding ${langContent.videos.length} videos for ${lang}`);
+          langContent.videos.forEach((video: VideoItem) => {
+            const group = this.fb.group({
+              title: [video.title || ''],
+              url: [video.url || '', Validators.required],
+              type: [video.type || 'youtube', Validators.required]
+            });
+            videos.push(group);
+          });
+        }
+        
+        if (langContent.photos && Array.isArray(langContent.photos) && langContent.photos.length > 0) {
+          console.log(`Adding ${langContent.photos.length} photos for ${lang}`);
+          langContent.photos.forEach((photo: PhotoItem) => {
+            console.log(`Adding photo for ${lang}:`, photo);
+            const group = this.fb.group({
+              title: [photo.title || ''],
+              url: [photo.url || '', Validators.required],
+              type: [photo.type || 'photo', Validators.required]
+            });
+            photos.push(group);
+            console.log(`Photo added to ${lang} FormArray, new length:`, photos.length);
+          });
+        } else {
+          console.log(`No photos to add for ${lang} - photos array:`, langContent.photos);
+        }
       }
     });
   }
@@ -465,14 +556,21 @@ export class AdminVideosFormComponent implements OnInit {
     this.isSaving = true;
     this.errorMessage = '';
 
-    const formValue = this.form.value;
+    // Use getRawValue() to ensure FormArrays are properly serialized
+    // Get raw value for each language separately to ensure FormArrays are captured
+    const translationsData: any = {};
+    
+    ['fr', 'ar', 'en'].forEach(lang => {
+      const langGroup = this.getLanguageFormGroup(lang);
+      translationsData[lang] = langGroup.getRawValue();
+    });
     
     // Build content with translations
     const content: VideosContent = {
       translations: {
-        fr: this.buildLanguageContent(formValue.translations.fr),
-        ar: this.buildLanguageContent(formValue.translations.ar),
-        en: this.buildLanguageContent(formValue.translations.en)
+        fr: this.buildLanguageContent(translationsData.fr),
+        ar: this.buildLanguageContent(translationsData.ar),
+        en: this.buildLanguageContent(translationsData.en)
       }
     };
 
@@ -534,11 +632,31 @@ export class AdminVideosFormComponent implements OnInit {
   }
 
   private buildLanguageContent(langData: any): VideosLanguageContent {
+    // Ensure photos and videos are properly extracted from FormArrays
+    // Filter out entries that have no URL (empty entries)
+    const photos = (langData.photos || []).map((photo: any) => ({
+      title: photo.title || '',
+      url: photo.url || '',
+      type: photo.type || 'photo'
+    })).filter((photo: any) => {
+      // Keep photos that have a URL (even if title is empty)
+      return photo.url && typeof photo.url === 'string' && photo.url.trim().length > 0;
+    });
+    
+    const videos = (langData.videos || []).map((video: any) => ({
+      title: video.title || '',
+      url: video.url || '',
+      type: video.type || 'youtube'
+    })).filter((video: any) => {
+      // Keep videos that have a URL (even if title is empty)
+      return video.url && typeof video.url === 'string' && video.url.trim().length > 0;
+    });
+    
     return {
       heroTitle: langData.heroTitle || '',
       heroSubtitle: langData.heroSubtitle || '',
-      videos: langData.videos || [],
-      photos: langData.photos || []
+      videos: videos,
+      photos: photos
     };
   }
 

@@ -393,6 +393,14 @@ export class AdminZoneHumideFormComponent implements OnInit {
     return this.getActiveLanguageFormGroup().get('media') as FormArray;
   }
 
+  getMediaForLanguage(lang: string): FormArray {
+    const langGroup = this.getLanguageFormGroup(lang);
+    if (!langGroup) {
+      return this.fb.array([]);
+    }
+    return langGroup.get('media') as FormArray;
+  }
+
   addMedia(item?: MediaItem, lang?: string): void {
     const langGroup = lang ? this.getLanguageFormGroup(lang) : this.getActiveLanguageFormGroup();
     const media = langGroup.get('media') as FormArray;
@@ -414,7 +422,10 @@ export class AdminZoneHumideFormComponent implements OnInit {
       next: (page) => {
         this.pageId = page.id || null;
         
-        // First, try to get from page.translations (new system)
+        // Check if we have valid data to load BEFORE clearing
+        let contentToUse: ZoneHumideContent | null = null;
+        
+        // Priority 1: Check page.translations (from page_translations table)
         if (page.translations && Object.keys(page.translations).length > 0) {
           try {
             const content: ZoneHumideContent = {
@@ -438,73 +449,61 @@ export class AdminZoneHumideFormComponent implements OnInit {
               }
             });
             
-            this.populateForm(content);
-            // Check if Arabic data is empty in the form and load defaults if needed
-            const arGroup = this.getLanguageFormGroup('ar');
-            const arHeroTitle = arGroup.get('heroTitle')?.value;
-            const arOverview = arGroup.get('overview') as FormArray;
-            const arThemes = arGroup.get('themes') as FormArray;
-            if ((!arHeroTitle || arHeroTitle.trim() === '') && arOverview.length === 0 && arThemes.length === 0) {
-              this.loadDefaultArabicData();
-            }
-            // Check if English data is empty in the form and load defaults if needed
-            const enGroup = this.getLanguageFormGroup('en');
-            const enHeroTitle = enGroup.get('heroTitle')?.value;
-            const enOverview = enGroup.get('overview') as FormArray;
-            const enThemes = enGroup.get('themes') as FormArray;
-            if ((!enHeroTitle || enHeroTitle.trim() === '') && enOverview.length === 0 && enThemes.length === 0) {
-              this.loadDefaultEnglishData();
+            // Only use if we have at least some content
+            if (content.translations.fr.heroTitle || content.translations.ar.heroTitle || content.translations.en.heroTitle ||
+                content.translations.fr.media?.length > 0 || content.translations.ar.media?.length > 0 || content.translations.en.media?.length > 0 ||
+                content.translations.fr.overview?.length > 0 || content.translations.ar.overview?.length > 0 || content.translations.en.overview?.length > 0) {
+              contentToUse = content;
             }
           } catch (e) {
             console.error('Error processing translations:', e);
-            // Fall through to page.content check
           }
         }
         
-        // Fallback: Try to get from page.content (old system or backup)
-        if (page.content) {
+        // Priority 2: Fallback to page.content (old format)
+        if (!contentToUse && page.content) {
           try {
             const parsedContent = JSON.parse(page.content);
             // Check if it's the new format with translations
             if (parsedContent.translations) {
-              const content: ZoneHumideContent = parsedContent;
-              this.populateForm(content);
-              // Check if Arabic data is empty in the form and load defaults if needed
-              const arGroup = this.getLanguageFormGroup('ar');
-              const arHeroTitle = arGroup.get('heroTitle')?.value;
-              const arOverview = arGroup.get('overview') as FormArray;
-              const arThemes = arGroup.get('themes') as FormArray;
-              if ((!arHeroTitle || arHeroTitle.trim() === '') && arOverview.length === 0 && arThemes.length === 0) {
-                this.loadDefaultArabicData();
-              }
-              // Check if English data is empty in the form and load defaults if needed
-              const enGroup = this.getLanguageFormGroup('en');
-              const enHeroTitle = enGroup.get('heroTitle')?.value;
-              const enOverview = enGroup.get('overview') as FormArray;
-              const enThemes = enGroup.get('themes') as FormArray;
-              if ((!enHeroTitle || enHeroTitle.trim() === '') && enOverview.length === 0 && enThemes.length === 0) {
-                this.loadDefaultEnglishData();
-              }
+              contentToUse = parsedContent;
             } else {
               // Old format - migrate to new format
               const oldContent: ZoneHumideLanguageContent = parsedContent;
-              const content: ZoneHumideContent = {
+              contentToUse = {
                 translations: {
                   fr: oldContent,
                   ar: this.getEmptyLanguageContent(),
                   en: this.getEmptyLanguageContent()
                 }
               };
-              this.populateForm(content);
-              // Load default Arabic and English data since they're empty
-              this.loadDefaultArabicData();
-              this.loadDefaultEnglishData();
             }
           } catch (e) {
             console.error('Error parsing content:', e);
-            this.loadDefaultData();
           }
-        } else if (!page.translations || Object.keys(page.translations).length === 0) {
+        }
+        
+        // Only populate if we have content to use
+        if (contentToUse) {
+          this.populateForm(contentToUse);
+          // Check if Arabic data is empty in the form and load defaults if needed
+          const arGroup = this.getLanguageFormGroup('ar');
+          const arHeroTitle = arGroup.get('heroTitle')?.value;
+          const arOverview = arGroup.get('overview') as FormArray;
+          const arThemes = arGroup.get('themes') as FormArray;
+          if ((!arHeroTitle || arHeroTitle.trim() === '') && arOverview.length === 0 && arThemes.length === 0) {
+            this.loadDefaultArabicData();
+          }
+          // Check if English data is empty in the form and load defaults if needed
+          const enGroup = this.getLanguageFormGroup('en');
+          const enHeroTitle = enGroup.get('heroTitle')?.value;
+          const enOverview = enGroup.get('overview') as FormArray;
+          const enThemes = enGroup.get('themes') as FormArray;
+          if ((!enHeroTitle || enHeroTitle.trim() === '') && enOverview.length === 0 && enThemes.length === 0) {
+            this.loadDefaultEnglishData();
+          }
+        } else {
+          // No content found, load defaults
           this.loadDefaultData();
         }
         
@@ -1279,25 +1278,43 @@ export class AdminZoneHumideFormComponent implements OnInit {
       const file = input.files[0];
       const reader = new FileReader();
       reader.onload = (e: any) => {
-        const mediaArray = this.media;
-        const mediaItem = mediaArray.at(mediaIndex) as FormGroup;
-        if (mediaItem) {
-          const imageControl = mediaItem.get('image');
-          if (imageControl) {
-            imageControl.setValue(e.target.result);
-            imageControl.markAsDirty();
-            imageControl.updateValueAndValidity();
+        const imageDataUrl = e.target.result;
+        
+        // Update image for the same index in ALL language tabs
+        // since the image is shared across all translations
+        ['fr', 'ar', 'en'].forEach(lang => {
+          const langGroup = this.getLanguageFormGroup(lang);
+          const langMediaArray = this.getMediaForLanguage(lang);
+          
+          // Ensure the media item exists at this index
+          while (langMediaArray.length <= mediaIndex) {
+            this.addMedia(undefined, lang);
+          }
+          
+          // Get the media item at this index
+          const mediaItem = langMediaArray.at(mediaIndex) as FormGroup;
+          if (mediaItem) {
+            const imageControl = mediaItem.get('image');
+            if (imageControl) {
+              imageControl.setValue(imageDataUrl, { emitEvent: true });
+              imageControl.markAsDirty();
+              imageControl.updateValueAndValidity({ emitEvent: true });
+            }
             // Mark the parent form group as dirty
             mediaItem.markAsDirty();
-            mediaArray.markAsDirty();
-            // Also mark the language form group as dirty
-            this.getActiveLanguageFormGroup().markAsDirty();
-          } else {
-            console.error('Image control not found in media item');
+            mediaItem.updateValueAndValidity({ emitEvent: true });
           }
-        } else {
-          console.error('Media item not found at index:', mediaIndex);
-        }
+          
+          // Mark the media FormArray as dirty
+          langMediaArray.markAsDirty();
+          langMediaArray.updateValueAndValidity({ emitEvent: true });
+          
+          // Update the language FormGroup to ensure changes propagate
+          if (langGroup) {
+            langGroup.markAsDirty();
+            langGroup.updateValueAndValidity({ emitEvent: true });
+          }
+        });
       };
       reader.onerror = (error) => {
         console.error('Error reading file:', error);
@@ -1308,21 +1325,36 @@ export class AdminZoneHumideFormComponent implements OnInit {
   }
 
   removeImage(mediaIndex: number): void {
-    const mediaArray = this.media;
-    const mediaItem = mediaArray.at(mediaIndex) as FormGroup;
-    if (mediaItem) {
-      const imageControl = mediaItem.get('image');
-      if (imageControl) {
-        imageControl.setValue('');
-        imageControl.markAsDirty();
-        imageControl.updateValueAndValidity();
-        // Mark the parent form group as dirty
-        mediaItem.markAsDirty();
-        mediaArray.markAsDirty();
-        // Also mark the language form group as dirty
-        this.getActiveLanguageFormGroup().markAsDirty();
+    // Remove image from the same index in ALL language tabs
+    // since the image is shared across all translations
+    ['fr', 'ar', 'en'].forEach(lang => {
+      const langMediaArray = this.getMediaForLanguage(lang);
+      if (langMediaArray && langMediaArray.length > mediaIndex) {
+        const mediaItem = langMediaArray.at(mediaIndex) as FormGroup;
+        if (mediaItem) {
+          const imageControl = mediaItem.get('image');
+          if (imageControl) {
+            imageControl.setValue('', { emitEvent: true });
+            imageControl.markAsDirty();
+            imageControl.updateValueAndValidity({ emitEvent: true });
+          }
+          // Mark the parent form group as dirty
+          mediaItem.markAsDirty();
+          mediaItem.updateValueAndValidity({ emitEvent: true });
+        }
+        
+        // Mark the media FormArray as dirty
+        langMediaArray.markAsDirty();
+        langMediaArray.updateValueAndValidity({ emitEvent: true });
+        
+        // Update the language FormGroup
+        const langGroup = this.getLanguageFormGroup(lang);
+        if (langGroup) {
+          langGroup.markAsDirty();
+          langGroup.updateValueAndValidity({ emitEvent: true });
+        }
       }
-    }
+    });
   }
 }
 

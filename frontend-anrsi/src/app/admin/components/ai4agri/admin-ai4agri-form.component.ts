@@ -302,6 +302,22 @@ export class AdminAi4agriFormComponent implements OnInit {
     return newsItemGroup.get('imageUrls') as FormArray;
   }
 
+  getNewsItemImagesForLanguage(lang: string, newsItemIndex: number): FormArray {
+    const langGroup = this.getLanguageFormGroup(lang);
+    if (!langGroup) {
+      return this.fb.array([]);
+    }
+    const newsItems = langGroup.get('newsItems') as FormArray;
+    if (!newsItems || newsItems.length <= newsItemIndex) {
+      return this.fb.array([]);
+    }
+    const newsItemGroup = newsItems.at(newsItemIndex) as FormGroup;
+    if (!newsItemGroup) {
+      return this.fb.array([]);
+    }
+    return newsItemGroup.get('imageUrls') as FormArray;
+  }
+
   addImageUrl(newsItemIndex: number, url: string = ''): void {
     const imageUrls = this.getNewsItemImages(newsItemIndex);
     imageUrls.push(this.fb.control(url));
@@ -430,35 +446,59 @@ export class AdminAi4agriFormComponent implements OnInit {
     
     this.articleService.uploadImage(file).subscribe({
       next: (response) => {
-        const imageUrls = this.getNewsItemImages(newsItemIndex);
+        const imageUrl = response.url;
         
-        // Ensure the control exists at this index
-        while (imageUrls.length <= imageIndex) {
-          imageUrls.push(this.fb.control(''));
-        }
+        // Update imageUrls for the same index in ALL language tabs
+        // since the image is shared across all translations
+        ['fr', 'ar', 'en'].forEach(lang => {
+          const langGroup = this.getLanguageFormGroup(lang);
+          const langNewsItems = langGroup.get('newsItems') as FormArray;
+          
+          // Ensure the news item exists at this index
+          while (langNewsItems.length <= newsItemIndex) {
+            this.addNewsItem(undefined, lang);
+          }
+          
+          // Get the imageUrls array for this language and news item
+          const newsItemGroup = langNewsItems.at(newsItemIndex) as FormGroup;
+          const imageUrls = newsItemGroup.get('imageUrls') as FormArray;
+          
+          // Ensure the control exists at this index
+          while (imageUrls.length <= imageIndex) {
+            imageUrls.push(this.fb.control(''));
+          }
+          
+          // Set the URL value and mark as dirty/touched
+          const control = imageUrls.at(imageIndex);
+          if (control) {
+            control.setValue(imageUrl, { emitEvent: true });
+            control.markAsDirty();
+            control.markAsTouched();
+            control.updateValueAndValidity({ emitEvent: true });
+            
+            // Also update the FormArray to ensure changes are detected
+            imageUrls.updateValueAndValidity({ emitEvent: true });
+          }
+          
+          // Update the news item FormGroup to ensure changes are detected
+          newsItemGroup.updateValueAndValidity({ emitEvent: true });
+        });
         
-        // Set the URL value and mark as dirty/touched
-        const control = imageUrls.at(imageIndex);
-        if (control) {
-          control.setValue(response.url, { emitEvent: true });
-          control.markAsDirty();
-          control.markAsTouched();
-          control.updateValueAndValidity({ emitEvent: true });
-          
-          // Also update the FormArray to ensure changes are detected
-          imageUrls.updateValueAndValidity({ emitEvent: true });
-          
-          console.log(`Image uploaded and saved to form at index ${imageIndex}:`, response.url);
-          console.log(`FormArray length: ${imageUrls.length}, Value:`, imageUrls.value);
-        } else {
-          console.error(`Failed to set image URL at index ${imageIndex}`);
-        }
+        // Update the language FormGroup to ensure changes propagate
+        ['fr', 'ar', 'en'].forEach(lang => {
+          const langGroup = this.getLanguageFormGroup(lang);
+          if (langGroup) {
+            langGroup.updateValueAndValidity({ emitEvent: true });
+          }
+        });
         
         state.isUploading = false;
         state.uploadProgress = 100;
         state.file = undefined; // Clear file after successful upload
         this.imageUploadState.set(stateKey, state);
         this.errorMessage = '';
+        
+        console.log(`Image uploaded and saved to all language tabs at index ${imageIndex}:`, imageUrl);
       },
       error: (error) => {
         console.error('Upload error:', error);
@@ -482,6 +522,22 @@ export class AdminAi4agriFormComponent implements OnInit {
   // Document handling methods
   getNewsItemDocuments(newsItemIndex: number): FormArray {
     const newsItemGroup = this.newsItems.at(newsItemIndex) as FormGroup;
+    return newsItemGroup.get('documentUrls') as FormArray;
+  }
+
+  getNewsItemDocumentsForLanguage(lang: string, newsItemIndex: number): FormArray {
+    const langGroup = this.getLanguageFormGroup(lang);
+    if (!langGroup) {
+      return this.fb.array([]);
+    }
+    const newsItems = langGroup.get('newsItems') as FormArray;
+    if (!newsItems || newsItems.length <= newsItemIndex) {
+      return this.fb.array([]);
+    }
+    const newsItemGroup = newsItems.at(newsItemIndex) as FormGroup;
+    if (!newsItemGroup) {
+      return this.fb.array([]);
+    }
     return newsItemGroup.get('documentUrls') as FormArray;
   }
 
@@ -610,32 +666,48 @@ export class AdminAi4agriFormComponent implements OnInit {
     this.articleService.uploadDocument(file).subscribe({
       next: (response) => {
         clearInterval(progressInterval);
-        const documentUrls = this.getNewsItemDocuments(newsItemIndex);
+        const downloadUrl = response.url;
         
-        // Ensure the control exists at this index
-        while (documentUrls.length <= documentIndex) {
-          documentUrls.push(this.fb.control(''));
-        }
-        
-        // Set the URL value and mark as dirty/touched
-        const control = documentUrls.at(documentIndex);
-        if (control) {
-          control.setValue(response.url, { emitEvent: true });
-          control.markAsDirty();
-          control.markAsTouched();
-          control.updateValueAndValidity({ emitEvent: true });
+        // Update documentUrls for the same index in ALL language tabs
+        // since the document is shared across all translations
+        ['fr', 'ar', 'en'].forEach(lang => {
+          const langGroup = this.getLanguageFormGroup(lang);
+          const langNewsItems = langGroup.get('newsItems') as FormArray;
           
-          // Also update the FormArray to ensure changes are detected
-          documentUrls.updateValueAndValidity({ emitEvent: true });
+          // Ensure the news item exists at this index
+          while (langNewsItems.length <= newsItemIndex) {
+            this.addNewsItem(undefined, lang);
+          }
           
-          console.log(`Document uploaded and saved to form at index ${documentIndex}:`, response.url);
-        }
+          // Get the documentUrls array for this language and news item
+          const newsItemGroup = langNewsItems.at(newsItemIndex) as FormGroup;
+          const documentUrls = newsItemGroup.get('documentUrls') as FormArray;
+          
+          // Ensure the control exists at this index
+          while (documentUrls.length <= documentIndex) {
+            documentUrls.push(this.fb.control(''));
+          }
+          
+          // Set the URL value and mark as dirty/touched
+          const control = documentUrls.at(documentIndex);
+          if (control) {
+            control.setValue(downloadUrl, { emitEvent: true });
+            control.markAsDirty();
+            control.markAsTouched();
+            control.updateValueAndValidity({ emitEvent: true });
+            
+            // Also update the FormArray to ensure changes are detected
+            documentUrls.updateValueAndValidity({ emitEvent: true });
+          }
+        });
         
         state.isUploading = false;
         state.uploadProgress = 100;
         state.file = undefined; // Clear file after successful upload
         this.documentUploadState.set(stateKey, state);
         this.errorMessage = '';
+        
+        console.log(`Document uploaded and saved to all language tabs at index ${documentIndex}:`, downloadUrl);
       },
       error: (error) => {
         clearInterval(progressInterval);
@@ -669,7 +741,10 @@ export class AdminAi4agriFormComponent implements OnInit {
       next: (page) => {
         this.pageId = page.id || null;
         
-        // First, try to get from page.translations (new system) - matches how page component reads
+        // Check if we have valid data to load BEFORE clearing
+        let contentToUse: Ai4agriContent | null = null;
+        
+        // Priority 1: Check page.translations (from page_translations table)
         if (page.translations && Object.keys(page.translations).length > 0) {
           try {
             const content: Ai4agriContent = {
@@ -693,70 +768,58 @@ export class AdminAi4agriFormComponent implements OnInit {
               }
             });
             
-            this.populateForm(content);
-            // Check if Arabic data is empty and load defaults
-            const arGroup = this.getLanguageFormGroup('ar');
-            const arHeroTitle = arGroup.get('heroTitle')?.value;
-            const arNewsItems = arGroup.get('newsItems') as FormArray;
-            if ((!arHeroTitle || arHeroTitle.trim() === '') && arNewsItems.length === 0) {
-              this.loadDefaultArabicData();
-            }
-            // Check if English data is empty and load defaults
-            const enGroup = this.getLanguageFormGroup('en');
-            const enHeroTitle = enGroup.get('heroTitle')?.value;
-            const enNewsItems = enGroup.get('newsItems') as FormArray;
-            if ((!enHeroTitle || enHeroTitle.trim() === '') && enNewsItems.length === 0) {
-              this.loadDefaultEnglishData();
+            // Only use if we have at least some content
+            if (content.translations.fr.heroTitle || content.translations.ar.heroTitle || content.translations.en.heroTitle ||
+                content.translations.fr.newsItems?.length > 0 || content.translations.ar.newsItems?.length > 0 || content.translations.en.newsItems?.length > 0) {
+              contentToUse = content;
             }
           } catch (e) {
             console.error('Error processing translations:', e);
-            // Fall through to page.content check
           }
         }
         
-        // Fallback: Try to get from page.content (old system or backup)
-        if (page.content) {
+        // Priority 2: Fallback to page.content (old format)
+        if (!contentToUse && page.content) {
           try {
             const parsedContent = JSON.parse(page.content);
             // Check if it's the new format with translations
             if (parsedContent.translations) {
-              const content: Ai4agriContent = parsedContent;
-              this.populateForm(content);
-              // Check if Arabic data is empty and load defaults
-              const arGroup = this.getLanguageFormGroup('ar');
-              const arHeroTitle = arGroup.get('heroTitle')?.value;
-              const arNewsItems = arGroup.get('newsItems') as FormArray;
-              if ((!arHeroTitle || arHeroTitle.trim() === '') && arNewsItems.length === 0) {
-                this.loadDefaultArabicData();
-              }
-              // Check if English data is empty and load defaults
-              const enGroup = this.getLanguageFormGroup('en');
-              const enHeroTitle = enGroup.get('heroTitle')?.value;
-              const enNewsItems = enGroup.get('newsItems') as FormArray;
-              if ((!enHeroTitle || enHeroTitle.trim() === '') && enNewsItems.length === 0) {
-                this.loadDefaultEnglishData();
-              }
+              contentToUse = parsedContent;
             } else {
               // Old format - migrate to new format
               const oldContent: Ai4agriLanguageContent = parsedContent;
-              const content: Ai4agriContent = {
+              contentToUse = {
                 translations: {
                   fr: oldContent,
                   ar: this.getEmptyLanguageContent(),
                   en: this.getEmptyLanguageContent()
                 }
               };
-              this.populateForm(content);
-              // Load default Arabic and English data for old format
-              this.loadDefaultArabicData();
-              this.loadDefaultEnglishData();
             }
           } catch (e) {
             console.error('Error parsing content:', e);
-            this.loadDefaultData();
           }
-        } else if (!page.translations || Object.keys(page.translations).length === 0) {
-          // No translations and no content, load defaults
+        }
+        
+        // Only populate if we have content to use
+        if (contentToUse) {
+          this.populateForm(contentToUse);
+          // Check if Arabic data is empty and load defaults
+          const arGroup = this.getLanguageFormGroup('ar');
+          const arHeroTitle = arGroup.get('heroTitle')?.value;
+          const arNewsItems = arGroup.get('newsItems') as FormArray;
+          if ((!arHeroTitle || arHeroTitle.trim() === '') && arNewsItems.length === 0) {
+            this.loadDefaultArabicData();
+          }
+          // Check if English data is empty and load defaults
+          const enGroup = this.getLanguageFormGroup('en');
+          const enHeroTitle = enGroup.get('heroTitle')?.value;
+          const enNewsItems = enGroup.get('newsItems') as FormArray;
+          if ((!enHeroTitle || enHeroTitle.trim() === '') && enNewsItems.length === 0) {
+            this.loadDefaultEnglishData();
+          }
+        } else {
+          // No content found, load defaults
           this.loadDefaultData();
         }
         

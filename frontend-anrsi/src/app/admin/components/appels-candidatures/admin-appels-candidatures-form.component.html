@@ -147,20 +147,20 @@
               <div class="image-upload-container">
                 <input
                   type="file"
-                  [id]="'imageFile-' + activeLanguage + '-' + i"
+                  [id]="'imageFile-' + activeLanguage + '-' + ((currentPage - 1) * itemsPerPage + i)"
                   accept="image/*"
-                  (change)="onImageSelected($event, i)"
+                  (change)="onImageSelected($event, (currentPage - 1) * itemsPerPage + i)"
                   class="file-input"
                   style="display: none;"
                   #imageFileInput
                 >
-                <div class="image-preview" *ngIf="getImageUploadState(i).preview || appel.get('image')?.value">
-                  <img [src]="getImageUploadState(i).preview || appel.get('image')?.value" alt="Preview" class="preview-image">
-                  <button type="button" class="remove-image" (click)="removeImage(i)" title="Supprimer l'image">
+                <div class="image-preview" *ngIf="getImageUploadState((currentPage - 1) * itemsPerPage + i).preview || appel.get('image')?.value">
+                  <img [src]="getImageUploadState((currentPage - 1) * itemsPerPage + i).preview || appel.get('image')?.value" alt="Preview" class="preview-image">
+                  <button type="button" class="remove-image" (click)="removeImage((currentPage - 1) * itemsPerPage + i)" title="Supprimer l'image">
                     <i class="fas fa-times"></i>
                   </button>
                 </div>
-                <div class="file-upload-placeholder" *ngIf="!getImageUploadState(i).preview && !appel.get('image')?.value && !getImageUploadState(i).file">
+                <div class="file-upload-placeholder" *ngIf="!getImageUploadState((currentPage - 1) * itemsPerPage + i).preview && !appel.get('image')?.value && !getImageUploadState((currentPage - 1) * itemsPerPage + i).file">
                   <i class="fas fa-cloud-upload-alt"></i>
                   <span>Cliquez pour télécharger une image</span>
                   <small>PNG, JPG, GIF jusqu'à 10MB</small>
@@ -168,19 +168,19 @@
                     <i class="fas fa-upload"></i> Télécharger une image
                   </button>
                 </div>
-                <div class="upload-progress" *ngIf="getImageUploadState(i).isUploading">
+                <div class="upload-progress" *ngIf="getImageUploadState((currentPage - 1) * itemsPerPage + i).isUploading">
                   <div class="progress-bar">
-                    <div class="progress-fill" [style.width.%]="getImageUploadState(i).uploadProgress || 0"></div>
+                    <div class="progress-fill" [style.width.%]="getImageUploadState((currentPage - 1) * itemsPerPage + i).uploadProgress || 0"></div>
                   </div>
-                  <span>Téléchargement... {{ getImageUploadState(i).uploadProgress || 0 }}%</span>
+                  <span>Téléchargement... {{ getImageUploadState((currentPage - 1) * itemsPerPage + i).uploadProgress || 0 }}%</span>
                 </div>
-                <div class="image-url-input" *ngIf="appel.get('image')?.value && !getImageUploadState(i).isUploading">
+                <div class="image-url-input" *ngIf="appel.get('image')?.value && !getImageUploadState((currentPage - 1) * itemsPerPage + i).isUploading">
                   <input type="text" formControlName="image" class="form-control" placeholder="Ou entrez une URL d'image" />
                   <button type="button" class="btn btn-sm btn-secondary mt-2" (click)="imageFileInput.click()">
                     <i class="fas fa-upload"></i> Remplacer par un fichier
                   </button>
                 </div>
-                <div class="image-url-input" *ngIf="!appel.get('image')?.value && !getImageUploadState(i).preview && !getImageUploadState(i).isUploading">
+                <div class="image-url-input" *ngIf="!appel.get('image')?.value && !getImageUploadState((currentPage - 1) * itemsPerPage + i).preview && !getImageUploadState((currentPage - 1) * itemsPerPage + i).isUploading">
                   <input type="text" formControlName="image" class="form-control" placeholder="Ou entrez une URL d'image" />
                   <button type="button" class="btn btn-sm btn-primary mt-2" (click)="imageFileInput.click()">
                     <i class="fas fa-upload"></i> Télécharger un fichier
@@ -225,9 +225,9 @@
               <div class="document-upload-container">
                 <input
                   type="file"
-                  [id]="'documentFile-' + activeLanguage + '-' + i"
+                  [id]="'documentFile-' + activeLanguage + '-' + ((currentPage - 1) * itemsPerPage + i)"
                   accept=".pdf,.doc,.docx,.xls,.xlsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                  (change)="onDocumentSelected($event, i)"
+                  (change)="onDocumentSelected($event, (currentPage - 1) * itemsPerPage + i)"
                   class="file-input"
                   style="display: none;"
                   #documentFileInput
@@ -237,26 +237,26 @@
                     type="button" 
                     class="btn btn-sm btn-outline-primary"
                     (click)="documentFileInput.click()"
-                    [disabled]="getDocumentUploadState(i).isUploading">
+                    [disabled]="getDocumentUploadState((currentPage - 1) * itemsPerPage + i).isUploading">
                     <i class="fas fa-file-upload"></i> 
-                    <span *ngIf="!getDocumentUploadState(i).isUploading">Télécharger un document</span>
-                    <span *ngIf="getDocumentUploadState(i).isUploading">Téléchargement...</span>
+                    <span *ngIf="!getDocumentUploadState((currentPage - 1) * itemsPerPage + i).isUploading">Télécharger un document</span>
+                    <span *ngIf="getDocumentUploadState((currentPage - 1) * itemsPerPage + i).isUploading">Téléchargement...</span>
                   </button>
-                  <span class="document-info" *ngIf="getDocumentUploadState(i).fileName && !getDocumentUploadState(i).isUploading">
-                    <i class="fas fa-file"></i> {{ getDocumentUploadState(i).fileName }}
+                  <span class="document-info" *ngIf="getDocumentUploadState((currentPage - 1) * itemsPerPage + i).fileName && !getDocumentUploadState((currentPage - 1) * itemsPerPage + i).isUploading">
+                    <i class="fas fa-file"></i> {{ getDocumentUploadState((currentPage - 1) * itemsPerPage + i).fileName }}
                   </span>
-                  <span class="document-url" *ngIf="appel.get('documentUrl')?.value && !getDocumentUploadState(i).isUploading">
+                  <span class="document-url" *ngIf="appel.get('documentUrl')?.value && !getDocumentUploadState((currentPage - 1) * itemsPerPage + i).isUploading">
                     <i class="fas fa-link"></i> Document téléchargé
-                    <button type="button" class="btn btn-sm btn-link text-danger" (click)="removeDocument(i)" title="Supprimer le document">
+                    <button type="button" class="btn btn-sm btn-link text-danger" (click)="removeDocument((currentPage - 1) * itemsPerPage + i)" title="Supprimer le document">
                       <i class="fas fa-times"></i>
                     </button>
                   </span>
                 </div>
-                <div class="upload-progress" *ngIf="getDocumentUploadState(i).isUploading">
+                <div class="upload-progress" *ngIf="getDocumentUploadState((currentPage - 1) * itemsPerPage + i).isUploading">
                   <div class="progress-bar">
-                    <div class="progress-fill" [style.width.%]="getDocumentUploadState(i).uploadProgress || 0"></div>
+                    <div class="progress-fill" [style.width.%]="getDocumentUploadState((currentPage - 1) * itemsPerPage + i).uploadProgress || 0"></div>
                   </div>
-                  <span>Téléchargement... {{ getDocumentUploadState(i).uploadProgress || 0 }}%</span>
+                  <span>Téléchargement... {{ getDocumentUploadState((currentPage - 1) * itemsPerPage + i).uploadProgress || 0 }}%</span>
                 </div>
               </div>
               <small class="form-text text-muted">Téléchargez un document (PDF, Word, Excel - max 50MB)</small>
