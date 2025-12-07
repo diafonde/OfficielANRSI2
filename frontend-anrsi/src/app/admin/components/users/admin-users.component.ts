@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject, catchError, of } from 'rxjs';
 import { User } from '../../models/user.model';
 import { AuthService } from '../../services/auth.service';
+import { UserAdminService, UserCreateRequest } from '../../services/user-admin.service';
 
 @Component({
   selector: 'app-admin-users',
@@ -25,7 +26,8 @@ export class AdminUsersComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private authService: AuthService
+    private authService: AuthService,
+    private userService: UserAdminService
   ) {
     this.users$ = this.usersSubject.asObservable();
     
@@ -57,34 +59,24 @@ export class AdminUsersComponent implements OnInit {
   }
 
   private loadUsers(): void {
-    // Mock users data - replace with actual service call
-    const mockUsers: User[] = [
-      {
-        id: 1,
-        username: 'admin',
-        email: 'admin@anrsi.mr',
-        role: 'admin',
-        firstName: 'Admin',
-        lastName: 'User',
-        isActive: true,
-        createdAt: new Date('2024-01-01'),
-        lastLogin: new Date()
-      },
-      {
-        id: 2,
-        username: 'editor',
-        email: 'editor@anrsi.mr',
-        role: 'editor',
-        firstName: 'Editor',
-        lastName: 'User',
-        isActive: true,
-        createdAt: new Date('2024-01-15'),
-        lastLogin: new Date()
-      }
-  
-    ];
-
-    this.usersSubject.next(mockUsers);
+    this.isLoading = true;
+    this.userService.getAll().pipe(
+      catchError(error => {
+        console.error('Error loading users:', error);
+        this.errorMessage = error.error?.message || 'Failed to load users';
+        this.isLoading = false;
+        return of([]);
+      })
+    ).subscribe(users => {
+      // Convert date strings to Date objects if needed
+      const processedUsers = users.map(user => ({
+        ...user,
+        createdAt: user.createdAt ? new Date(user.createdAt) : new Date(),
+        lastLogin: user.lastLogin ? new Date(user.lastLogin) : undefined
+      }));
+      this.usersSubject.next(processedUsers);
+      this.isLoading = false;
+    });
   }
 
   showCreateForm(): void {
@@ -148,41 +140,60 @@ export class AdminUsersComponent implements OnInit {
       this.errorMessage = '';
 
       const formValue = this.userForm.value;
-      const userData: User = {
-        id: this.editingUserId || Date.now(),
+      const userRequest: UserCreateRequest = {
         username: formValue.username,
         email: formValue.email,
         firstName: formValue.firstName,
         lastName: formValue.lastName,
-        role: formValue.role,
-        isActive: formValue.isActive,
-        createdAt: this.editingUserId ? this.getUserById(this.editingUserId)?.createdAt || new Date() : new Date(),
-        lastLogin: this.editingUserId ? this.getUserById(this.editingUserId)?.lastLogin : undefined
+        role: formValue.role.toUpperCase() as 'ADMIN' | 'EDITOR' | 'VIEWER',
+        isActive: formValue.isActive ?? true
       };
 
-      // Mock save operation
-      // In real implementation, include password in API call if provided:
-      // const updateData: any = { ...userData };
-      // if (formValue.password) {
-      //   updateData.password = formValue.password;
-      // }
-      
-      setTimeout(() => {
-        const currentUsers = this.usersSubject.value;
-        if (this.isEditMode && this.editingUserId) {
-          const index = currentUsers.findIndex(u => u.id === this.editingUserId);
-          if (index !== -1) {
-            currentUsers[index] = userData;
+      // Password is required for create, optional for update
+      if (!this.isEditMode) {
+        // Create mode: password is required (validated by form)
+        userRequest.password = formValue.password;
+      } else if (formValue.password) {
+        // Edit mode: include password only if provided
+        userRequest.password = formValue.password;
+      }
+
+      const operation = this.isEditMode && this.editingUserId
+        ? this.userService.update(this.editingUserId, userRequest)
+        : this.userService.create(userRequest);
+
+      operation.pipe(
+        catchError(error => {
+          console.error('Error saving user:', error);
+          this.errorMessage = error.error?.message || error.error?.error || 'Failed to save user';
+          this.isLoading = false;
+          return of(null);
+        })
+      ).subscribe(savedUser => {
+        if (savedUser) {
+          // Convert date strings to Date objects
+          const processedUser = {
+            ...savedUser,
+            createdAt: savedUser.createdAt ? new Date(savedUser.createdAt) : new Date(),
+            lastLogin: savedUser.lastLogin ? new Date(savedUser.lastLogin) : undefined
+          };
+
+          const currentUsers = this.usersSubject.value;
+          if (this.isEditMode && this.editingUserId) {
+            const index = currentUsers.findIndex(u => u.id === this.editingUserId);
+            if (index !== -1) {
+              currentUsers[index] = processedUser;
+            }
+          } else {
+            currentUsers.push(processedUser);
           }
-        } else {
-          currentUsers.push(userData);
+          
+          this.usersSubject.next([...currentUsers]);
+          this.showUserForm = false;
+          this.userForm.reset();
         }
-        
-        this.usersSubject.next([...currentUsers]);
         this.isLoading = false;
-        this.showUserForm = false;
-        this.userForm.reset();
-      }, 1000);
+      });
     } else {
       this.markFormGroupTouched();
     }
@@ -190,19 +201,50 @@ export class AdminUsersComponent implements OnInit {
 
   deleteUser(id: number): void {
     if (confirm('Are you sure you want to delete this user?')) {
-      const currentUsers = this.usersSubject.value;
-      const filteredUsers = currentUsers.filter(u => u.id !== id);
-      this.usersSubject.next(filteredUsers);
+      this.isLoading = true;
+      this.userService.delete(id).pipe(
+        catchError(error => {
+          console.error('Error deleting user:', error);
+          this.errorMessage = error.error?.message || error.error?.error || 'Failed to delete user';
+          this.isLoading = false;
+          return of(null);
+        })
+      ).subscribe(() => {
+        const currentUsers = this.usersSubject.value;
+        const filteredUsers = currentUsers.filter(u => u.id !== id);
+        this.usersSubject.next(filteredUsers);
+        this.isLoading = false;
+      });
     }
   }
 
   toggleUserStatus(user: User): void {
-    const currentUsers = this.usersSubject.value;
-    const index = currentUsers.findIndex(u => u.id === user.id);
-    if (index !== -1) {
-      currentUsers[index].isActive = !currentUsers[index].isActive;
-      this.usersSubject.next([...currentUsers]);
-    }
+    this.isLoading = true;
+    this.userService.toggleStatus(user.id).pipe(
+      catchError(error => {
+        console.error('Error toggling user status:', error);
+        this.errorMessage = error.error?.message || error.error?.error || 'Failed to update user status';
+        this.isLoading = false;
+        return of(null);
+      })
+    ).subscribe(updatedUser => {
+      if (updatedUser) {
+        // Convert date strings to Date objects
+        const processedUser = {
+          ...updatedUser,
+          createdAt: updatedUser.createdAt ? new Date(updatedUser.createdAt) : new Date(),
+          lastLogin: updatedUser.lastLogin ? new Date(updatedUser.lastLogin) : undefined
+        };
+
+        const currentUsers = this.usersSubject.value;
+        const index = currentUsers.findIndex(u => u.id === user.id);
+        if (index !== -1) {
+          currentUsers[index] = processedUser;
+          this.usersSubject.next([...currentUsers]);
+        }
+      }
+      this.isLoading = false;
+    });
   }
 
   cancelForm(): void {
