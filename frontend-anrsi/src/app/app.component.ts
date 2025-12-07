@@ -47,33 +47,42 @@ export class App implements OnInit {
     translate.addLangs(['fr', 'ar', 'en']);
     translate.setDefaultLang('fr');
     
-    // Get saved language from localStorage or default to 'fr'
-    const savedLang = localStorage.getItem('preferred_language') || 'fr';
-    const langToUse = ['fr', 'ar', 'en'].includes(savedLang) ? savedLang : 'fr';
-    translate.use(langToUse);
-    
-    // Set initial RTL state based on saved language
-    document.body.dir = langToUse === 'ar' ? 'rtl' : 'ltr';
-    
-    // Listen to language changes to update RTL and save preference
-    translate.onLangChange.subscribe(event => {
-      document.body.dir = event.lang === 'ar' ? 'rtl' : 'ltr';
-      localStorage.setItem('preferred_language', event.lang);
-    });
-    
-    // Check initial route
+    // Check initial route and load appropriate language
     this.checkIfAdminRoute();
+    this.loadLanguageForRoute();
     
-    // Listen to route changes
+    // Listen to route changes to restore appropriate language
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe(() => {
+        const wasAdminRoute = this.isAdminRoute;
         this.checkIfAdminRoute();
+        // Only restore language if route type changed (admin <-> public)
+        if (wasAdminRoute !== this.isAdminRoute) {
+          this.loadLanguageForRoute();
+        }
       });
+    
+    // Listen to language changes to update RTL and save preference based on route
+    translate.onLangChange.subscribe(event => {
+      document.body.dir = event.lang === 'ar' ? 'rtl' : 'ltr';
+      // Save to appropriate localStorage key based on current route
+      const storageKey = this.isAdminRoute ? 'admin_preferred_language' : 'public_preferred_language';
+      localStorage.setItem(storageKey, event.lang);
+    });
   }
   
   checkIfAdminRoute() {
     this.isAdminRoute = this.router.url.startsWith('/admin');
+  }
+
+  private loadLanguageForRoute() {
+    // Load language preference based on current route
+    const storageKey = this.isAdminRoute ? 'admin_preferred_language' : 'public_preferred_language';
+    const savedLang = localStorage.getItem(storageKey) || 'fr';
+    const langToUse = ['fr', 'ar', 'en'].includes(savedLang) ? savedLang : 'fr';
+    this.translate.use(langToUse);
+    document.body.dir = langToUse === 'ar' ? 'rtl' : 'ltr';
   }
   
   switchLang(lang: string) {

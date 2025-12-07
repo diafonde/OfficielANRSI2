@@ -178,6 +178,68 @@
             </div>
           </div>
 
+          <!-- Password fields for create mode -->
+          <div class="form-group" *ngIf="!isEditMode">
+            <label for="password">Password *</label>
+            <input
+              type="password"
+              id="password"
+              formControlName="password"
+              class="form-control"
+              [class.error]="getFieldError('password')"
+              placeholder="Enter password"
+            >
+            <div class="error-message" *ngIf="getFieldError('password')">
+              {{ getFieldError('password') }}
+            </div>
+          </div>
+
+          <div class="form-group" *ngIf="!isEditMode">
+            <label for="confirmPassword">Confirm Password *</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              formControlName="confirmPassword"
+              class="form-control"
+              [class.error]="getFieldError('confirmPassword')"
+              placeholder="Confirm password"
+            >
+            <div class="error-message" *ngIf="getFieldError('confirmPassword')">
+              {{ getFieldError('confirmPassword') }}
+            </div>
+          </div>
+
+          <!-- Password fields for edit mode -->
+          <div class="form-group" *ngIf="isEditMode">
+            <label for="passwordEdit">New Password (optional)</label>
+            <input
+              type="password"
+              id="passwordEdit"
+              formControlName="password"
+              class="form-control"
+              [class.error]="getFieldError('password')"
+              placeholder="Leave blank to keep current password"
+            >
+            <div class="error-message" *ngIf="getFieldError('password')">
+              {{ getFieldError('password') }}
+            </div>
+          </div>
+
+          <div class="form-group" *ngIf="isEditMode && userForm.get('password')?.value">
+            <label for="confirmPasswordEdit">Confirm New Password *</label>
+            <input
+              type="password"
+              id="confirmPasswordEdit"
+              formControlName="confirmPassword"
+              class="form-control"
+              [class.error]="getFieldError('confirmPassword')"
+              placeholder="Confirm new password"
+            >
+            <div class="error-message" *ngIf="getFieldError('confirmPassword')">
+              {{ getFieldError('confirmPassword') }}
+            </div>
+          </div>
+
           <div class="form-group">
             <label class="checkbox-label">
               <input

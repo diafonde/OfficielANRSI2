@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { User } from '../../models/user.model';
 import { AuthService } from '../../services/auth.service';
@@ -35,12 +35,25 @@ export class AdminUsersComponent implements OnInit {
       firstName: ['', [Validators.required]],
       lastName: ['', [Validators.required]],
       role: ['', [Validators.required]],
+      password: [''],
+      confirmPassword: [''],
       isActive: [true]
-    });
+    }, { validators: this.passwordMatchValidator });
   }
 
   ngOnInit(): void {
     this.loadUsers();
+  }
+
+  private passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
+    const password = control.get('password')?.value;
+    const confirmPassword = control.get('confirmPassword')?.value;
+    
+    if (!password || !confirmPassword) {
+      return null;
+    }
+    
+    return password === confirmPassword ? null : { passwordMismatch: true };
   }
 
   private loadUsers(): void {
@@ -67,18 +80,8 @@ export class AdminUsersComponent implements OnInit {
         isActive: true,
         createdAt: new Date('2024-01-15'),
         lastLogin: new Date()
-      },
-      {
-        id: 3,
-        username: 'viewer',
-        email: 'viewer@anrsi.mr',
-        role: 'viewer',
-        firstName: 'Viewer',
-        lastName: 'User',
-        isActive: false,
-        createdAt: new Date('2024-02-01'),
-        lastLogin: new Date('2024-02-10')
       }
+  
     ];
 
     this.usersSubject.next(mockUsers);
@@ -88,8 +91,15 @@ export class AdminUsersComponent implements OnInit {
     this.isEditMode = false;
     this.editingUserId = null;
     this.userForm.reset({
-      isActive: true
+      isActive: true,
+      password: '',
+      confirmPassword: ''
     });
+    // Set password as required for create mode
+    this.userForm.get('password')?.setValidators([Validators.required, Validators.minLength(6)]);
+    this.userForm.get('confirmPassword')?.setValidators([Validators.required]);
+    this.userForm.get('password')?.updateValueAndValidity();
+    this.userForm.get('confirmPassword')?.updateValueAndValidity();
     this.showUserForm = true;
   }
 
@@ -102,12 +112,37 @@ export class AdminUsersComponent implements OnInit {
       firstName: user.firstName,
       lastName: user.lastName,
       role: user.role,
-      isActive: user.isActive
+      isActive: user.isActive,
+      password: '',
+      confirmPassword: ''
     });
+    // Make password optional for edit mode
+    this.userForm.get('password')?.setValidators([Validators.minLength(6)]);
+    this.userForm.get('confirmPassword')?.clearValidators();
+    this.userForm.get('password')?.updateValueAndValidity();
+    this.userForm.get('confirmPassword')?.updateValueAndValidity();
     this.showUserForm = true;
   }
 
   onSubmit(): void {
+    // If in edit mode and password is provided, confirmPassword is required
+    if (this.isEditMode) {
+      const password = this.userForm.get('password')?.value;
+      const confirmPassword = this.userForm.get('confirmPassword')?.value;
+      
+      if (password && !confirmPassword) {
+        this.userForm.get('confirmPassword')?.setValidators([Validators.required]);
+        this.userForm.get('confirmPassword')?.updateValueAndValidity();
+        this.userForm.get('confirmPassword')?.markAsTouched();
+      } else if (password && confirmPassword) {
+        this.userForm.get('confirmPassword')?.setValidators([Validators.required]);
+        this.userForm.get('confirmPassword')?.updateValueAndValidity();
+      } else {
+        this.userForm.get('confirmPassword')?.clearValidators();
+        this.userForm.get('confirmPassword')?.updateValueAndValidity();
+      }
+    }
+
     if (this.userForm.valid) {
       this.isLoading = true;
       this.errorMessage = '';
@@ -126,6 +161,12 @@ export class AdminUsersComponent implements OnInit {
       };
 
       // Mock save operation
+      // In real implementation, include password in API call if provided:
+      // const updateData: any = { ...userData };
+      // if (formValue.password) {
+      //   updateData.password = formValue.password;
+      // }
+      
       setTimeout(() => {
         const currentUsers = this.usersSubject.value;
         if (this.isEditMode && this.editingUserId) {
@@ -182,16 +223,22 @@ export class AdminUsersComponent implements OnInit {
     const field = this.userForm.get(fieldName);
     if (field?.errors && field.touched) {
       if (field.errors['required']) {
-        return `${fieldName} is required`;
+        return `${fieldName === 'confirmPassword' ? 'Confirm password' : fieldName} is required`;
       }
       if (field.errors['email']) {
         return 'Please enter a valid email address';
       }
       if (field.errors['minlength']) {
         const requiredLength = field.errors['minlength'].requiredLength;
-        return `${fieldName} must be at least ${requiredLength} characters`;
+        return `${fieldName === 'password' ? 'Password' : fieldName} must be at least ${requiredLength} characters`;
       }
     }
+    
+    // Check for password mismatch error at form level
+    if (fieldName === 'confirmPassword' && this.userForm.errors?.['passwordMismatch'] && field?.touched) {
+      return 'Passwords do not match';
+    }
+    
     return '';
   }
 
@@ -215,3 +262,4 @@ export class AdminUsersComponent implements OnInit {
     return role.charAt(0).toUpperCase() + role.slice(1);
   }
 }
+

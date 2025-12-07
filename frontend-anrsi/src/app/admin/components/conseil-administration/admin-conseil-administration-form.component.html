@@ -72,8 +72,8 @@
     <div class="form-section">
       <h2>{{ getLabel('boardMembers') }} - {{ getActiveLanguageName() }}</h2>
       <div [formGroup]="getActiveLanguageFormGroup()">
-        <div formArrayName="boardMembers" *ngFor="let member of boardMembers.controls; let i = index">
-          <div [formGroupName]="i" class="nested-form-group">
+        <div formArrayName="boardMembers">
+          <div *ngFor="let member of boardMembers.controls; let i = index" [formGroupName]="i" class="nested-form-group">
             <div class="form-row">
               <div class="form-group">
                 <label>{{ getLabel('name') }}</label>

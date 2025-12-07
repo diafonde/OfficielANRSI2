@@ -52,8 +52,8 @@
     <div class="form-section">
       <h2>{{ getLabel('introductionParagraphs') }} - {{ getActiveLanguageName() }}</h2>
       <div [formGroup]="getActiveLanguageFormGroup()">
-        <div formArrayName="introParagraphs" *ngFor="let paragraph of introParagraphs.controls; let i = index">
-          <div [formGroupName]="i" class="nested-form-group">
+        <div formArrayName="introParagraphs">
+          <div *ngFor="let paragraph of introParagraphs.controls; let i = index" [formGroupName]="i" class="nested-form-group">
             <div class="form-row">
               <div class="form-group">
                 <label>{{ getLabel('paragraph') }} {{ i + 1 }} *</label>
@@ -87,8 +87,8 @@
     <div class="form-section">
       <h2>{{ getLabel('researchPriorities') }} - {{ getActiveLanguageName() }}</h2>
       <div [formGroup]="getActiveLanguageFormGroup()">
-        <div formArrayName="researchPriorities" *ngFor="let priority of researchPriorities.controls; let i = index">
-          <div [formGroupName]="i" class="nested-form-group">
+        <div formArrayName="researchPriorities">
+          <div *ngFor="let priority of researchPriorities.controls; let i = index" [formGroupName]="i" class="nested-form-group">
             <div class="form-row">
               <div class="form-group">
                 <label>{{ getLabel('id') }}</label>

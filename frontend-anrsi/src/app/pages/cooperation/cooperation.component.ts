@@ -95,6 +95,8 @@ export class CooperationComponent implements OnInit, OnDestroy {
 
   updateTranslatedContent(): void {
     if (!this.page) return;
+
+    // First, try to get from page.translations (new system)
     const translation = this.page.translations?.[this.currentLang];
     if (translation && translation.content) {
       try {
@@ -102,27 +104,69 @@ export class CooperationComponent implements OnInit, OnDestroy {
         if (translation.heroTitle) this.page.heroTitle = translation.heroTitle;
         if (translation.heroSubtitle) this.page.heroSubtitle = translation.heroSubtitle;
         if (translation.title) this.page.title = translation.title;
+        return;
       } catch (e) {
         console.error('Error parsing translated content:', e);
-        this.loadContentFromPage();
       }
-    } else {
-      this.loadContentFromPage();
     }
+
+    // Fallback: Try other languages if current language doesn't have content
+    const fallbackLanguages = ['fr', 'ar', 'en'].filter(lang => lang !== this.currentLang);
+    for (const lang of fallbackLanguages) {
+      const fallbackTranslation = this.page.translations?.[lang];
+      if (fallbackTranslation && fallbackTranslation.content) {
+        try {
+          this.parseContent(fallbackTranslation.content);
+          if (fallbackTranslation.heroTitle) this.page.heroTitle = fallbackTranslation.heroTitle;
+          if (fallbackTranslation.heroSubtitle) this.page.heroSubtitle = fallbackTranslation.heroSubtitle;
+          if (fallbackTranslation.title) this.page.title = fallbackTranslation.title;
+          return;
+        } catch (e) {
+          console.error(`Error parsing ${lang} translation content:`, e);
+        }
+      }
+    }
+
+    // Final fallback: Try page.content (old system or backup)
+    this.loadContentFromPage();
   }
 
   loadContentFromPage(): void {
-    if (this.page?.content) {
-      this.parseContent(this.page.content);
-    } else {
-      // Show empty state - data should come from database via DataInitializer
-      this.partnerships = [];
-      this.cooperationInfo = {
-        title: '',
-        description: '',
-        benefits: []
-      };
+    if (!this.page) return;
+
+    // First, try to get from page.content with translations structure
+    if (this.page.content) {
+      try {
+        const parsedContent = JSON.parse(this.page.content);
+        // Check if it's the new format with translations
+        if (parsedContent.translations) {
+          // Extract content for current language, fallback to French
+          const langContent = parsedContent.translations[this.currentLang] 
+            || parsedContent.translations['fr'] 
+            || parsedContent.translations['ar'] 
+            || parsedContent.translations['en'];
+          
+          if (langContent) {
+            this.parseContent(JSON.stringify(langContent));
+            return;
+          }
+        } else {
+          // Old format - parse directly
+          this.parseContent(this.page.content);
+          return;
+        }
+      } catch (e) {
+        console.error('Error parsing page.content:', e);
+      }
     }
+
+    // Show empty state if no content found
+    this.partnerships = [];
+    this.cooperationInfo = {
+      title: '',
+      description: '',
+      benefits: []
+    };
   }
 
   parseContent(contentString: string): void {
@@ -134,7 +178,9 @@ export class CooperationComponent implements OnInit, OnDestroy {
         this.cooperationInfo = {
           title: content.cooperationInfo.title || '',
           description: content.cooperationInfo.description || '',
-          benefits: content.cooperationInfo.benefits || []
+          benefits: Array.isArray(content.cooperationInfo.benefits) 
+            ? content.cooperationInfo.benefits 
+            : []
         };
       } else {
         this.cooperationInfo = {
@@ -145,10 +191,15 @@ export class CooperationComponent implements OnInit, OnDestroy {
       }
       
       if (content.partnerships && Array.isArray(content.partnerships)) {
-        this.partnerships = content.partnerships;
+        // Filter out partnerships with missing required fields
+        this.partnerships = content.partnerships.filter((p: any) => 
+          p && p.id && p.title && p.description
+        );
       } else if (Array.isArray(content)) {
         // Legacy format - content is directly an array of partnerships
-        this.partnerships = content;
+        this.partnerships = content.filter((p: any) => 
+          p && p.id && p.title && p.description
+        );
       } else {
         this.partnerships = [];
       }

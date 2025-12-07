@@ -63,8 +63,8 @@
     <div class="form-section">
       <h2>{{ getLabel('requirementsSection') }} - {{ getActiveLanguageName() }}</h2>
       <div [formGroup]="getActiveLanguageFormGroup()">
-        <div formArrayName="requirements" *ngFor="let requirement of requirements.controls; let i = index">
-          <div [formGroupName]="i" class="nested-form-group">
+        <div formArrayName="requirements">
+          <div *ngFor="let requirement of requirements.controls; let i = index" [formGroupName]="i" class="nested-form-group">
             <div class="form-row">
               <div class="form-group">
                 <label>{{ getLabel('icon') }}</label>
@@ -78,8 +78,8 @@
             </div>
             <div class="form-group">
               <label>{{ getLabel('items') }}</label>
-              <div formArrayName="items" *ngFor="let itemCtrl of getRequirementItems(i).controls; let j = index">
-                <div class="form-row">
+              <div formArrayName="items">
+                <div *ngFor="let itemCtrl of getRequirementItems(i).controls; let j = index" class="form-row">
                   <input type="text" [formControlName]="j" class="form-control" />
                   <button type="button" (click)="removeRequirementItem(i, j)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
                 </div>
@@ -96,8 +96,8 @@
     <div class="form-section">
       <h2>{{ getLabel('domainsSection') }} - {{ getActiveLanguageName() }}</h2>
       <div [formGroup]="getActiveLanguageFormGroup()">
-        <div formArrayName="domains" *ngFor="let domain of domains.controls; let i = index">
-          <div [formGroupName]="i" class="nested-form-group">
+        <div formArrayName="domains">
+          <div *ngFor="let domain of domains.controls; let i = index" [formGroupName]="i" class="nested-form-group">
             <div class="form-row">
               <div class="form-group">
                 <label>{{ getLabel('icon') }}</label>
@@ -150,8 +150,8 @@
     <div class="form-section">
       <h2>{{ getLabel('benefitsSection') }} - {{ getActiveLanguageName() }}</h2>
       <div [formGroup]="getActiveLanguageFormGroup()">
-        <div formArrayName="benefits" *ngFor="let benefit of benefits.controls; let i = index">
-          <div [formGroupName]="i" class="nested-form-group">
+        <div formArrayName="benefits">
+          <div *ngFor="let benefit of benefits.controls; let i = index" [formGroupName]="i" class="nested-form-group">
             <div class="form-row">
               <div class="form-group">
                 <label>{{ getLabel('icon') }}</label>
@@ -187,8 +187,8 @@
         </div>
         <div class="form-group">
           <label>{{ getLabel('contactInformation') }}</label>
-          <div formArrayName="contactInfo" *ngFor="let item of contactInfo.controls; let i = index">
-            <div [formGroupName]="i" class="nested-form-group">
+          <div formArrayName="contactInfo">
+            <div *ngFor="let item of contactInfo.controls; let i = index" [formGroupName]="i" class="nested-form-group">
               <div class="form-row">
                 <div class="form-group">
                   <label>{{ getLabel('iconFontAwesome') }}</label>
@@ -210,8 +210,8 @@
         </div>
         <div class="form-group">
           <label>{{ getLabel('requiredDocuments') }}</label>
-          <div formArrayName="requiredDocuments" *ngFor="let doc of requiredDocuments.controls; let i = index">
-            <div class="form-row">
+          <div formArrayName="requiredDocuments">
+            <div *ngFor="let doc of requiredDocuments.controls; let i = index" class="form-row">
               <input type="text" [formControlName]="i" class="form-control" />
               <button type="button" (click)="removeRequiredDocument(i)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
             </div>

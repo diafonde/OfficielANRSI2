@@ -88,8 +88,8 @@
         </div>
         
         <h3>{{ getLabel('values') }}</h3>
-        <div formArrayName="values" *ngFor="let value of values.controls; let i = index">
-          <div [formGroupName]="i" class="nested-form-group">
+        <div formArrayName="values">
+          <div *ngFor="let value of values.controls; let i = index" [formGroupName]="i" class="nested-form-group">
             <div class="form-row">
               <div class="form-group">
                 <label>{{ getLabel('icon') }}</label>

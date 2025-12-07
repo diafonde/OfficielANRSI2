@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -84,7 +84,8 @@ export class AdminPlateformesFormComponent implements OnInit {
     private fb: FormBuilder,
     private pageService: PageAdminService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private cdr: ChangeDetectorRef
   ) {
     this.form = this.createForm();
   }
@@ -135,6 +136,7 @@ export class AdminPlateformesFormComponent implements OnInit {
   switchLanguage(lang: string): void {
     if (lang === 'fr' || lang === 'ar' || lang === 'en') {
       this.activeLanguage = lang as 'fr' | 'ar' | 'en';
+      this.cdr.markForCheck();
     }
   }
 
@@ -350,13 +352,26 @@ export class AdminPlateformesFormComponent implements OnInit {
                 }
               };
               
+              // Track which languages have data
+              const hasData: { [key: string]: boolean } = {
+                fr: false,
+                ar: false,
+                en: false
+              };
+              
               // Extract content from each translation
               ['fr', 'ar', 'en'].forEach(lang => {
                 const translation = page.translations?.[lang];
                 if (translation && translation.content) {
                   try {
                     const parsedContent = JSON.parse(translation.content);
-                    content.translations[lang as 'fr' | 'ar' | 'en'] = parsedContent;
+                    // Check if the parsed content has actual data
+                    if (parsedContent.heroTitle || 
+                        (parsedContent.plateformes && parsedContent.plateformes.length > 0) ||
+                        (parsedContent.accessModes && parsedContent.accessModes.length > 0)) {
+                      content.translations[lang as 'fr' | 'ar' | 'en'] = parsedContent;
+                      hasData[lang] = true;
+                    }
                   } catch (e) {
                     console.error(`Error parsing ${lang} translation content:`, e);
                   }
@@ -364,20 +379,12 @@ export class AdminPlateformesFormComponent implements OnInit {
               });
               
               this.populateForm(content);
-              // Check if Arabic data is empty in the form and load defaults if needed
-              const arGroup = this.getLanguageFormGroup('ar');
-              const arHeroTitle = arGroup.get('heroTitle')?.value;
-              const arPlateformes = arGroup.get('plateformes') as FormArray;
-              const arAccessModes = arGroup.get('accessModes') as FormArray;
-              if ((!arHeroTitle || arHeroTitle.trim() === '') && arPlateformes.length === 0 && arAccessModes.length === 0) {
+              
+              // Only load defaults for languages that don't have data
+              if (!hasData['ar']) {
                 this.loadDefaultArabicData();
               }
-              // Check if English data is empty in the form and load defaults if needed
-              const enGroup = this.getLanguageFormGroup('en');
-              const enHeroTitle = enGroup.get('heroTitle')?.value;
-              const enPlateformes = enGroup.get('plateformes') as FormArray;
-              const enAccessModes = enGroup.get('accessModes') as FormArray;
-              if ((!enHeroTitle || enHeroTitle.trim() === '') && enPlateformes.length === 0 && enAccessModes.length === 0) {
+              if (!hasData['en']) {
                 this.loadDefaultEnglishData();
               }
             } catch (e) {
@@ -387,27 +394,38 @@ export class AdminPlateformesFormComponent implements OnInit {
           }
           
           // Fallback: Try to get from page.content (old system or backup)
-          if (page.content) {
+          // Only process if we didn't already process translations above
+          if (page.content && (!page.translations || Object.keys(page.translations).length === 0)) {
             try {
               const parsedContent = JSON.parse(page.content);
               // Check if it's the new format with translations
               if (parsedContent.translations) {
                 const content: PlateformesContent = parsedContent;
+                
+                // Track which languages have data
+                const hasData: { [key: string]: boolean } = {
+                  fr: false,
+                  ar: false,
+                  en: false
+                };
+                
+                ['fr', 'ar', 'en'].forEach(lang => {
+                  const langContent = content.translations[lang as 'fr' | 'ar' | 'en'];
+                  if (langContent && 
+                      (langContent.heroTitle || 
+                       (langContent.plateformes && langContent.plateformes.length > 0) ||
+                       (langContent.accessModes && langContent.accessModes.length > 0))) {
+                    hasData[lang] = true;
+                  }
+                });
+                
                 this.populateForm(content);
-                // Check if Arabic data is empty in the form and load defaults if needed
-                const arGroup = this.getLanguageFormGroup('ar');
-                const arHeroTitle = arGroup.get('heroTitle')?.value;
-                const arPlateformes = arGroup.get('plateformes') as FormArray;
-                const arAccessModes = arGroup.get('accessModes') as FormArray;
-                if ((!arHeroTitle || arHeroTitle.trim() === '') && arPlateformes.length === 0 && arAccessModes.length === 0) {
+                
+                // Only load defaults for languages that don't have data
+                if (!hasData['ar']) {
                   this.loadDefaultArabicData();
                 }
-                // Check if English data is empty in the form and load defaults if needed
-                const enGroup = this.getLanguageFormGroup('en');
-                const enHeroTitle = enGroup.get('heroTitle')?.value;
-                const enPlateformes = enGroup.get('plateformes') as FormArray;
-                const enAccessModes = enGroup.get('accessModes') as FormArray;
-                if ((!enHeroTitle || enHeroTitle.trim() === '') && enPlateformes.length === 0 && enAccessModes.length === 0) {
+                if (!hasData['en']) {
                   this.loadDefaultEnglishData();
                 }
               } else {
@@ -437,6 +455,7 @@ export class AdminPlateformesFormComponent implements OnInit {
           this.loadDefaultData();
         } finally {
           this.isLoading = false;
+          this.cdr.markForCheck();
         }
       },
       error: (error) => {
@@ -828,15 +847,54 @@ export class AdminPlateformesFormComponent implements OnInit {
         while (supportItems.length) supportItems.removeAt(0);
         while (contactInfo.length) contactInfo.removeAt(0);
 
-        // Populate arrays
-        langContent.plateformes?.forEach(item => this.addPlateforme(item, lang));
-        langContent.accessModes?.forEach(item => this.addAccessMode(item, lang));
-        langContent.bookingSteps?.forEach(item => this.addBookingStep(item, lang));
-        langContent.bookingRequirements?.forEach(item => this.addBookingRequirement(item, lang));
-        langContent.supportItems?.forEach(item => this.addSupportItem(item, lang));
-        langContent.contactInfo?.forEach(item => this.addContactItem(item, lang));
+        // Populate arrays with validation
+        if (langContent.plateformes && Array.isArray(langContent.plateformes)) {
+          langContent.plateformes.forEach(item => {
+            if (item && item.title) {
+              this.addPlateforme(item, lang);
+            }
+          });
+        }
+        if (langContent.accessModes && Array.isArray(langContent.accessModes)) {
+          langContent.accessModes.forEach(item => {
+            if (item && item.title) {
+              this.addAccessMode(item, lang);
+            }
+          });
+        }
+        if (langContent.bookingSteps && Array.isArray(langContent.bookingSteps)) {
+          langContent.bookingSteps.forEach(item => {
+            if (item && item.title) {
+              this.addBookingStep(item, lang);
+            }
+          });
+        }
+        if (langContent.bookingRequirements && Array.isArray(langContent.bookingRequirements)) {
+          langContent.bookingRequirements.forEach(item => {
+            if (item) {
+              this.addBookingRequirement(item, lang);
+            }
+          });
+        }
+        if (langContent.supportItems && Array.isArray(langContent.supportItems)) {
+          langContent.supportItems.forEach(item => {
+            if (item && item.title) {
+              this.addSupportItem(item, lang);
+            }
+          });
+        }
+        if (langContent.contactInfo && Array.isArray(langContent.contactInfo)) {
+          langContent.contactInfo.forEach(item => {
+            if (item && item.label) {
+              this.addContactItem(item, lang);
+            }
+          });
+        }
       }
     });
+    
+    // Trigger change detection after populating
+    this.cdr.markForCheck();
   }
 
   onSubmit(): void {
@@ -844,14 +902,21 @@ export class AdminPlateformesFormComponent implements OnInit {
     this.isSaving = true;
     this.errorMessage = '';
 
-    const formValue = this.form.value;
+    // Use getRawValue() to ensure FormArrays are properly captured
+    const translationsData: any = {};
+    
+    ['fr', 'ar', 'en'].forEach(lang => {
+      const langGroup = this.getLanguageFormGroup(lang);
+      const langValue = langGroup.getRawValue();
+      translationsData[lang] = langValue;
+    });
     
     // Build content with translations
     const content: PlateformesContent = {
       translations: {
-        fr: this.buildLanguageContent(formValue.translations.fr),
-        ar: this.buildLanguageContent(formValue.translations.ar),
-        en: this.buildLanguageContent(formValue.translations.en)
+        fr: this.buildLanguageContent(translationsData.fr),
+        ar: this.buildLanguageContent(translationsData.ar),
+        en: this.buildLanguageContent(translationsData.en)
       }
     };
 

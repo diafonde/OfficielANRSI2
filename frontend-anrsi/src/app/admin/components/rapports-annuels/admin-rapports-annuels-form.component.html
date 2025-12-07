@@ -64,8 +64,8 @@
     <div class="form-section">
       <h2>Rapports Annuels - {{ getActiveLanguageName() }}</h2>
       <div [formGroup]="getActiveLanguageFormGroup()">
-      <div formArrayName="rapports" *ngFor="let rapport of rapports.controls; let i = index">
-        <div [formGroupName]="i" class="nested-form-group">
+      <div formArrayName="rapports">
+        <div *ngFor="let rapport of rapports.controls; let i = index" [formGroupName]="i" class="nested-form-group">
           <div class="form-row">
             <div class="form-group">
               <label>Année *</label>

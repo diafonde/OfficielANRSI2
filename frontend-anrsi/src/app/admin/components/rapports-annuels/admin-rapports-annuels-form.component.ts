@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -52,7 +52,8 @@ export class AdminRapportsAnnuelsFormComponent implements OnInit {
     private pageService: PageAdminService,
     private articleService: ArticleAdminService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private cdr: ChangeDetectorRef
   ) {
     this.form = this.createForm();
   }
@@ -89,11 +90,17 @@ export class AdminRapportsAnnuelsFormComponent implements OnInit {
   switchLanguage(lang: string): void {
     if (lang === 'fr' || lang === 'ar' || lang === 'en') {
       this.activeLanguage = lang as 'fr' | 'ar' | 'en';
+      this.cdr.markForCheck();
     }
   }
 
   getActiveLanguageFormGroup(): FormGroup {
-    return this.form.get(`translations.${this.activeLanguage}`) as FormGroup;
+    const group = this.form.get(`translations.${this.activeLanguage}`) as FormGroup;
+    if (!group) {
+      console.error(`Form group for language ${this.activeLanguage} not found`);
+      return this.form.get('translations.fr') as FormGroup;
+    }
+    return group;
   }
 
   getLanguageFormGroup(lang: string): FormGroup {
@@ -157,13 +164,25 @@ export class AdminRapportsAnnuelsFormComponent implements OnInit {
               }
             };
             
+            // Track which languages have data
+            const hasData: { [key: string]: boolean } = {
+              fr: false,
+              ar: false,
+              en: false
+            };
+            
             // Extract content from each translation
             ['fr', 'ar', 'en'].forEach(lang => {
               const translation = page.translations?.[lang];
               if (translation && translation.content) {
                 try {
                   const parsedContent = JSON.parse(translation.content);
-                  content.translations[lang as 'fr' | 'ar' | 'en'] = parsedContent;
+                  // Check if the parsed content has actual data
+                  if (parsedContent.heroTitle || 
+                      (parsedContent.rapports && parsedContent.rapports.length > 0)) {
+                    content.translations[lang as 'fr' | 'ar' | 'en'] = parsedContent;
+                    hasData[lang] = true;
+                  }
                 } catch (e) {
                   console.error(`Error parsing ${lang} translation content:`, e);
                 }
@@ -171,6 +190,11 @@ export class AdminRapportsAnnuelsFormComponent implements OnInit {
             });
             
             this.populateForm(content, page);
+            
+            // Only load defaults for languages that don't have data
+            if (!hasData['fr']) {
+              this.loadDefaultData();
+            }
           } catch (e) {
             console.error('Error processing translations:', e);
             // Fall through to page.content check
@@ -178,10 +202,41 @@ export class AdminRapportsAnnuelsFormComponent implements OnInit {
         }
         
         // Fallback: Try to get from page.content (old system or backup)
-        if (page.content) {
+        // Only process if we didn't already process translations above
+        if (page.content && (!page.translations || Object.keys(page.translations).length === 0)) {
           try {
             const content: RapportsContent = JSON.parse(page.content);
+            
+            // Track which languages have data
+            const hasData: { [key: string]: boolean } = {
+              fr: false,
+              ar: false,
+              en: false
+            };
+            
+            if (content.translations) {
+              ['fr', 'ar', 'en'].forEach(lang => {
+                const langContent = content.translations?.[lang as 'fr' | 'ar' | 'en'];
+                if (langContent && 
+                    (langContent.heroTitle || 
+                     (langContent.rapports && langContent.rapports.length > 0))) {
+                  hasData[lang] = true;
+                }
+              });
+            } else {
+              // Old format - only French has data
+              const oldContent = content as any;
+              if (oldContent.heroTitle || (oldContent.rapports && oldContent.rapports.length > 0)) {
+                hasData['fr'] = true;
+              }
+            }
+            
             this.populateForm(content, page);
+            
+            // Only load defaults if no data exists
+            if (!hasData['fr'] && !hasData['ar'] && !hasData['en']) {
+              this.loadDefaultData();
+            }
           } catch (e) {
             console.error('Error parsing content:', e);
             this.loadDefaultData();
@@ -191,6 +246,7 @@ export class AdminRapportsAnnuelsFormComponent implements OnInit {
         }
         
         this.isLoading = false;
+        this.cdr.markForCheck();
       },
       error: (error) => {
         if (error.status === 404) {
@@ -270,15 +326,17 @@ export class AdminRapportsAnnuelsFormComponent implements OnInit {
           const rapportsArray = langGroup.get('rapports') as FormArray;
           while (rapportsArray.length) rapportsArray.removeAt(0);
 
-          // Populate array for this language
-          if (langContent.rapports && langContent.rapports.length > 0) {
+          // Populate array for this language with validation
+          if (langContent.rapports && Array.isArray(langContent.rapports) && langContent.rapports.length > 0) {
             langContent.rapports.forEach(rapport => {
-              const group = this.fb.group({
-                year: [rapport.year], // Removed required validator to allow saving incomplete forms
-                title: [rapport.title], // Removed required validator to allow saving incomplete forms
-                downloadUrl: [rapport.downloadUrl || '']
-              });
-              rapportsArray.push(group);
+              if (rapport && (rapport.year || rapport.title)) {
+                const group = this.fb.group({
+                  year: [rapport.year || ''], // Removed required validator to allow saving incomplete forms
+                  title: [rapport.title || ''], // Removed required validator to allow saving incomplete forms
+                  downloadUrl: [rapport.downloadUrl || '']
+                });
+                rapportsArray.push(group);
+              }
             });
           }
         } else {
@@ -306,14 +364,16 @@ export class AdminRapportsAnnuelsFormComponent implements OnInit {
       });
       const frRapportsArray = frGroup.get('rapports') as FormArray;
       while (frRapportsArray.length) frRapportsArray.removeAt(0);
-      if (oldContent.rapports && oldContent.rapports.length > 0) {
+      if (oldContent.rapports && Array.isArray(oldContent.rapports) && oldContent.rapports.length > 0) {
         oldContent.rapports.forEach((rapport: Rapport) => {
-          const group = this.fb.group({
-            year: [rapport.year], // Removed required validator to allow saving incomplete forms
-            title: [rapport.title], // Removed required validator to allow saving incomplete forms
-            downloadUrl: [rapport.downloadUrl || '']
-          });
-          frRapportsArray.push(group);
+          if (rapport && (rapport.year || rapport.title)) {
+            const group = this.fb.group({
+              year: [rapport.year || ''], // Removed required validator to allow saving incomplete forms
+              title: [rapport.title || ''], // Removed required validator to allow saving incomplete forms
+              downloadUrl: [rapport.downloadUrl || '']
+            });
+            frRapportsArray.push(group);
+          }
         });
       }
 
@@ -336,18 +396,23 @@ export class AdminRapportsAnnuelsFormComponent implements OnInit {
         const rapportsArray = langGroup.get('rapports') as FormArray;
         while (rapportsArray.length) rapportsArray.removeAt(0);
         // Copy rapports structure from French but leave titles empty for translation
-        if (oldContent.rapports && oldContent.rapports.length > 0) {
+        if (oldContent.rapports && Array.isArray(oldContent.rapports) && oldContent.rapports.length > 0) {
           oldContent.rapports.forEach((rapport: Rapport) => {
-            const group = this.fb.group({
-              year: [rapport.year], // Keep same year - removed required validator to allow saving incomplete forms
-              title: [''], // Empty for translation - removed required validator to allow saving incomplete forms
-              downloadUrl: [rapport.downloadUrl || ''] // Keep same download URLs
-            });
-            rapportsArray.push(group);
+            if (rapport && rapport.year) {
+              const group = this.fb.group({
+                year: [rapport.year || ''], // Keep same year - removed required validator to allow saving incomplete forms
+                title: [''], // Empty for translation - removed required validator to allow saving incomplete forms
+                downloadUrl: [rapport.downloadUrl || ''] // Keep same download URLs
+              });
+              rapportsArray.push(group);
+            }
           });
         }
       });
     }
+    
+    // Trigger change detection after populating
+    this.cdr.markForCheck();
   }
 
   onFileSelected(event: Event, index: number): void {

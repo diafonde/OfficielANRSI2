@@ -33,8 +33,11 @@ export class AdminDashboardComponent implements OnInit {
     public translate: TranslateService
   ) {
     this.articles$ = this.articleService.getAllArticles();
-    // Initialize current language
-    this.currentLang = this.translate.currentLang || 'fr';
+    // Initialize current language from admin preference
+    const savedLang = localStorage.getItem('admin_preferred_language') || 'fr';
+    this.currentLang = ['fr', 'ar', 'en'].includes(savedLang) ? savedLang : 'fr';
+    this.translate.use(this.currentLang);
+    document.body.dir = this.currentLang === 'ar' ? 'rtl' : 'ltr';
   }
 
   ngOnInit(): void {
@@ -65,6 +68,8 @@ export class AdminDashboardComponent implements OnInit {
     this.currentLang = lang;
     this.translate.use(lang);
     document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    // Save to admin-specific localStorage key
+    localStorage.setItem('admin_preferred_language', lang);
     this.isLangDropdownOpen = false;
   }
 

@@ -17,8 +17,8 @@ export class HeaderComponent {
   dropdownOpen: string | null = null;
 
   constructor(public translate: TranslateService) {
-    // Get saved language from localStorage
-    const savedLang = localStorage.getItem('preferred_language') || 'fr';
+    // Get saved language from public preference localStorage
+    const savedLang = localStorage.getItem('public_preferred_language') || 'fr';
     if (['fr', 'ar', 'en'].includes(savedLang)) {
       this.currentLang = savedLang;
     }
@@ -60,6 +60,7 @@ export class HeaderComponent {
     this.currentLang = this.currentLang === 'fr' ? 'ar' : 'fr';
     this.translate.use(this.currentLang);
     document.body.dir = this.currentLang === 'ar' ? 'rtl' : 'ltr';
-    localStorage.setItem('preferred_language', this.currentLang); // Save to localStorage
+    // Save to public-specific localStorage key
+    localStorage.setItem('public_preferred_language', this.currentLang);
   }
 }

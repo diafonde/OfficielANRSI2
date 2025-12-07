@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -62,7 +62,8 @@ export class AdminCooperationFormComponent implements OnInit {
     private fb: FormBuilder,
     private pageService: PageAdminService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private cdr: ChangeDetectorRef
   ) {
     this.form = this.createForm();
   }
@@ -101,11 +102,17 @@ export class AdminCooperationFormComponent implements OnInit {
   switchLanguage(lang: string): void {
     if (lang === 'fr' || lang === 'ar' || lang === 'en') {
       this.activeLanguage = lang as 'fr' | 'ar' | 'en';
+      this.cdr.markForCheck();
     }
   }
 
   getActiveLanguageFormGroup(): FormGroup {
-    return this.form.get(`translations.${this.activeLanguage}`) as FormGroup;
+    const group = this.form.get(`translations.${this.activeLanguage}`) as FormGroup;
+    if (!group) {
+      console.error(`Form group for language ${this.activeLanguage} not found`);
+      return this.form.get('translations.fr') as FormGroup;
+    }
+    return group;
   }
 
   getLanguageFormGroup(lang: string): FormGroup {
@@ -205,13 +212,25 @@ export class AdminCooperationFormComponent implements OnInit {
               }
             };
             
+            // Track which languages have data
+            const hasData: { [key: string]: boolean } = {
+              fr: false,
+              ar: false,
+              en: false
+            };
+            
             // Extract content from each translation
             ['fr', 'ar', 'en'].forEach(lang => {
               const translation = page.translations?.[lang];
               if (translation && translation.content) {
                 try {
                   const parsedContent = JSON.parse(translation.content);
-                  content.translations[lang as 'fr' | 'ar' | 'en'] = parsedContent;
+                  // Check if the parsed content has actual data
+                  if (parsedContent.cooperationInfo?.title || 
+                      (parsedContent.partnerships && parsedContent.partnerships.length > 0)) {
+                    content.translations[lang as 'fr' | 'ar' | 'en'] = parsedContent;
+                    hasData[lang] = true;
+                  }
                 } catch (e) {
                   console.error(`Error parsing ${lang} translation content:`, e);
                 }
@@ -219,16 +238,12 @@ export class AdminCooperationFormComponent implements OnInit {
             });
             
             this.populateForm(content);
-            // Check if Arabic data is empty and load defaults
-            const arGroup = this.getLanguageFormGroup('ar');
-            const arCooperationInfo = arGroup.get('cooperationInfo') as FormGroup;
-            if (!arCooperationInfo.get('title')?.value || (arGroup.get('partnerships') as FormArray).length === 0) {
+            
+            // Only load defaults for languages that don't have data
+            if (!hasData['ar']) {
               this.loadDefaultArabicData();
             }
-            // Check if English data is empty and load defaults
-            const enGroup = this.getLanguageFormGroup('en');
-            const enCooperationInfo = enGroup.get('cooperationInfo') as FormGroup;
-            if (!enCooperationInfo.get('title')?.value || (enGroup.get('partnerships') as FormArray).length === 0) {
+            if (!hasData['en']) {
               this.loadDefaultEnglishData();
             }
           } catch (e) {
@@ -238,23 +253,37 @@ export class AdminCooperationFormComponent implements OnInit {
         }
         
         // Fallback: Try to get from page.content (old system or backup)
-        if (page.content) {
+        // Only process if we didn't already process translations above
+        if (page.content && (!page.translations || Object.keys(page.translations).length === 0)) {
           try {
             const parsedContent = JSON.parse(page.content);
             // Check if it's the new format with translations
             if (parsedContent.translations) {
               const content: CooperationContent = parsedContent;
+              
+              // Track which languages have data
+              const hasData: { [key: string]: boolean } = {
+                fr: false,
+                ar: false,
+                en: false
+              };
+              
+              ['fr', 'ar', 'en'].forEach(lang => {
+                const langContent = content.translations[lang as 'fr' | 'ar' | 'en'];
+                if (langContent && 
+                    (langContent.cooperationInfo?.title || 
+                     (langContent.partnerships && langContent.partnerships.length > 0))) {
+                  hasData[lang] = true;
+                }
+              });
+              
               this.populateForm(content);
-              // Check if Arabic data is empty and load defaults
-              const arGroup = this.getLanguageFormGroup('ar');
-              const arCooperationInfo = arGroup.get('cooperationInfo') as FormGroup;
-              if (!arCooperationInfo.get('title')?.value || (arGroup.get('partnerships') as FormArray).length === 0) {
+              
+              // Only load defaults for languages that don't have data
+              if (!hasData['ar']) {
                 this.loadDefaultArabicData();
               }
-              // Check if English data is empty and load defaults
-              const enGroup = this.getLanguageFormGroup('en');
-              const enCooperationInfo = enGroup.get('cooperationInfo') as FormGroup;
-              if (!enCooperationInfo.get('title')?.value || (enGroup.get('partnerships') as FormArray).length === 0) {
+              if (!hasData['en']) {
                 this.loadDefaultEnglishData();
               }
             } else {
@@ -280,6 +309,7 @@ export class AdminCooperationFormComponent implements OnInit {
         }
         
         this.isLoading = false;
+        this.cdr.markForCheck();
       },
       error: (error) => {
         if (error.status === 404) {
@@ -609,6 +639,8 @@ export class AdminCooperationFormComponent implements OnInit {
       if (langContent) {
         const langGroup = this.getLanguageFormGroup(lang);
         const cooperationInfo = langGroup.get('cooperationInfo') as FormGroup;
+        
+        // Patch basic fields
         cooperationInfo.patchValue({
           title: langContent.cooperationInfo?.title || '',
           description: langContent.cooperationInfo?.description || ''
@@ -620,11 +652,28 @@ export class AdminCooperationFormComponent implements OnInit {
         while (benefits.length) benefits.removeAt(0);
         while (partnerships.length) partnerships.removeAt(0);
 
-        // Populate arrays
-        langContent.cooperationInfo?.benefits?.forEach(benefit => this.addBenefit(benefit, lang));
-        langContent.partnerships?.forEach(partnership => this.addPartnership(partnership, lang));
+        // Populate benefits array
+        if (langContent.cooperationInfo?.benefits && Array.isArray(langContent.cooperationInfo.benefits)) {
+          langContent.cooperationInfo.benefits.forEach(benefit => {
+            if (benefit) {
+              this.addBenefit(benefit, lang);
+            }
+          });
+        }
+
+        // Populate partnerships array
+        if (langContent.partnerships && Array.isArray(langContent.partnerships)) {
+          langContent.partnerships.forEach(partnership => {
+            if (partnership && partnership.id && partnership.title) {
+              this.addPartnership(partnership, lang);
+            }
+          });
+        }
       }
     });
+    
+    // Trigger change detection after populating
+    this.cdr.markForCheck();
   }
 
   onSubmit(): void {
@@ -632,14 +681,21 @@ export class AdminCooperationFormComponent implements OnInit {
     this.isSaving = true;
     this.errorMessage = '';
 
-    const formValue = this.form.value;
+    // Use getRawValue() to ensure FormArrays are properly captured
+    const translationsData: any = {};
+    
+    ['fr', 'ar', 'en'].forEach(lang => {
+      const langGroup = this.getLanguageFormGroup(lang);
+      const langValue = langGroup.getRawValue();
+      translationsData[lang] = langValue;
+    });
     
     // Build content with translations
     const content: CooperationContent = {
       translations: {
-        fr: this.buildLanguageContent(formValue.translations.fr),
-        ar: this.buildLanguageContent(formValue.translations.ar),
-        en: this.buildLanguageContent(formValue.translations.en)
+        fr: this.buildLanguageContent(translationsData.fr),
+        ar: this.buildLanguageContent(translationsData.ar),
+        en: this.buildLanguageContent(translationsData.en)
       }
     };
 

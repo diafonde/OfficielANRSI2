@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -81,7 +81,8 @@ export class AdminExpertAnrsiFormComponent implements OnInit {
     private fb: FormBuilder,
     private pageService: PageAdminService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private cdr: ChangeDetectorRef
   ) {
     this.form = this.createForm();
   }
@@ -133,6 +134,7 @@ export class AdminExpertAnrsiFormComponent implements OnInit {
   switchLanguage(lang: string): void {
     if (lang === 'fr' || lang === 'ar' || lang === 'en') {
       this.activeLanguage = lang as 'fr' | 'ar' | 'en';
+      this.cdr.markForCheck();
     }
   }
 
@@ -319,13 +321,26 @@ export class AdminExpertAnrsiFormComponent implements OnInit {
                 }
               };
               
+              // Track which languages have data
+              const hasData: { [key: string]: boolean } = {
+                fr: false,
+                ar: false,
+                en: false
+              };
+              
               // Extract content from each translation
               ['fr', 'ar', 'en'].forEach(lang => {
                 const translation = page.translations?.[lang];
                 if (translation && translation.content) {
                   try {
                     const parsedContent = JSON.parse(translation.content);
-                    content.translations[lang as 'fr' | 'ar' | 'en'] = parsedContent;
+                    // Check if the parsed content has actual data
+                    if (parsedContent.heroTitle || 
+                        (parsedContent.requirements && parsedContent.requirements.length > 0) ||
+                        (parsedContent.domains && parsedContent.domains.length > 0)) {
+                      content.translations[lang as 'fr' | 'ar' | 'en'] = parsedContent;
+                      hasData[lang] = true;
+                    }
                   } catch (e) {
                     console.error(`Error parsing ${lang} translation content:`, e);
                   }
@@ -333,20 +348,12 @@ export class AdminExpertAnrsiFormComponent implements OnInit {
               });
               
               this.populateForm(content);
-              // Check if Arabic data is empty and load defaults
-              const arGroup = this.getLanguageFormGroup('ar');
-              const arHeroTitle = arGroup.get('heroTitle')?.value;
-              const arRequirements = arGroup.get('requirements') as FormArray;
-              const arDomains = arGroup.get('domains') as FormArray;
-              if ((!arHeroTitle || arHeroTitle.trim() === '') && arRequirements.length === 0 && arDomains.length === 0) {
+              
+              // Only load defaults for languages that don't have data
+              if (!hasData['ar']) {
                 this.loadDefaultArabicData();
               }
-              // Check if English data is empty and load defaults
-              const enGroup = this.getLanguageFormGroup('en');
-              const enHeroTitle = enGroup.get('heroTitle')?.value;
-              const enRequirements = enGroup.get('requirements') as FormArray;
-              const enDomains = enGroup.get('domains') as FormArray;
-              if ((!enHeroTitle || enHeroTitle.trim() === '') && enRequirements.length === 0 && enDomains.length === 0) {
+              if (!hasData['en']) {
                 this.loadDefaultEnglishData();
               }
             } catch (e) {
@@ -356,27 +363,38 @@ export class AdminExpertAnrsiFormComponent implements OnInit {
           }
           
           // Fallback: Try to get from page.content (old system or backup)
-          if (page.content) {
+          // Only process if we didn't already process translations above
+          if (page.content && (!page.translations || Object.keys(page.translations).length === 0)) {
             try {
               const parsedContent = JSON.parse(page.content);
               // Check if it's the new format with translations
               if (parsedContent.translations) {
                 const content: ExpertAnrsiContent = parsedContent;
+                
+                // Track which languages have data
+                const hasData: { [key: string]: boolean } = {
+                  fr: false,
+                  ar: false,
+                  en: false
+                };
+                
+                ['fr', 'ar', 'en'].forEach(lang => {
+                  const langContent = content.translations[lang as 'fr' | 'ar' | 'en'];
+                  if (langContent && 
+                      (langContent.heroTitle || 
+                       (langContent.requirements && langContent.requirements.length > 0) ||
+                       (langContent.domains && langContent.domains.length > 0))) {
+                    hasData[lang] = true;
+                  }
+                });
+                
                 this.populateForm(content);
-                // Check if Arabic data is empty and load defaults
-                const arGroup = this.getLanguageFormGroup('ar');
-                const arHeroTitle = arGroup.get('heroTitle')?.value;
-                const arRequirements = arGroup.get('requirements') as FormArray;
-                const arDomains = arGroup.get('domains') as FormArray;
-                if ((!arHeroTitle || arHeroTitle.trim() === '') && arRequirements.length === 0 && arDomains.length === 0) {
+                
+                // Only load defaults for languages that don't have data
+                if (!hasData['ar']) {
                   this.loadDefaultArabicData();
                 }
-                // Check if English data is empty and load defaults
-                const enGroup = this.getLanguageFormGroup('en');
-                const enHeroTitle = enGroup.get('heroTitle')?.value;
-                const enRequirements = enGroup.get('requirements') as FormArray;
-                const enDomains = enGroup.get('domains') as FormArray;
-                if ((!enHeroTitle || enHeroTitle.trim() === '') && enRequirements.length === 0 && enDomains.length === 0) {
+                if (!hasData['en']) {
                   this.loadDefaultEnglishData();
                 }
               } else {
@@ -406,6 +424,7 @@ export class AdminExpertAnrsiFormComponent implements OnInit {
           this.loadDefaultData();
         } finally {
           this.isLoading = false;
+          this.cdr.markForCheck();
         }
       },
       error: (error) => {
@@ -707,15 +726,54 @@ export class AdminExpertAnrsiFormComponent implements OnInit {
         while (contactInfo.length) contactInfo.removeAt(0);
         while (requiredDocuments.length) requiredDocuments.removeAt(0);
 
-        // Populate arrays
-        langContent.requirements?.forEach(item => this.addRequirement(item, lang));
-        langContent.domains?.forEach(item => this.addDomain(item, lang));
-        langContent.processSteps?.forEach(item => this.addProcessStep(item, lang));
-        langContent.benefits?.forEach(item => this.addBenefit(item, lang));
-        langContent.contactInfo?.forEach(item => this.addContactItem(item, lang));
-        langContent.requiredDocuments?.forEach(item => this.addRequiredDocument(item, lang));
+        // Populate arrays with validation
+        if (langContent.requirements && Array.isArray(langContent.requirements)) {
+          langContent.requirements.forEach(item => {
+            if (item && item.title) {
+              this.addRequirement(item, lang);
+            }
+          });
+        }
+        if (langContent.domains && Array.isArray(langContent.domains)) {
+          langContent.domains.forEach(item => {
+            if (item && item.title) {
+              this.addDomain(item, lang);
+            }
+          });
+        }
+        if (langContent.processSteps && Array.isArray(langContent.processSteps)) {
+          langContent.processSteps.forEach(item => {
+            if (item && item.title) {
+              this.addProcessStep(item, lang);
+            }
+          });
+        }
+        if (langContent.benefits && Array.isArray(langContent.benefits)) {
+          langContent.benefits.forEach(item => {
+            if (item && item.title) {
+              this.addBenefit(item, lang);
+            }
+          });
+        }
+        if (langContent.contactInfo && Array.isArray(langContent.contactInfo)) {
+          langContent.contactInfo.forEach(item => {
+            if (item && item.label) {
+              this.addContactItem(item, lang);
+            }
+          });
+        }
+        if (langContent.requiredDocuments && Array.isArray(langContent.requiredDocuments)) {
+          langContent.requiredDocuments.forEach(item => {
+            if (item) {
+              this.addRequiredDocument(item, lang);
+            }
+          });
+        }
       }
     });
+    
+    // Trigger change detection after populating
+    this.cdr.markForCheck();
   }
 
   onSubmit(): void {
@@ -723,14 +781,21 @@ export class AdminExpertAnrsiFormComponent implements OnInit {
     this.isSaving = true;
     this.errorMessage = '';
 
-    const formValue = this.form.value;
+    // Use getRawValue() to ensure FormArrays are properly captured
+    const translationsData: any = {};
+    
+    ['fr', 'ar', 'en'].forEach(lang => {
+      const langGroup = this.getLanguageFormGroup(lang);
+      const langValue = langGroup.getRawValue();
+      translationsData[lang] = langValue;
+    });
     
     // Build content with translations
     const content: ExpertAnrsiContent = {
       translations: {
-        fr: this.buildLanguageContent(formValue.translations.fr),
-        ar: this.buildLanguageContent(formValue.translations.ar),
-        en: this.buildLanguageContent(formValue.translations.en)
+        fr: this.buildLanguageContent(translationsData.fr),
+        ar: this.buildLanguageContent(translationsData.ar),
+        en: this.buildLanguageContent(translationsData.en)
       }
     };
 

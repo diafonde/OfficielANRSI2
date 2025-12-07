@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -73,7 +73,8 @@ export class AdminOrganigrammeFormComponent implements OnInit {
     private fb: FormBuilder,
     private pageService: PageAdminService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private cdr: ChangeDetectorRef
   ) {
     this.form = this.createForm();
   }
@@ -91,6 +92,7 @@ export class AdminOrganigrammeFormComponent implements OnInit {
   switchLanguage(lang: string): void {
     if (lang === 'fr' || lang === 'ar' || lang === 'en') {
       this.activeLanguage = lang as 'fr' | 'ar' | 'en';
+      this.cdr.markForCheck();
     }
   }
 
@@ -132,7 +134,12 @@ export class AdminOrganigrammeFormComponent implements OnInit {
   }
 
   getActiveLanguageFormGroup(): FormGroup {
-    return this.getLanguageFormGroup(this.activeLanguage);
+    const group = this.getLanguageFormGroup(this.activeLanguage);
+    if (!group) {
+      console.error(`Form group for language ${this.activeLanguage} not found`);
+      return this.getLanguageFormGroup('fr');
+    }
+    return group;
   }
 
   getLanguageFormGroup(lang: string): FormGroup {
@@ -234,37 +241,90 @@ export class AdminOrganigrammeFormComponent implements OnInit {
     this.pageService.getPageBySlug('organigramme').subscribe({
       next: (page) => {
         this.pageId = page.id || null;
-        if (page.content) {
+        
+        // First, try to get from page.translations (new system)
+        if (page.translations && Object.keys(page.translations).length > 0) {
+          try {
+            const content: OrganigrammeContent = {
+              translations: {
+                fr: this.getEmptyLanguageContent(),
+                ar: this.getEmptyLanguageContent(),
+                en: this.getEmptyLanguageContent()
+              }
+            };
+            
+            // Track which languages have data
+            const hasData: { [key: string]: boolean } = {
+              fr: false,
+              ar: false,
+              en: false
+            };
+            
+            // Extract content from each translation
+            ['fr', 'ar', 'en'].forEach(lang => {
+              const translation = page.translations?.[lang];
+              if (translation && translation.content) {
+                try {
+                  const parsedContent = JSON.parse(translation.content);
+                  // Check if the parsed content has actual data
+                  if (parsedContent.heroTitle || 
+                      (parsedContent.levels && parsedContent.levels.length > 0)) {
+                    content.translations![lang as 'fr' | 'ar' | 'en'] = parsedContent;
+                    hasData[lang] = true;
+                  }
+                } catch (e) {
+                  console.error(`Error parsing ${lang} translation content:`, e);
+                }
+              }
+            });
+            
+            this.populateForm(content);
+            
+            // Only load defaults for languages that don't have data
+            if (!hasData['ar']) {
+              this.loadDefaultArabicData();
+            }
+            if (!hasData['en']) {
+              this.loadDefaultEnglishData();
+            }
+          } catch (e) {
+            console.error('Error processing translations:', e);
+            // Fall through to page.content check
+          }
+        }
+        
+        // Fallback: Try to get from page.content (old system or backup)
+        // Only process if we didn't already process translations above
+        if (page.content && (!page.translations || Object.keys(page.translations).length === 0)) {
           try {
             const parsedContent = JSON.parse(page.content);
             // Check if it's the new format with translations
             if (parsedContent.translations) {
               const content: OrganigrammeContent = parsedContent;
+              
+              // Track which languages have data
+              const hasData: { [key: string]: boolean } = {
+                fr: false,
+                ar: false,
+                en: false
+              };
+              
+              ['fr', 'ar', 'en'].forEach(lang => {
+                const langContent = content.translations?.[lang as 'fr' | 'ar' | 'en'];
+                if (langContent && 
+                    (langContent.heroTitle || 
+                     (langContent.levels && langContent.levels.length > 0))) {
+                  hasData[lang] = true;
+                }
+              });
+              
               this.populateForm(content);
               
-              // Check if Arabic data is empty and load defaults
-              try {
-                const arGroup = this.getLanguageFormGroup('ar');
-                const arHeroTitle = arGroup.get('heroTitle')?.value;
-                const arLevels = arGroup.get('levels') as FormArray;
-                if (!arHeroTitle || !arLevels || arLevels.length === 0) {
-                  this.loadDefaultArabicData();
-                }
-              } catch (e) {
-                console.error('Error checking Arabic data:', e);
+              // Only load defaults for languages that don't have data
+              if (!hasData['ar']) {
                 this.loadDefaultArabicData();
               }
-              
-              // Check if English data is empty and load defaults
-              try {
-                const enGroup = this.getLanguageFormGroup('en');
-                const enHeroTitle = enGroup.get('heroTitle')?.value;
-                const enLevels = enGroup.get('levels') as FormArray;
-                if (!enHeroTitle || !enLevels || enLevels.length === 0) {
-                  this.loadDefaultEnglishData();
-                }
-              } catch (e) {
-                console.error('Error checking English data:', e);
+              if (!hasData['en']) {
                 this.loadDefaultEnglishData();
               }
             } else {
@@ -278,6 +338,7 @@ export class AdminOrganigrammeFormComponent implements OnInit {
                 }
               };
               this.populateForm(content);
+              // Load default Arabic and English data for old format
               this.loadDefaultArabicData();
               this.loadDefaultEnglishData();
             }
@@ -285,10 +346,12 @@ export class AdminOrganigrammeFormComponent implements OnInit {
             console.error('Error parsing content:', e);
             this.loadDefaultData();
           }
-        } else {
+        } else if (!page.translations || Object.keys(page.translations).length === 0) {
           this.loadDefaultData();
         }
+        
         this.isLoading = false;
+        this.cdr.markForCheck();
       },
       error: (error) => {
         if (error.status === 404) {
@@ -694,13 +757,23 @@ export class AdminOrganigrammeFormComponent implements OnInit {
           while (levels.length) levels.removeAt(0);
           while (responsibilities.length) responsibilities.removeAt(0);
 
-          // Populate levels
-          langContent.levels?.forEach(level => {
-            this.addLevel(level, lang);
-          });
+          // Populate levels with validation
+          if (langContent.levels && Array.isArray(langContent.levels)) {
+            langContent.levels.forEach(level => {
+              if (level && level.positions && Array.isArray(level.positions)) {
+                this.addLevel(level, lang);
+              }
+            });
+          }
 
-          // Populate responsibilities
-          langContent.responsibilities?.forEach(responsibility => this.addResponsibility(responsibility, lang));
+          // Populate responsibilities with validation
+          if (langContent.responsibilities && Array.isArray(langContent.responsibilities)) {
+            langContent.responsibilities.forEach(responsibility => {
+              if (responsibility && responsibility.title) {
+                this.addResponsibility(responsibility, lang);
+              }
+            });
+          }
         } else {
           // If translation doesn't exist, ensure form group is initialized with empty values
           langGroup.patchValue({
@@ -734,14 +807,27 @@ export class AdminOrganigrammeFormComponent implements OnInit {
       while (levels.length) levels.removeAt(0);
       while (responsibilities.length) responsibilities.removeAt(0);
 
-      // Populate levels
-      content.levels?.forEach(level => {
-        this.addLevel(level, 'fr');
-      });
+      // Populate levels with validation
+      if (content.levels && Array.isArray(content.levels)) {
+        content.levels.forEach(level => {
+          if (level && level.positions && Array.isArray(level.positions)) {
+            this.addLevel(level, 'fr');
+          }
+        });
+      }
 
-      // Populate responsibilities
-      content.responsibilities?.forEach(responsibility => this.addResponsibility(responsibility, 'fr'));
+      // Populate responsibilities with validation
+      if (content.responsibilities && Array.isArray(content.responsibilities)) {
+        content.responsibilities.forEach(responsibility => {
+          if (responsibility && responsibility.title) {
+            this.addResponsibility(responsibility, 'fr');
+          }
+        });
+      }
     }
+    
+    // Trigger change detection after populating
+    this.cdr.markForCheck();
   }
 
   onSubmit(): void {
@@ -749,14 +835,21 @@ export class AdminOrganigrammeFormComponent implements OnInit {
       this.isSaving = true;
       this.errorMessage = '';
 
-      const formValue = this.form.value;
+      // Use getRawValue() to ensure FormArrays are properly captured
+      const translationsData: any = {};
+      
+      ['fr', 'ar', 'en'].forEach(lang => {
+        const langGroup = this.getLanguageFormGroup(lang);
+        const langValue = langGroup.getRawValue();
+        translationsData[lang] = langValue;
+      });
       
       // Build content with translations
       const content: OrganigrammeContent = {
         translations: {
-          fr: this.buildLanguageContent(formValue.translations.fr),
-          ar: this.buildLanguageContent(formValue.translations.ar),
-          en: this.buildLanguageContent(formValue.translations.en)
+          fr: this.buildLanguageContent(translationsData.fr),
+          ar: this.buildLanguageContent(translationsData.ar),
+          en: this.buildLanguageContent(translationsData.en)
         }
       };
 
@@ -767,11 +860,13 @@ export class AdminOrganigrammeFormComponent implements OnInit {
         (['fr', 'ar', 'en'] as const).forEach(lang => {
           const langContent = content.translations![lang];
           if (langContent) {
+            const langContentJson = JSON.stringify(langContent);
             translations[lang] = {
               title: langContent.heroTitle || 'Organigramme',
               heroTitle: langContent.heroTitle || '',
               heroSubtitle: langContent.heroSubtitle || '',
-              extra: JSON.stringify(langContent) // Store the full content in extra (JSONB)
+              content: langContentJson, // Store the language-specific content in content field
+              extra: langContentJson // Also store in extra for backward compatibility
             };
           }
         });

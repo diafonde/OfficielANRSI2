@@ -52,8 +52,8 @@
     <div class="form-section">
       <h2>{{ getLabel('processSection') }} - {{ getActiveLanguageName() }}</h2>
       <div [formGroup]="getActiveLanguageFormGroup()">
-        <div formArrayName="process" *ngFor="let step of process.controls; let i = index">
-          <div [formGroupName]="i" class="nested-form-group">
+        <div formArrayName="process">
+          <div *ngFor="let step of process.controls; let i = index" [formGroupName]="i" class="nested-form-group">
             <div class="form-row">
               <div class="form-group">
                 <label>{{ getLabel('stepNumber') }}</label>
@@ -83,8 +83,8 @@
     <div class="form-section">
       <h2>{{ getLabel('requirementsSection') }} - {{ getActiveLanguageName() }}</h2>
       <div [formGroup]="getActiveLanguageFormGroup()">
-        <div formArrayName="requirements" *ngFor="let requirement of requirements.controls; let i = index">
-          <div class="form-row">
+        <div formArrayName="requirements">
+          <div *ngFor="let requirement of requirements.controls; let i = index" class="form-row">
             <input type="text" [formControlName]="i" class="form-control" />
             <button type="button" (click)="removeRequirement(i)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
           </div>
@@ -97,8 +97,8 @@
     <div class="form-section">
       <h2>{{ getLabel('benefitsSection') }} - {{ getActiveLanguageName() }}</h2>
       <div [formGroup]="getActiveLanguageFormGroup()">
-        <div formArrayName="benefits" *ngFor="let benefit of benefits.controls; let i = index">
-          <div class="form-row">
+        <div formArrayName="benefits">
+          <div *ngFor="let benefit of benefits.controls; let i = index" class="form-row">
             <input type="text" [formControlName]="i" class="form-control" />
             <button type="button" (click)="removeBenefit(i)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
           </div>

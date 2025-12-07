@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -54,7 +54,8 @@ export class AdminStrategicVisionFormComponent implements OnInit {
     private fb: FormBuilder,
     private pageService: PageAdminService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private cdr: ChangeDetectorRef
   ) {
     this.form = this.createForm();
   }
@@ -95,11 +96,17 @@ export class AdminStrategicVisionFormComponent implements OnInit {
   switchLanguage(lang: string): void {
     if (lang === 'fr' || lang === 'ar' || lang === 'en') {
       this.activeLanguage = lang as 'fr' | 'ar' | 'en';
+      this.cdr.markForCheck();
     }
   }
 
   getActiveLanguageFormGroup(): FormGroup {
-    return this.form.get(`translations.${this.activeLanguage}`) as FormGroup;
+    const group = this.form.get(`translations.${this.activeLanguage}`) as FormGroup;
+    if (!group) {
+      console.error(`Form group for language ${this.activeLanguage} not found`);
+      return this.form.get('translations.fr') as FormGroup;
+    }
+    return group;
   }
 
   getLanguageFormGroup(lang: string): FormGroup {
@@ -158,13 +165,25 @@ export class AdminStrategicVisionFormComponent implements OnInit {
               }
             };
             
+            // Track which languages have data
+            const hasData: { [key: string]: boolean } = {
+              fr: false,
+              ar: false,
+              en: false
+            };
+            
             // Extract content from each translation
             ['fr', 'ar', 'en'].forEach(lang => {
               const translation = page.translations?.[lang];
               if (translation && translation.content) {
                 try {
                   const parsedContent = JSON.parse(translation.content);
-                  content.translations[lang as 'fr' | 'ar' | 'en'] = parsedContent;
+                  // Check if the parsed content has actual data
+                  if (parsedContent.heroTitle || 
+                      (parsedContent.values && parsedContent.values.length > 0)) {
+                    content.translations[lang as 'fr' | 'ar' | 'en'] = parsedContent;
+                    hasData[lang] = true;
+                  }
                 } catch (e) {
                   console.error(`Error parsing ${lang} translation content:`, e);
                 }
@@ -172,14 +191,12 @@ export class AdminStrategicVisionFormComponent implements OnInit {
             });
             
             this.populateForm(content);
-            // Check if Arabic data is empty and load defaults
-            const arGroup = this.getLanguageFormGroup('ar');
-            if (!arGroup.get('heroTitle')?.value || (arGroup.get('values') as FormArray).length === 0) {
+            
+            // Only load defaults for languages that don't have data
+            if (!hasData['ar']) {
               this.loadDefaultArabicData();
             }
-            // Check if English data is empty and load defaults
-            const enGroup = this.getLanguageFormGroup('en');
-            if (!enGroup.get('heroTitle')?.value || (enGroup.get('values') as FormArray).length === 0) {
+            if (!hasData['en']) {
               this.loadDefaultEnglishData();
             }
           } catch (e) {
@@ -189,21 +206,37 @@ export class AdminStrategicVisionFormComponent implements OnInit {
         }
         
         // Fallback: Try to get from page.content (old system or backup)
-        if (page.content) {
+        // Only process if we didn't already process translations above
+        if (page.content && (!page.translations || Object.keys(page.translations).length === 0)) {
           try {
             const parsedContent = JSON.parse(page.content);
             // Check if it's the new format with translations
             if (parsedContent.translations) {
               const content: StrategicVisionContent = parsedContent;
+              
+              // Track which languages have data
+              const hasData: { [key: string]: boolean } = {
+                fr: false,
+                ar: false,
+                en: false
+              };
+              
+              ['fr', 'ar', 'en'].forEach(lang => {
+                const langContent = content.translations[lang as 'fr' | 'ar' | 'en'];
+                if (langContent && 
+                    (langContent.heroTitle || 
+                     (langContent.values && langContent.values.length > 0))) {
+                  hasData[lang] = true;
+                }
+              });
+              
               this.populateForm(content);
-              // Check if Arabic data is empty and load defaults
-              const arGroup = this.getLanguageFormGroup('ar');
-              if (!arGroup.get('heroTitle')?.value || (arGroup.get('values') as FormArray).length === 0) {
+              
+              // Only load defaults for languages that don't have data
+              if (!hasData['ar']) {
                 this.loadDefaultArabicData();
               }
-              // Check if English data is empty and load defaults
-              const enGroup = this.getLanguageFormGroup('en');
-              if (!enGroup.get('heroTitle')?.value || (enGroup.get('values') as FormArray).length === 0) {
+              if (!hasData['en']) {
                 this.loadDefaultEnglishData();
               }
             } else {
@@ -217,6 +250,7 @@ export class AdminStrategicVisionFormComponent implements OnInit {
                 }
               };
               this.populateForm(content);
+              // Load default Arabic and English data for old format
               this.loadDefaultArabicData();
               this.loadDefaultEnglishData();
             }
@@ -229,6 +263,7 @@ export class AdminStrategicVisionFormComponent implements OnInit {
         }
         
         this.isLoading = false;
+        this.cdr.markForCheck();
       },
       error: (error) => {
         if (error.status === 404) {
@@ -408,10 +443,19 @@ export class AdminStrategicVisionFormComponent implements OnInit {
         const values = langGroup.get('values') as FormArray;
         while (values.length) values.removeAt(0);
 
-        // Populate array
-        langContent.values?.forEach(value => this.addValue(value, lang));
+        // Populate array with validation
+        if (langContent.values && Array.isArray(langContent.values)) {
+          langContent.values.forEach(value => {
+            if (value && value.title) {
+              this.addValue(value, lang);
+            }
+          });
+        }
       }
     });
+    
+    // Trigger change detection after populating
+    this.cdr.markForCheck();
   }
 
   onSubmit(): void {
@@ -419,14 +463,21 @@ export class AdminStrategicVisionFormComponent implements OnInit {
     this.isSaving = true;
     this.errorMessage = '';
 
-    const formValue = this.form.value;
+    // Use getRawValue() to ensure FormArrays are properly captured
+    const translationsData: any = {};
+    
+    ['fr', 'ar', 'en'].forEach(lang => {
+      const langGroup = this.getLanguageFormGroup(lang);
+      const langValue = langGroup.getRawValue();
+      translationsData[lang] = langValue;
+    });
     
     // Build content with translations
     const content: StrategicVisionContent = {
       translations: {
-        fr: this.buildLanguageContent(formValue.translations.fr),
-        ar: this.buildLanguageContent(formValue.translations.ar),
-        en: this.buildLanguageContent(formValue.translations.en)
+        fr: this.buildLanguageContent(translationsData.fr),
+        ar: this.buildLanguageContent(translationsData.ar),
+        en: this.buildLanguageContent(translationsData.en)
       }
     };
 

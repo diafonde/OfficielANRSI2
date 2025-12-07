@@ -52,8 +52,8 @@
     <div class="form-section">
       <h2>{{ getLabel('programmesSection') }} - {{ getActiveLanguageName() }}</h2>
       <div [formGroup]="getActiveLanguageFormGroup()">
-        <div formArrayName="programmes" *ngFor="let programme of programmes.controls; let i = index">
-          <div [formGroupName]="i" class="nested-form-group">
+        <div formArrayName="programmes">
+          <div *ngFor="let programme of programmes.controls; let i = index" [formGroupName]="i" class="nested-form-group">
             <div class="form-row">
               <div class="form-group">
                 <label>{{ getLabel('id') }}</label>
@@ -85,8 +85,8 @@
             </div>
             <div class="form-group">
               <label>{{ getLabel('objectives') }}</label>
-              <div formArrayName="objectives" *ngFor="let objective of getProgrammeObjectives(i).controls; let j = index">
-                <div class="form-row">
+              <div formArrayName="objectives">
+                <div *ngFor="let objective of getProgrammeObjectives(i).controls; let j = index" class="form-row">
                   <input type="text" [formControlName]="j" class="form-control" />
                   <button type="button" (click)="removeProgrammeObjective(i, j)" class="btn btn-danger btn-sm">{{ getLabel('remove') }}</button>
                 </div>
