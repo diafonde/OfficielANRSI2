@@ -18,7 +18,7 @@
     <!-- Language Tabs -->
     <div class="language-tabs">
       <button
-        *ngFor="let lang of languages; trackBy: trackByLanguageCode"
+        *ngFor="let lang of languages"
         type="button"
         class="lang-tab"
         [class.active]="activeLanguage === lang.code"
@@ -37,7 +37,7 @@
     <!-- Hero Section -->
     <div class="form-section">
       <h2>{{ getLabel('heroSection') }} - {{ getActiveLanguageName() }}</h2>
-      <div [formGroup]="activeLanguageFormGroup">
+      <div [formGroup]="getActiveLanguageFormGroup()">
         <div class="form-group">
           <label>{{ getLabel('heroTitle') }}</label>
           <input type="text" formControlName="heroTitle" class="form-control" />
@@ -58,7 +58,7 @@
     <!-- Article Links -->
     <div class="form-section">
       <h2>{{ getLabel('articleLinksSection') }} - {{ getActiveLanguageName() }}</h2>
-      <div [formGroup]="activeLanguageFormGroup">
+      <div [formGroup]="getActiveLanguageFormGroup()">
         <div formArrayName="articleLinks">
           <div *ngIf="articleLinks.length === 0" class="empty-state">
             <p class="text-muted">{{ getLabel('noArticleLinks') || 'No article links added yet. Click the button below to add one.' }}</p>

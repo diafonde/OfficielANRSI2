@@ -456,7 +456,10 @@ export class AdminAgenceMediasFormComponent implements OnInit {
       next: (page) => {
         this.pageId = page.id || null;
         
-        // First, try to get from page.translations (new system) - matches how page component reads
+        // Check if we have valid data to load BEFORE clearing
+        let contentToUse: AgenceMediasContent | null = null;
+        
+        // Priority 1: Check page.translations (from page_translations table)
         if (page.translations && Object.keys(page.translations).length > 0) {
           try {
             const content: AgenceMediasContent = {
@@ -480,54 +483,30 @@ export class AdminAgenceMediasFormComponent implements OnInit {
               }
             });
             
-            // Check if Arabic data is empty in the database content BEFORE populating
-            const arContent = content.translations.ar;
-            const isArabicEmpty = (!arContent.heroTitle || arContent.heroTitle.trim() === '') &&
-                                 (!arContent.mediaLinks || arContent.mediaLinks.length === 0) &&
-                                 (!arContent.mediaOverview || arContent.mediaOverview.length === 0);
-            
-            // Check if English data is empty in the database content BEFORE populating
-            const enContent = content.translations.en;
-            const isEnglishEmpty = (!enContent.heroTitle || enContent.heroTitle.trim() === '') &&
-                                   (!enContent.mediaLinks || enContent.mediaLinks.length === 0) &&
-                                   (!enContent.mediaOverview || enContent.mediaOverview.length === 0);
-            
-            // Populate form with data from database
-            this.populateForm(content);
-            
-            // Only load defaults if the database content was actually empty
-         
+            // Only use if we have at least some content
+            if (content.translations.fr.heroTitle || content.translations.fr.heroSubtitle ||
+                content.translations.ar.heroTitle || content.translations.ar.heroSubtitle ||
+                content.translations.en.heroTitle || content.translations.en.heroSubtitle ||
+                (content.translations.fr.mediaLinks && content.translations.fr.mediaLinks.length > 0) ||
+                (content.translations.ar.mediaLinks && content.translations.ar.mediaLinks.length > 0) ||
+                (content.translations.en.mediaLinks && content.translations.en.mediaLinks.length > 0) ||
+                (content.translations.fr.mediaOverview && content.translations.fr.mediaOverview.length > 0) ||
+                (content.translations.ar.mediaOverview && content.translations.ar.mediaOverview.length > 0) ||
+                (content.translations.en.mediaOverview && content.translations.en.mediaOverview.length > 0)) {
+              contentToUse = content;
+            }
           } catch (e) {
             console.error('Error processing translations:', e);
-            // Fall through to page.content check
           }
         }
         
-        // Fallback: Try to get from page.content (old system or backup) - matches page component fallback
-        if (page.content) {
+        // Priority 2: Fallback to page.content (old format)
+        if (!contentToUse && page.content) {
           try {
             const parsedContent = JSON.parse(page.content);
             // Check if it's the new format with translations
             if (parsedContent.translations) {
-              const content: AgenceMediasContent = parsedContent;
-              
-              // Check if Arabic data is empty in the database content BEFORE populating
-              const arContent = content.translations.ar;
-              const isArabicEmpty = (!arContent.heroTitle || arContent.heroTitle.trim() === '') &&
-                                   (!arContent.mediaLinks || arContent.mediaLinks.length === 0) &&
-                                   (!arContent.mediaOverview || arContent.mediaOverview.length === 0);
-              
-              // Check if English data is empty in the database content BEFORE populating
-              const enContent = content.translations.en;
-              const isEnglishEmpty = (!enContent.heroTitle || enContent.heroTitle.trim() === '') &&
-                                     (!enContent.mediaLinks || enContent.mediaLinks.length === 0) &&
-                                     (!enContent.mediaOverview || enContent.mediaOverview.length === 0);
-              
-              // Populate form with data from database
-              this.populateForm(content);
-              
-              // Only load defaults if the database content was actually empty
-           
+              contentToUse = parsedContent;
             } else {
               // Old format - migrate to new format
               const oldContent: any = parsedContent;
@@ -545,20 +524,22 @@ export class AdminAgenceMediasFormComponent implements OnInit {
                 socialMedia: oldContent.socialMedia || [],
                 contactInfo: oldContent.contactInfo || []
               };
-              const content: AgenceMediasContent = {
+              contentToUse = {
                 translations: {
                   fr: migratedContent,
                   ar: this.getEmptyLanguageContent(),
                   en: this.getEmptyLanguageContent()
                 }
               };
-              this.populateForm(content);
-              // Load default Arabic and English data since they're empty
-            
             }
           } catch (e) {
             console.error('Error parsing content:', e);
           }
+        }
+        
+        // Only populate if we have content to use
+        if (contentToUse) {
+          this.populateForm(contentToUse);
         }
         
         this.isLoading = false;
@@ -596,6 +577,19 @@ export class AdminAgenceMediasFormComponent implements OnInit {
       const langContent = content.translations[lang as 'fr' | 'ar' | 'en'];
       if (langContent) {
         const langGroup = this.getLanguageFormGroup(lang);
+        if (!langGroup) {
+          console.error(`Language form group for ${lang} not found`);
+          return;
+        }
+        
+        console.log(`Populating ${lang} form with:`, {
+          heroTitle: langContent.heroTitle,
+          heroSubtitle: langContent.heroSubtitle,
+          mediaLinksCount: langContent.mediaLinks?.length || 0,
+          articleLinksCount: langContent.articleLinks?.length || 0,
+          mediaOverviewCount: langContent.mediaOverview?.length || 0
+        });
+        
         langGroup.patchValue({
           heroTitle: langContent.heroTitle || '',
           heroSubtitle: langContent.heroSubtitle || '',
@@ -683,6 +677,20 @@ export class AdminAgenceMediasFormComponent implements OnInit {
         if (langContent.contactInfo && Array.isArray(langContent.contactInfo)) {
           langContent.contactInfo.forEach(item => this.addContactItem(item, lang));
         }
+        
+        // Update form arrays to ensure changes are detected
+        mediaLinks.updateValueAndValidity({ emitEvent: true });
+        articleLinks.updateValueAndValidity({ emitEvent: true });
+        mediaOverview.updateValueAndValidity({ emitEvent: true });
+        recentCoverage.updateValueAndValidity({ emitEvent: true });
+        mediaTypes.updateValueAndValidity({ emitEvent: true });
+        pressReleases.updateValueAndValidity({ emitEvent: true });
+        mediaKit.updateValueAndValidity({ emitEvent: true });
+        socialMedia.updateValueAndValidity({ emitEvent: true });
+        contactInfo.updateValueAndValidity({ emitEvent: true });
+        langGroup.updateValueAndValidity({ emitEvent: true });
+        
+        console.log(`Finished populating ${lang} form. MediaLinks count:`, mediaLinks.length);
       }
     });
     // Trigger change detection after populating form
