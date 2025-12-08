@@ -14,13 +14,21 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Value("${file.upload-dir:uploads}")
     private String uploadDir;
     
+    @Value("${FILE_UPLOAD_DIR:}")
+    private String fileUploadDirEnv;
+    
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // Priority: 1. Environment variable, 2. Property, 3. Default
+        String dirToUse = (fileUploadDirEnv != null && !fileUploadDirEnv.isEmpty()) 
+            ? fileUploadDirEnv 
+            : uploadDir;
+        
         // Serve uploaded files
-        Path uploadPath = Paths.get(uploadDir);
+        Path uploadPath = Paths.get(dirToUse);
         // If relative path, make it relative to the current working directory
         if (!uploadPath.isAbsolute()) {
-            uploadPath = Paths.get(System.getProperty("user.dir"), uploadDir);
+            uploadPath = Paths.get(System.getProperty("user.dir"), dirToUse);
         }
         String uploadPathStr = uploadPath.toFile().getAbsolutePath();
         

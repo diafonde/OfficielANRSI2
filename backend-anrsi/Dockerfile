@@ -1,5 +1,5 @@
 # Stage 1: Build the application
-FROM openjdk:17-jdk-slim AS builder
+FROM gradle:8.10-jdk17-alpine AS builder
 
 WORKDIR /app
 
@@ -18,10 +18,10 @@ COPY settings.gradle .
 COPY src ./src
 
 # Build the application (skip tests for faster builds)
-RUN ./gradlew build -x test
+RUN ./gradlew bootJar --no-daemon
 
 # Stage 2: Runtime image
-FROM openjdk:17-jre-slim
+FROM gradle:8.10-jdk17-alpine
 
 WORKDIR /app
 
@@ -33,4 +33,3 @@ EXPOSE 8080
 
 # Run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
-
