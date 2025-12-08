@@ -6,6 +6,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { PageAdminService, PageDTO, PageCreateDTO, PageUpdateDTO } from '../../services/page-admin.service';
 import { ArticleAdminService } from '../../services/article-admin.service';
 import { AuthService } from '../../services/auth.service';
+import { environment } from '../../../../environments/environment';
 
 interface AppelItem {
   title: string;
@@ -1019,7 +1020,7 @@ export class AdminAppelsCandidaturesFormComponent implements OnInit {
     });
     
     this.http.post<{ success: boolean; message?: string; error?: string }>(
-      '/api/admin/appels-candidatures/import',
+      `${environment.apiUrl}/admin/appels-candidatures/import`,
       formData,
       { headers }
     ).subscribe({

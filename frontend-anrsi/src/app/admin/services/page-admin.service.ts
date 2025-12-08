@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
+import { environment } from '../../../environments/environment';
 
 export interface PageTranslationDTO {
   id?: number;
@@ -61,7 +62,7 @@ export interface PageUpdateDTO {
   providedIn: 'root'
 })
 export class PageAdminService {
-  private apiUrl = '/api/pages';
+  private apiUrl = `${environment.apiUrl}/pages`;
 
   constructor(
     private http: HttpClient,

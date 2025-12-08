@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
 import { User } from '../models/user.model';
+import { environment } from '../../../environments/environment';
 
 export interface UserCreateRequest {
   username: string;
@@ -18,7 +19,7 @@ export interface UserCreateRequest {
   providedIn: 'root'
 })
 export class UserAdminService {
-  private readonly apiUrl = '/api/users';
+  private readonly apiUrl = `${environment.apiUrl}/users`;
 
   constructor(
     private http: HttpClient,

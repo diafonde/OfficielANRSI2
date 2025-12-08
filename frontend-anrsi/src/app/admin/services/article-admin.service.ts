@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of, BehaviorSubject, map, catchError, throwError, switchMap } from 'rxjs';
 import { Article } from '../../models/article.model';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ArticleAdminService {
-  private readonly apiUrl = '/api/articles';
+  private readonly apiUrl = `${environment.apiUrl}/articles`;
   private articlesSubject = new BehaviorSubject<Article[]>([]);
   public articles$ = this.articlesSubject.asObservable();
 
@@ -51,10 +52,10 @@ export class ArticleAdminService {
       headers = headers.set('Authorization', `Bearer ${token}`);
     }
     
-    console.log('Uploading image to:', `/api/upload/image`);
+    console.log('Uploading image to:', `${environment.apiUrl}/upload/image`);
     console.log('Has token:', !!token);
     
-    return this.http.post<{ url: string; filename: string }>(`/api/upload/image`, formData, { 
+    return this.http.post<{ url: string; filename: string }>(`${environment.apiUrl}/upload/image`, formData, { 
       headers,
       reportProgress: false
     });
@@ -73,10 +74,10 @@ export class ArticleAdminService {
       headers = headers.set('Authorization', `Bearer ${token}`);
     }
     
-    console.log('Uploading document to:', `/api/upload/document`);
+    console.log('Uploading document to:', `${environment.apiUrl}/upload/document`);
     console.log('Has token:', !!token);
     
-    return this.http.post<{ url: string; filename: string }>(`/api/upload/document`, formData, { 
+    return this.http.post<{ url: string; filename: string }>(`${environment.apiUrl}/upload/document`, formData, { 
       headers,
       reportProgress: false
     });

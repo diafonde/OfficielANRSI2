@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
+import { environment } from '../../../environments/environment';
 
 export interface UsefulWebsite {
   id?: number;
@@ -16,7 +17,7 @@ export interface UsefulWebsite {
   providedIn: 'root'
 })
 export class UsefulWebsitesAdminService {
-  private readonly apiUrl = '/api/useful-websites';
+  private readonly apiUrl = `${environment.apiUrl}/useful-websites`;
 
   constructor(
     private http: HttpClient,

@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { User, LoginRequest, LoginResponse } from '../models/user.model';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +16,7 @@ export class AuthService {
 
   private readonly TOKEN_KEY = 'admin_token';
   private readonly USER_KEY = 'admin_user';
-  private readonly apiUrl = '/api/auth';
+  private readonly apiUrl = `${environment.apiUrl}/auth`;
 
   constructor(private http: HttpClient) {
     // Check for existing session on service initialization

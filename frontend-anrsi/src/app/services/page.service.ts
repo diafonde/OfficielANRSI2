@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface PageTranslationDTO {
   id?: number;
@@ -32,7 +33,7 @@ export interface PageDTO {
   providedIn: 'root'
 })
 export class PageService {
-  private apiUrl = '/api/pages';
+  private apiUrl = `${environment.apiUrl}/pages`;
 
   constructor(private http: HttpClient) {}
 

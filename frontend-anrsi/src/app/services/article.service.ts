@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Article } from '../models/article.model';
 import { Observable, map, catchError, throwError, of } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface PaginatedResponse<T> {
   content: T[];
@@ -45,7 +46,7 @@ interface ArticleDTO {
   providedIn: 'root'
 })
 export class ArticleService {
-  private readonly apiUrl = '/api/articles';
+  private readonly apiUrl = `${environment.apiUrl}/articles`;
 
   constructor(private http: HttpClient) {}
 
