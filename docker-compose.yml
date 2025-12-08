@@ -32,8 +32,11 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JPA_SHOW_SQL: "false"
       SPRING_PROFILES_ACTIVE: prod
+      FILE_UPLOAD_DIR: /app/uploads
     ports:
       - "8080:8080"
+    volumes:
+      - uploads_data:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -53,4 +56,5 @@ services:
 
 volumes:
   postgres_data:
+  uploads_data:
 
