@@ -1,0 +1,136 @@
+# ------------------------------
+# Image / versioning
+# ------------------------------
+image:
+  repository: bitnamilegacy/postgresql
+  # Pin a minor/patch you control (recommended). If you omit this, the chart uses its default.
+  tag: "17.5.0-debian-12-r19"
+  pullPolicy: IfNotPresent
+
+# ------------------------------
+# Auth — use an existing Secret you manage
+# ------------------------------
+auth:
+  enablePostgresUser: true
+  # Use one single Secret for all auth fields to avoid drift.
+  # Expected keys:
+  postgres-password: postgres
+  #   postgres-password   -> superuser (postgres)
+  postgresql-username: postgres
+  password: postgres
+  postgresql-database: postgres
+  existingSecret: pg-auth
+  # If you prefer not to put username/db in the Secret, you can set them here instead:
+  # username: appuser
+  # database: appdb
+  # postgresPassword: "..."
+  # password: "..."
+
+# ------------------------------
+# Topology
+# ------------------------------
+#architecture: standalone
+# For HA later, switch to 'replication' and configure 'readReplicas', 'synchronousCommit', etc.
+
+# ------------------------------
+# Primary node settings
+# ------------------------------
+primary:
+  service:
+    type: ClusterIP
+    ports:
+      postgresql: 5432
+  persistence:
+    enabled: true
+    storageClass: "longhorn"
+    accessModes: [ "ReadWriteOnce" ]
+    size: 8Gi
+  volumePermissions:
+    enabled: true
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "1"
+      memory: "1Gi"
+  pgHbaConfiguration: |-
+    local   all             all                                     md5
+    host    all             all             127.0.0.1/32            md5
+    host    all             all             ::1/128                 md5
+    host    all             all             0.0.0.0/0               md5
+    host    all             all             ::/0                    md5
+  extendedConfiguration: |-
+    listen_addresses = '*'
+    max_connections = 200
+    shared_buffers = '256MB'
+    effective_cache_size = '768MB'
+    maintenance_work_mem = '64MB'
+    work_mem = '8MB'
+    random_page_cost = 1.1
+    wal_compression = on
+    log_min_duration_statement = 250ms
+    wal_level = logical
+  initdb:
+    scripts:
+      01_extensions.sql: |
+        CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+        CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+#        DO $$
+#        DECLARE
+#          db text := current_setting('server_version_num'); -- just to show a block; adjust as needed
+#        BEGIN
+#          -- Ensure app user owns its DB if both exist
+#          IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = current_setting('app.user', true))
+#             AND EXISTS (SELECT 1 FROM pg_database WHERE datname = current_setting('app.db', true)) THEN
+#            EXECUTE format('ALTER DATABASE %I OWNER TO %I',
+#              current_setting('app.db', true), current_setting('app.user', true));
+#          END IF;
+#        END$$;
+
+# ------------------------------
+# Metrics / monitoring
+# ------------------------------
+#metrics:
+#  enabled: true
+#  service:
+#    type: ClusterIP
+#  serviceMonitor:
+#    enabled: false           # set true if you run Prometheus Operator
+#    namespace: monitoring
+#    interval: 30s
+#    scrapeTimeout: 10s
+  # If not using ServiceMonitor, have Prom scrape 'metrics' Service directly.
+
+# ------------------------------
+# Network Policies (optional but recommended)
+# ------------------------------
+#networkPolicy:
+#  enabled: true
+#  allowExternal: false
+#  # Only allow from same namespace; adjust selectors to allow your app namespaces.
+#  extraIngress:
+#    - from:
+#        - podSelector: {}         # same-namespace pods
+#      ports:
+#        - protocol: TCP
+#          port: 5432
+
+# ------------------------------
+# Pod security / misc
+# ------------------------------
+#podSecurityContext:
+#  enabled: true
+#  fsGroup: 1001
+#
+#containerSecurityContext:
+#  enabled: true
+#  runAsUser: 1001
+#  runAsNonRoot: true
+#  allowPrivilegeEscalation: false
+#  readOnlyRootFilesystem: false  # PostgreSQL needs write access inside container
+
+# If you need to inject extra environment variables:
+# extraEnvVars:
+#   - name: TZ
+#     value: UTC

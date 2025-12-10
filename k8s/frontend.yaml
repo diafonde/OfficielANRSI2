@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: anrsi-frontend
+  namespace: anrsi
+  labels:
+    app: anrsi-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: anrsi-frontend
+  template:
+    metadata:
+      labels:
+        app: anrsi-frontend
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      containers:
+        - name: anrsi-frontend
+          image: mohamdikhlil/anrsi-frontend:dev
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: anrsi-frontend
+  name: anrsi-frontend
+spec:
+  ports:
+    - name: http
+      port: 80
+  selector:
+    app: anrsi-frontend
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: anrsi-frontend
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: "/"
+    nginx.ingress.kubernetes.io/proxy-body-size: 999m
+spec:
+  tls:
+    - hosts:
+        - anrsi.dsohost.com
+      secretName: anrsi-frontend-ssl-cert-production
+  ingressClassName: nginx
+  rules:
+    - host: anrsi.dsohost.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: anrsi-frontend
+                port:
+                  number: 80
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: anrsi-frontend-ssl-cert-production
+  namespace: anrsi
+spec:
+  secretName: anrsi-frontend-ssl-cert-production
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  commonName: anrsi.dsohost.com
+  dnsNames:
+    - anrsi.dsohost.com
