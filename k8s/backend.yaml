@@ -1,3 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: anrsi-file-upload-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -20,6 +31,9 @@ spec:
       containers:
         - name: anrsi-backend
           image: mohamdikhlil/anrsi-backend:dev
+          volumeMounts:
+            - mountPath: "/app/uploads"
+              name: anrsi-file-upload-pvc
           imagePullPolicy: Always
           ports:
             - containerPort: 8080  # Application port
@@ -39,12 +53,10 @@ spec:
               port: 8080  # Use management port
             initialDelaySeconds: 10
             periodSeconds: 10
-#          livenessProbe:
-#            httpGet:
-#              path: /actuator/health/liveness
-#              port: 8081  # Use management port
-#            initialDelaySeconds: 10
-#            periodSeconds: 30
+      volumes:
+        - name: anrsi-file-upload-pvc
+          persistentVolumeClaim:
+            claimName: anrsi-file-upload-pvc
 
 ---
 apiVersion: v1
