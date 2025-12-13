@@ -24,3 +24,4 @@ curl -X POST "$BASE_URL/api/admin/appels-candidatures/import?filePath=$FILE_PATH
 
 echo ""
 echo "Import completed. Check the response above for status."
+

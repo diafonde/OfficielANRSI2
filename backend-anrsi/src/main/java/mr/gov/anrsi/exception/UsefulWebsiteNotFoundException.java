@@ -8,3 +8,4 @@ public class UsefulWebsiteNotFoundException extends RuntimeException {
 
 
 
+

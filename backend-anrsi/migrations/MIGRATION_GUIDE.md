@@ -164,3 +164,4 @@ Si vous rencontrez des problèmes :
 1. Vérifiez les logs PostgreSQL
 2. Vérifiez que toutes les pages ont des traductions
 3. Restaurez depuis la sauvegarde si nécessaire
+

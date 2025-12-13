@@ -314,3 +314,4 @@ BEGIN
     RAISE NOTICE 'Arabic appels: %', jsonb_array_length(ar_appels);
     RAISE NOTICE 'English appels: %', jsonb_array_length(en_appels);
 END $$;
+

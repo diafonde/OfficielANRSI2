@@ -48,3 +48,4 @@ COMMIT;
 -- 2. Test all page endpoints
 -- 3. Verify that pages load correctly with translations
 -- =====================================================
+

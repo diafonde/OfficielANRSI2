@@ -140,3 +140,4 @@ BEGIN
     RAISE NOTICE 'Pages with ordre set: %', pages_with_ordre;
     RAISE NOTICE 'Translations with extra (JSONB): %', translations_with_extra;
 END $$;
+

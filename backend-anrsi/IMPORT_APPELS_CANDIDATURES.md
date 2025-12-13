@@ -114,3 +114,4 @@ Place your JSON file in one of these locations:
 - **Authentication error**: Make sure you're using a valid admin JWT token
 - **Import fails**: Check the logs for detailed error messages
 - **Images not downloading**: Some images may fail due to CORS restrictions - they will keep original URLs
+

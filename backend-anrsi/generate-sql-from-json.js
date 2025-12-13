@@ -328,3 +328,4 @@ console.log(`   - French appels: ${frAppels.length}`);
 console.log(`   - Arabic appels: ${arAppels.length}`);
 console.log(`   - English appels: ${enAppels.length}`);
 console.log(`\n💡 To execute: psql -U your_user -d your_database -f ${outputPath}`);
+

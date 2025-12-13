@@ -55,34 +55,23 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // CRITICAL: Do NOT call setAllowedOrigins at all when using allowCredentials=true
-        // Only use allowedOriginPatterns - this is the correct way for credentials
-        configuration.setAllowedOriginPatterns(Arrays.asList(
-            "http://localhost:*",
-            "http://127.0.0.1:*"
-        ));
+        // Allow all origins - effectively disables CORS restrictions
+        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
         
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"));
+        // Allow all HTTP methods
+        configuration.setAllowedMethods(Arrays.asList("*"));
         
         // Allow all headers
-        configuration.setAllowedHeaders(Arrays.asList(
-            "Authorization",
-            "Content-Type",
-            "X-Requested-With",
-            "Accept",
-            "Origin",
-            "Access-Control-Request-Method",
-            "Access-Control-Request-Headers"
-        ));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
         
-        // Allow credentials (cookies, authorization headers)
-        configuration.setAllowCredentials(true);
+        // Must be false when using "*" for origins
+        configuration.setAllowCredentials(false);
         
         // Cache preflight response for 1 hour
         configuration.setMaxAge(3600L);
         
-        // Expose headers that the frontend might need
-        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        // Expose all headers
+        configuration.setExposedHeaders(Arrays.asList("*"));
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

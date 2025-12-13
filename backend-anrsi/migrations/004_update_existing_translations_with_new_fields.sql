@@ -89,3 +89,4 @@ BEGIN
     GET DIAGNOSTICS pages_updated = ROW_COUNT;
     RAISE NOTICE 'Set ordre for % pages that were missing it', pages_updated;
 END $$;
+

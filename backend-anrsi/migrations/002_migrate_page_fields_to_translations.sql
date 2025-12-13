@@ -202,3 +202,4 @@ COMMIT;
 --    ALTER TABLE pages DROP COLUMN IF EXISTS metadata;
 -- 4. Or create a separate cleanup script to remove them later
 -- =====================================================
+
